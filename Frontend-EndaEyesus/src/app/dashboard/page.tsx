@@ -7,6 +7,8 @@ import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { Announcement } from "@/lib/types";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") || "http://localhost:8080";
+
 function formatDate(dateStr: string) {
     return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
@@ -82,11 +84,11 @@ export default function DashboardPage() {
     return (
         <div className="max-w-5xl mx-auto space-y-6">
             {/* Welcome banner */}
-            <div className="rounded-2xl p-6 flex items-center gap-5" style={{ background: "linear-gradient(135deg, #0F3D2E 0%, #1a5c44 100%)", borderLeft: "4px solid #C9A227" }}>
+            <div className="rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5" style={{ background: "linear-gradient(135deg, #0F3D2E 0%, #1a5c44 100%)", borderLeft: "4px solid #C9A227" }}>
                 <div className="w-14 h-14 rounded-full border-2 border-[#C9A227]/60 overflow-hidden flex-shrink-0">
                     {user?.profileImage ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={`http://localhost:8080${user.profileImage}`} alt="Profile" className="w-full h-full object-cover" />
+                        <img src={`${API_BASE}${user.profileImage}`} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
                         <div className="w-full h-full bg-[#C9A227]/20 flex items-center justify-center">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -97,7 +99,7 @@ export default function DashboardPage() {
                     )}
                 </div>
                 <div>
-                    <h1 className="text-white font-bold text-xl leading-tight flex items-center gap-2">
+                    <h1 className="text-white font-bold text-lg sm:text-xl leading-tight flex items-center gap-2">
                         Welcome back, {displayName} <Sparkles className="h-5 w-5 text-[#C9A227]" />
                     </h1>
                     <p className="text-white/60 text-sm mt-0.5">
