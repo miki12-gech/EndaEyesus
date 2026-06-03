@@ -47,7 +47,7 @@
   --card-foreground: #1a1a1a;
   --popover: #FFFFFF;
   --popover-foreground: #1a1a1a;
-  --primary: #0F3D2E;
+  --primary: #7A1C1C;
   --primary-foreground: #F8F5F0;
   --secondary: #EDE9E2;
   --secondary-foreground: #1a1a1a;
@@ -59,7 +59,7 @@
   --border: #ddd8d0;
   --input: #ddd8d0;
   --ring: #C9A227;
-  --sidebar: #0F3D2E;
+  --sidebar: #7A1C1C;
   --sidebar-foreground: #F8F5F0;
   --sidebar-primary: #C9A227;
   --sidebar-primary-foreground: #F8F5F0;
@@ -71,7 +71,7 @@
   /* Brand tokens */
   --gold: #C9A227;
   --church-red: #7A1C1C;
-  --emerald: #0F3D2E;
+  --emerald: #7A1C1C;
   --ivory: #F8F5F0;
 }
 
@@ -107,7 +107,7 @@
   /* Brand tokens (dark) */
   --gold: #D4AF37;
   --church-red: #8B2C2C;
-  --emerald: #1E4D3A;
+  --emerald: #9B2323;
 }
 
 @layer base {

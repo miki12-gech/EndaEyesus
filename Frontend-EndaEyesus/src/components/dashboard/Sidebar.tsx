@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, BookOpen, Bell, User, LogOut, Shield, FileText, MessageSquare, X } from "lucide-react";
+import { Home, BookOpen, Bell, User, LogOut, Shield, FileText, MessageSquare, X, GraduationCap, Users2 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 
 interface SidebarProps {
@@ -10,11 +10,30 @@ interface SidebarProps {
     onClose: () => void;
 }
 
+const ADMIN_ROLES = ["SECRETARIAT_CHAIRMAN", "SECRETARIAT_VICE", "SECRETARIAT_SECRETARY", "SUPER_ADMIN", "SERVICE_MANAGER"];
+const MEMBER_ROLES = ["MEMBER", "TEACHER", "SERVICE_MANAGER", "SECRETARIAT_SECRETARY", "SECRETARIAT_VICE", "SECRETARIAT_CHAIRMAN", "SUPER_ADMIN", "CLASS_LEADER"];
+
+function getRoleBadge(role: string) {
+    switch (role) {
+        case "SECRETARIAT_CHAIRMAN": return { label: "⭐ Chairman", color: "#C9A227", bg: "rgba(201,162,39,0.15)", border: "#C9A22740" };
+        case "SECRETARIAT_VICE":     return { label: "⭐ Vice Chair", color: "#C9A227", bg: "rgba(201,162,39,0.15)", border: "#C9A22740" };
+        case "SECRETARIAT_SECRETARY": return { label: "⭐ Secretary", color: "#C9A227", bg: "rgba(201,162,39,0.15)", border: "#C9A22740" };
+        case "SERVICE_MANAGER":     return { label: "⭐ Svc Manager", color: "#C9A227", bg: "rgba(201,162,39,0.15)", border: "#C9A22740" };
+        case "SUPER_ADMIN":         return { label: "⭐ Super Admin", color: "#C9A227", bg: "rgba(201,162,39,0.15)", border: "#C9A22740" };
+        case "TEACHER":             return { label: "🎓 Teacher", color: "#7ac9a8", bg: "rgba(15,61,46,0.4)", border: "#7ac9a840" };
+        case "CLASS_LEADER":        return { label: "🏷 Class Leader", color: "#7ac9a8", bg: "rgba(15,61,46,0.4)", border: "#7ac9a840" };
+        default: return null;
+    }
+}
+
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
     const router = useRouter();
     const { user, logout } = useAuthStore();
-    const role = user?.role;
+    const role = user?.system_role || user?.role || "USER";
+    const isAdmin = ADMIN_ROLES.includes(role);
+    const isMember = MEMBER_ROLES.includes(role);
+    const roleBadge = getRoleBadge(role);
 
     const handleLogout = () => {
         logout();
@@ -28,18 +47,19 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     const navItems = [
         { href: "/dashboard", label: "Home", icon: Home, show: true },
         { href: "/dashboard/posts", label: "Posts", icon: FileText, show: true },
+        { href: "/dashboard/courses/gubae-abew", label: "Gubae Abew", icon: GraduationCap, show: isMember },
         { href: "/dashboard/my-class", label: "My Class", icon: BookOpen, show: true },
         { href: "/dashboard/messages", label: "Messages", icon: MessageSquare, show: true },
         { href: "/dashboard/announcements", label: "Announcements", icon: Bell, show: true },
         { href: "/dashboard/profile", label: "Profile", icon: User, show: true },
-        // Admin-only
-        { href: "/dashboard/agent", label: "Admin Panel", icon: Shield, show: role === "SUPER_ADMIN" },
+        { href: "/dashboard/members", label: "Members", icon: Users2, show: isAdmin },
+        { href: "/dashboard/agent", label: "Admin Panel", icon: Shield, show: isAdmin },
     ].filter((item) => item.show);
 
     return (
         <aside
             className={`
-                w-64 min-h-screen bg-[#0F3D2E] dark:bg-[#1C1C1F] flex flex-col
+                w-64 min-h-screen bg-[#7A1C1C] dark:bg-[#1C1C1F] flex flex-col
                 fixed left-0 top-0 z-30 shadow-xl dark:border-r dark:border-[#2a2a2d]
                 transition-transform duration-300 ease-in-out
                 ${isOpen ? "translate-x-0" : "-translate-x-full"}
@@ -71,19 +91,19 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             </div>
 
             {/* Role badge */}
-            {role && role !== "MEMBER" && (
+            {roleBadge && (
                 <div className="mx-4 mt-3 mb-1 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider text-center"
                     style={{
-                        background: role === "SUPER_ADMIN" ? "rgba(201,162,39,0.15)" : "rgba(15,61,46,0.4)",
-                        color: role === "SUPER_ADMIN" ? "#C9A227" : "#7ac9a8",
-                        border: `1px solid ${role === "SUPER_ADMIN" ? "#C9A227" : "#7ac9a8"}40`,
+                        background: roleBadge.bg,
+                        color: roleBadge.color,
+                        border: `1px solid ${roleBadge.border}`,
                     }}>
-                    {role === "SUPER_ADMIN" ? "⭐ Super Admin" : "🏷 Class Leader"}
+                    {roleBadge.label}
                 </div>
             )}
 
             {/* Navigation */}
-            <nav className="flex-1 px-3 py-4 space-y-1" aria-label="Sidebar navigation">
+            <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto" aria-label="Sidebar navigation">
                 {navItems.map(({ href, label, icon: Icon }) => {
                     const isActive = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
                     return (
@@ -91,7 +111,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                             onClick={onClose}
                             className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group ${isActive
                                 ? "bg-white/10 dark:bg-[#D4AF37]/10 text-[#C9A227] dark:text-[#D4AF37]"
-                                : "text-white/70 dark:text-[#B0B0B0] hover:bg-white/8 dark:hover:bg-[#1E4D3A]/40 hover:text-white dark:hover:text-[#F5F5F5]"
+                                : "text-white/70 dark:text-[#B0B0B0] hover:bg-white/8 dark:hover:bg-[#9B2323]/40 hover:text-white dark:hover:text-[#F5F5F5]"
                                 }`}
                             aria-current={isActive ? "page" : undefined}>
                             <Icon className={`h-5 w-5 flex-shrink-0 transition-colors ${isActive ? "text-[#C9A227] dark:text-[#D4AF37]" : "text-white/60 dark:text-[#B0B0B0] group-hover:text-white dark:group-hover:text-[#F5F5F5]"}`} />
@@ -110,14 +130,14 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={`${process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") || "http://localhost:8080"}${user.profileImage}`} alt="Profile" className="w-full h-full object-cover" />
                         ) : (
-                            <div className="w-full h-full bg-[#C9A227] dark:bg-[#D4AF37] flex items-center justify-center text-[#0F3D2E] font-bold text-sm">
+                            <div className="w-full h-full bg-[#C9A227] dark:bg-[#D4AF37] flex items-center justify-center text-[#7A1C1C] font-bold text-sm">
                                 {initials}
                             </div>
                         )}
                     </div>
                     <div className="min-w-0">
                         <p className="text-white dark:text-[#F5F5F5] text-sm font-semibold truncate">{user?.fullName || "Guest Member"}</p>
-                        <p className="text-white/50 dark:text-[#B0B0B0]/60 text-[10px] truncate">{user?.serviceClassName || "Fellowship Member"}</p>
+                        <p className="text-white/50 dark:text-[#B0B0B0]/60 text-[10px] truncate">{user?.email || "Fellowship Member"}</p>
                     </div>
                 </Link>
 

@@ -1,6 +1,6 @@
 // Shared TypeScript types matching the backend exactly
 
-export type Role = 'SUPER_ADMIN' | 'CLASS_LEADER' | 'MEMBER';
+export type Role = 'SUPER_ADMIN' | 'CLASS_LEADER' | 'MEMBER' | 'USER' | 'TEACHER' | 'SERVICE_MANAGER' | 'SECRETARIAT_SECRETARY' | 'SECRETARIAT_VICE' | 'SECRETARIAT_CHAIRMAN';
 export type Status = 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'PENDING_OFFICE_APPROVAL';
 export type Sex = 'MALE' | 'FEMALE';
 export type PostTargetType = 'GLOBAL' | 'CLASS';

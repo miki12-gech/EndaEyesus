@@ -155,3 +155,108 @@ export function useAgentData() {
 
     return { logs, permissions, loading };
 }
+
+export function useMembershipReview() {
+    const [pendingMemberships, setPendingMemberships] = useState<any[]>([]);
+    const [pendingClasses, setPendingClasses] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    const fetchAll = async () => {
+        setLoading(true);
+        try {
+            const [memberships, classes] = await Promise.all([
+                agentService.getPendingMemberships().catch(() => []),
+                agentService.getPendingClassAssignments().catch(() => []),
+            ]);
+            setPendingMemberships(memberships);
+            setPendingClasses(classes);
+        } catch {
+            // silently handle
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchAll();
+    }, []);
+
+    const approveMembership = async (userId: string) => {
+        await agentService.approveMembership(userId);
+        setPendingMemberships(prev => prev.filter(u => u.id !== userId));
+        // After approval, they may appear in pending classes
+        fetchAll();
+    };
+
+    const rejectMembership = async (userId: string, reason?: string) => {
+        await agentService.rejectMembership(userId, reason);
+        setPendingMemberships(prev => prev.filter(u => u.id !== userId));
+    };
+
+    const confirmClass = async (userId: string) => {
+        await agentService.confirmClass(userId);
+        setPendingClasses(prev => prev.filter(u => u.id !== userId));
+    };
+
+    const rejectClass = async (userId: string, reason?: string) => {
+        await agentService.rejectClass(userId, reason);
+        setPendingClasses(prev => prev.filter(u => u.id !== userId));
+    };
+
+    return {
+        pendingMemberships,
+        pendingClasses,
+        loading,
+        approveMembership,
+        rejectMembership,
+        confirmClass,
+        rejectClass,
+        refresh: fetchAll,
+    };
+}
+
+// ── Sub-Classes Hook ──────────────────────────────────────────
+export function useSubClasses() {
+    const [subClasses, setSubClasses] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    const fetchSubClasses = async () => {
+        setLoading(true);
+        try {
+            const data = await agentService.getSubClasses();
+            setSubClasses(data);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchSubClasses();
+    }, []);
+
+    const createSubClass = async (name: string) => {
+        try {
+            await agentService.createSubClass(name);
+            fetchSubClasses();
+            return true;
+        } catch (e) {
+            console.error(e);
+            return false;
+        }
+    };
+
+    const updateRoles = async (id: string, roles: any) => {
+        try {
+            await agentService.updateSubClassRoles(id, roles);
+            fetchSubClasses();
+            return true;
+        } catch (e) {
+            console.error(e);
+            return false;
+        }
+    };
+
+    return { subClasses, loading, fetchSubClasses, createSubClass, updateRoles };
+}

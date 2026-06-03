@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 
 const serviceClasses: ServiceClassFeature[] = [
     { id: "1", title: "Mezmur (Choir)", description: "Praising God through sacred Ethiopian Orthodox hymns and spiritual songs.", icon: Music, color: "#C9A227" },
-    { id: "2", title: "Sunday School", description: "Deepening our understanding of the Gospel, Dogma, and Church history.", icon: BookOpen, color: "#0F3D2E" },
+    { id: "2", title: "Sunday School", description: "Deepening our understanding of the Gospel, Dogma, and Church history.", icon: BookOpen, color: "#7A1C1C" },
     { id: "3", title: "General Assembly", description: "Weekly gatherings for prayer, sermons, and community fellowship.", icon: Users, color: "#7A1C1C" },
     { id: "4", title: "Youth Leadership", description: "Training the next generation of dedicated church servants.", icon: Shield, color: "#D4AF37" },
 ];
@@ -122,7 +122,7 @@ export function HomeView() {
                                     "Supporting members academically and socially"
                                 ].map((item, i) => (
                                     <li key={i} className="flex items-center gap-3 text-[#F5F5F5]/80">
-                                        <span className="w-6 h-6 rounded-full bg-[#1E4D3A]/20 text-[#1E4D3A] flex items-center justify-center text-sm font-bold border border-[#1E4D3A]/30 flex-shrink-0">✓</span>
+                                        <span className="w-6 h-6 rounded-full bg-[#9B2323]/20 text-[#9B2323] flex items-center justify-center text-sm font-bold border border-[#9B2323]/30 flex-shrink-0">✓</span>
                                         {item}
                                     </li>
                                 ))}
@@ -253,7 +253,7 @@ export function HomeView() {
             {/* 6. EMERALD CTA CRESENDO */}
             <section className="relative py-24 overflow-hidden border-t-4 border-[#D4AF37]">
                 {/* Deep Emerald Background with gradient */}
-                <div className="absolute inset-0 bg-[#1E4D3A] mix-blend-multiply" />
+                <div className="absolute inset-0 bg-[#9B2323] mix-blend-multiply" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0E0E0F] to-transparent opacity-80" />
 
                 <div className="relative z-10 max-w-4xl mx-auto px-4 text-center animate-on-scroll opacity-0 translate-y-10 transition-all duration-1000">

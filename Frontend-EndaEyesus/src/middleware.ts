@@ -15,7 +15,7 @@ export function middleware(req: NextRequest) {
         try {
             const parsed = JSON.parse(decodeURIComponent(authRaw));
             token = parsed?.state?.token ?? null;
-            role = parsed?.state?.user?.role ?? null;
+            role = parsed?.state?.user?.system_role ?? parsed?.state?.user?.role ?? null;
         } catch {
             token = null;
         }
@@ -28,8 +28,9 @@ export function middleware(req: NextRequest) {
         if (!isLoggedIn) {
             return NextResponse.redirect(new URL('/login', req.url));
         }
-        // Protect admin panel from non-SUPER_ADMINs
-        if (pathname.startsWith('/dashboard/agent') && role !== 'SUPER_ADMIN') {
+        // Protect admin panel from non-administrators
+        const isAdmin = ['SECRETARIAT_CHAIRMAN', 'SECRETARIAT_VICE', 'SECRETARIAT_SECRETARY', 'SUPER_ADMIN'].includes(role || '');
+        if (pathname.startsWith('/dashboard/agent') && !isAdmin) {
             return NextResponse.redirect(new URL('/dashboard', req.url));
         }
     }

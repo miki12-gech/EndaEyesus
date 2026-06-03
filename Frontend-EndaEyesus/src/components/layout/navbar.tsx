@@ -9,7 +9,7 @@ export function Navbar() {
 
                     {/* Logo & Title */}
                     <Link href="/" className="flex items-center gap-3 group">
-                        <div className="w-10 h-10 rounded-full bg-[#1C1C1F] border border-[#D4AF37]/40 flex items-center justify-center flex-shrink-0 group-hover:bg-[#1E4D3A] transition-colors">
+                        <div className="w-10 h-10 rounded-full bg-[#1C1C1F] border border-[#D4AF37]/40 flex items-center justify-center flex-shrink-0 group-hover:bg-[#9B2323] transition-colors">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                                 <rect x="8.5" y="1" width="3" height="18" rx="1" fill="#D4AF37" />
                                 <rect x="2" y="6" width="16" height="3" rx="1" fill="#D4AF37" />

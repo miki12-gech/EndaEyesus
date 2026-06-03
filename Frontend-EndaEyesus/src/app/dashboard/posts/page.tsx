@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useAuthStore, AuthUser } from "@/store/authStore";
-import api from "@/lib/api";
+import apiClient from "@/api";
 import { Post, Comment, ReactionType } from "@/lib/types";
 import { Heart, MessageCircle, Trash2, Pin, ThumbsUp, ThumbsDown, Send, ImageIcon, X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -42,7 +42,7 @@ function PostCard({ post, currentUser, onDelete, onReact, onPin, onCommentCountC
     const loadComments = async () => {
         setLoadingComments(true);
         try {
-            const res = await api.get<{ data: Comment[] }>(`/posts/${post.id}/comments`);
+            const res = await apiClient.instance.get<{ data: Comment[] }>(`/posts/${post.id}/comments`);
             setComments(res.data.data);
         } catch { /* ignore */ }
         finally { setLoadingComments(false); }
@@ -53,7 +53,7 @@ function PostCard({ post, currentUser, onDelete, onReact, onPin, onCommentCountC
         setSubmittingComment(true);
         try {
             const payload = { content: commentText, ...(replyTo ? { parentCommentID: replyTo.id } : {}) };
-            const res = await api.post<{ data: Comment }>(`/posts/${post.id}/comments`, payload);
+            const res = await apiClient.instance.post<{ data: Comment }>(`/posts/${post.id}/comments`, payload);
 
             // Pessimistic UI: Update state only after success
             setComments((prev) => [...prev, res.data.data]);
@@ -68,7 +68,7 @@ function PostCard({ post, currentUser, onDelete, onReact, onPin, onCommentCountC
 
     const deleteComment = async (commentId: string) => {
         try {
-            await api.delete(`/posts/${post.id}/comments/${commentId}`);
+            await apiClient.instance.delete(`/posts/${post.id}/comments/${commentId}`);
 
             // Pessimistic UI: Update state only after success
             setComments((prev) => prev.filter((c) => c.id !== commentId));
@@ -104,7 +104,7 @@ function PostCard({ post, currentUser, onDelete, onReact, onPin, onCommentCountC
                         </div>
                         <div>
                             <p className="text-sm font-semibold text-[#1a1a1a] dark:text-[#F5F5F5]">{post.author.fullName}</p>
-                            <p className="text-[10px] text-[#6b6b6b] dark:text-[#B0B0B0]">{timeAgo(post.createdAt)} · <span className={`font-medium ${post.targetType === "GLOBAL" ? "text-[#C9A227]" : "text-[#0F3D2E] dark:text-[#7ac9a8]"}`}>{post.targetType}</span></p>
+                            <p className="text-[10px] text-[#6b6b6b] dark:text-[#B0B0B0]">{timeAgo(post.createdAt)} · <span className={`font-medium ${post.targetType === "GLOBAL" ? "text-[#C9A227]" : "text-[#7A1C1C] dark:text-[#7ac9a8]"}`}>{post.targetType}</span></p>
                         </div>
                     </div>
                     <div className="flex items-center gap-1.5">
@@ -122,7 +122,7 @@ function PostCard({ post, currentUser, onDelete, onReact, onPin, onCommentCountC
                 </div>
 
                 {/* Content */}
-                <h3 className="font-semibold text-[#0F3D2E] dark:text-[#D4AF37] mb-1.5">{post.title}</h3>
+                <h3 className="font-semibold text-[#7A1C1C] dark:text-[#D4AF37] mb-1.5">{post.title}</h3>
                 <p className="text-sm text-[#4a4a4a] dark:text-[#B0B0B0] leading-relaxed whitespace-pre-wrap">{post.content}</p>
 
                 {/* Image */}
@@ -136,7 +136,7 @@ function PostCard({ post, currentUser, onDelete, onReact, onPin, onCommentCountC
                 {/* Reactions row */}
                 <div className="flex items-center gap-3 mt-4 pt-3 border-t border-[#f0ece4] dark:border-[#2a2a2d]">
                     <button onClick={() => onReact(post.id, "LIKE")}
-                        className="flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] dark:text-[#B0B0B0] hover:text-[#0F3D2E] dark:hover:text-[#D4AF37] transition-colors">
+                        className="flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] dark:text-[#B0B0B0] hover:text-[#7A1C1C] dark:hover:text-[#D4AF37] transition-colors">
                         <ThumbsUp className="h-4 w-4" /> {post._count?.reactions ?? 0}
                     </button>
                     <button onClick={() => onReact(post.id, "DISLIKE")}
@@ -144,7 +144,7 @@ function PostCard({ post, currentUser, onDelete, onReact, onPin, onCommentCountC
                         <ThumbsDown className="h-4 w-4" />
                     </button>
                     <button onClick={toggleComments}
-                        className="flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] dark:text-[#B0B0B0] hover:text-[#0F3D2E] dark:hover:text-[#D4AF37] transition-colors ml-auto">
+                        className="flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] dark:text-[#B0B0B0] hover:text-[#7A1C1C] dark:hover:text-[#D4AF37] transition-colors ml-auto">
                         <MessageCircle className="h-4 w-4" /> {post._count?.comments ?? 0} comments
                     </button>
                 </div>
@@ -157,19 +157,19 @@ function PostCard({ post, currentUser, onDelete, onReact, onPin, onCommentCountC
                             <div key={c.id} className="mb-3">
                                 {/* Root comment */}
                                 <div className="flex gap-2.5 group">
-                                    <div className="w-7 h-7 rounded-full bg-[#0F3D2E]/10 flex items-center justify-center text-[#0F3D2E] dark:text-[#D4AF37] text-xs font-bold flex-shrink-0">
+                                    <div className="w-7 h-7 rounded-full bg-[#7A1C1C]/10 flex items-center justify-center text-[#7A1C1C] dark:text-[#D4AF37] text-xs font-bold flex-shrink-0">
                                         {c.user.fullName?.[0]?.toUpperCase()}
                                     </div>
                                     <div className="flex-1 bg-[#F8F5F0] dark:bg-[#252529] rounded-xl px-3 py-2">
                                         <div className="flex justify-between items-start">
                                             <div>
-                                                <span className="text-xs font-semibold text-[#0F3D2E] dark:text-[#D4AF37]">{c.user.fullName}</span>
+                                                <span className="text-xs font-semibold text-[#7A1C1C] dark:text-[#D4AF37]">{c.user.fullName}</span>
                                                 <span className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0] ml-2">{timeAgo(c.createdAt)}</span>
                                             </div>
                                         </div>
                                         <p className="text-sm text-[#1a1a1a] dark:text-[#F5F5F5] mt-0.5">{c.content}</p>
                                         <div className="flex items-center gap-3 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button onClick={() => setReplyTo({ id: c.id, name: c.user.fullName })} className="text-[10px] font-medium text-[#6b6b6b] hover:text-[#0F3D2E] dark:hover:text-[#D4AF37]">Reply</button>
+                                            <button onClick={() => setReplyTo({ id: c.id, name: c.user.fullName })} className="text-[10px] font-medium text-[#6b6b6b] hover:text-[#7A1C1C] dark:hover:text-[#D4AF37]">Reply</button>
                                             {(c.userID === currentUser?.id || isSuperAdmin || isClassLeader) && (
                                                 <button onClick={() => deleteComment(c.id)} className="text-[10px] font-medium text-[#6b6b6b] hover:text-red-500">Delete</button>
                                             )}
@@ -180,11 +180,11 @@ function PostCard({ post, currentUser, onDelete, onReact, onPin, onCommentCountC
                                 {/* Replies */}
                                 {comments.filter(r => r.parentCommentID === c.id).map((r) => (
                                     <div key={r.id} className="flex gap-2.5 group ml-9 mt-2">
-                                        <div className="w-6 h-6 rounded-full bg-[#0F3D2E]/10 flex items-center justify-center text-[#0F3D2E] dark:text-[#D4AF37] text-[10px] font-bold flex-shrink-0">
+                                        <div className="w-6 h-6 rounded-full bg-[#7A1C1C]/10 flex items-center justify-center text-[#7A1C1C] dark:text-[#D4AF37] text-[10px] font-bold flex-shrink-0">
                                             {r.user.fullName?.[0]?.toUpperCase()}
                                         </div>
                                         <div className="flex-1 bg-[#F8F5F0] dark:bg-[#252529] rounded-xl px-3 py-2">
-                                            <span className="text-xs font-semibold text-[#0F3D2E] dark:text-[#D4AF37]">{r.user.fullName}</span>
+                                            <span className="text-xs font-semibold text-[#7A1C1C] dark:text-[#D4AF37]">{r.user.fullName}</span>
                                             <span className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0] ml-2">{timeAgo(r.createdAt)}</span>
                                             <p className="text-sm text-[#1a1a1a] dark:text-[#F5F5F5] mt-0.5">{r.content}</p>
                                             <div className="flex items-center gap-3 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -206,7 +206,7 @@ function PostCard({ post, currentUser, onDelete, onReact, onPin, onCommentCountC
                             <div className="flex-1 flex flex-col pt-1">
                                 {replyTo && (
                                     <div className="flex items-center justify-between bg-[#F8F5F0] dark:bg-[#252529] border border-b-0 border-[#ddd8d0] dark:border-[#2a2a2d] px-3 py-1.5 rounded-t-xl text-xs text-[#6b6b6b] dark:text-[#B0B0B0]">
-                                        <span>Replying to <span className="font-semibold text-[#0F3D2E] dark:text-[#D4AF37]">{replyTo.name}</span></span>
+                                        <span>Replying to <span className="font-semibold text-[#7A1C1C] dark:text-[#D4AF37]">{replyTo.name}</span></span>
                                         <button onClick={() => setReplyTo(null)} className="hover:text-red-500"><X className="h-3 w-3" /></button>
                                     </div>
                                 )}
@@ -216,7 +216,7 @@ function PostCard({ post, currentUser, onDelete, onReact, onPin, onCommentCountC
                                         className={`flex-1 bg-[#F8F5F0] dark:bg-[#252529] border-[#ddd8d0] dark:border-[#2a2a2d] text-sm resize-none py-2 min-h-0 ${replyTo ? 'rounded-b-xl rounded-t-none' : 'rounded-xl'}`}
                                         onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitComment(); } }} />
                                     <button onClick={submitComment} disabled={submittingComment || !commentText.trim()}
-                                        className="p-2 rounded-xl h-10 w-10 flex items-center justify-center bg-[#0F3D2E] text-white hover:bg-[#C9A227] transition-colors disabled:opacity-50">
+                                        className="p-2 rounded-xl h-10 w-10 flex items-center justify-center bg-[#7A1C1C] text-white hover:bg-[#C9A227] transition-colors disabled:opacity-50">
                                         <Send className="h-4 w-4" />
                                     </button>
                                 </div>
@@ -261,12 +261,12 @@ function CreatePostModal({ classes, currentUser, onClose, onCreated }: {
             let imageURL: string | undefined;
             if (imageFile) {
                 const fd = new FormData(); fd.append("image", imageFile);
-                const upRes = await api.post<{ data: { imageURL: string } }>("/upload/image", fd);
+                const upRes = await apiClient.instance.post<{ data: { imageURL: string } }>("/upload/image", fd);
                 imageURL = upRes.data.data.imageURL;
             }
             const payload: any = { title, content, targetType, imageURL };
             if (targetType === "CLASS") payload.serviceClassID = serviceClassID;
-            const res = await api.post<{ data: Post }>("/posts", payload);
+            const res = await apiClient.instance.post<{ data: Post }>("/posts", payload);
             onCreated(res.data.data);
             onClose();
         } catch (err: any) {
@@ -283,7 +283,7 @@ function CreatePostModal({ classes, currentUser, onClose, onCreated }: {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
             <div className="bg-white dark:bg-[#1C1C1F] rounded-2xl border border-[#ddd8d0] dark:border-[#2a2a2d] shadow-2xl w-full max-w-lg" style={{ borderTop: "4px solid #C9A227" }}>
                 <div className="flex items-center justify-between p-5 border-b border-[#f0ece4] dark:border-[#2a2a2d]">
-                    <h2 className="font-bold text-[#0F3D2E] dark:text-[#D4AF37]">Create Post</h2>
+                    <h2 className="font-bold text-[#7A1C1C] dark:text-[#D4AF37]">Create Post</h2>
                     <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-[#F8F5F0] dark:hover:bg-[#252529] text-[#6b6b6b]"><X className="h-5 w-5" /></button>
                 </div>
 
@@ -292,7 +292,7 @@ function CreatePostModal({ classes, currentUser, onClose, onCreated }: {
                         <div className="flex gap-2">
                             {(["GLOBAL", "CLASS"] as const).map((t) => (
                                 <button key={t} type="button" onClick={() => setTargetType(t)}
-                                    className={`flex-1 py-2 rounded-xl text-xs font-bold uppercase tracking-wide border transition-all ${targetType === t ? "bg-[#0F3D2E] text-white border-[#0F3D2E]" : "border-[#ddd8d0] dark:border-[#2a2a2d] text-[#6b6b6b] dark:text-[#B0B0B0] hover:border-[#0F3D2E] dark:hover:border-[#D4AF37]"}`}>
+                                    className={`flex-1 py-2 rounded-xl text-xs font-bold uppercase tracking-wide border transition-all ${targetType === t ? "bg-[#7A1C1C] text-white border-[#7A1C1C]" : "border-[#ddd8d0] dark:border-[#2a2a2d] text-[#6b6b6b] dark:text-[#B0B0B0] hover:border-[#7A1C1C] dark:hover:border-[#D4AF37]"}`}>
                                     {t}
                                 </button>
                             ))}
@@ -330,7 +330,7 @@ function CreatePostModal({ classes, currentUser, onClose, onCreated }: {
                         </label>
                         <input id="postImage" type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
                         <Button type="submit" disabled={submitting}
-                            className="flex-1 rounded-xl bg-[#0F3D2E] dark:bg-[#D4AF37] text-white dark:text-[#0E0E0F] font-semibold hover:bg-[#C9A227] dark:hover:bg-[#e0c040] hover:text-[#0F3D2E] transition-all">
+                            className="flex-1 rounded-xl bg-[#7A1C1C] dark:bg-[#D4AF37] text-white dark:text-[#0E0E0F] font-semibold hover:bg-[#C9A227] dark:hover:bg-[#e0c040] hover:text-[#7A1C1C] transition-all">
                             {submitting ? "Posting..." : "Post"}
                         </Button>
                     </div>
@@ -346,12 +346,13 @@ export default function PostsPage() {
     const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
     const [loading, setLoading] = useState(true);
     const [showCreate, setShowCreate] = useState(false);
-    const canCreatePost = user?.role === "SUPER_ADMIN" || user?.role === "CLASS_LEADER";
+    const userRole = user?.system_role || user?.role || "USER";
+    const canCreatePost = ["SECRETARIAT_CHAIRMAN", "SECRETARIAT_VICE", "SECRETARIAT_SECRETARY", "SERVICE_MANAGER", "SUPER_ADMIN", "CLASS_LEADER"].includes(userRole);
 
     const loadPosts = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await api.get<{ data: Post[] }>("/posts");
+            const res = await apiClient.instance.get<{ data: Post[] }>("/posts");
             setPosts(res.data.data);
         } catch { /* ignore */ }
         finally { setLoading(false); }
@@ -359,19 +360,19 @@ export default function PostsPage() {
 
     useEffect(() => {
         loadPosts();
-        api.get<{ data: { id: string; name: string }[] }>("/classes").then((r) => setClasses(r.data.data)).catch(() => { });
+        apiClient.instance.get<{ data: { id: string; name: string }[] }>("/classes").then((r) => setClasses(r.data.data)).catch(() => { });
     }, [loadPosts]);
 
     const handleDelete = async (postId: string) => {
         try {
-            await api.delete(`/posts/${postId}`);
+            await apiClient.instance.delete(`/posts/${postId}`);
             setPosts((prev) => prev.filter((p) => p.id !== postId));
         } catch { /* ignore */ }
     };
 
     const handleReact = async (postId: string, type: ReactionType) => {
         try {
-            const res = await api.post<{ data: { counts: { likes: number, dislikes: number } } }>(`/posts/${postId}/react`, { reactionType: type });
+            const res = await apiClient.instance.post<{ data: { counts: { likes: number, dislikes: number } } }>(`/posts/${postId}/react`, { reactionType: type });
 
             // Pessimistic UI: Update state only after success
             const totalReactions = res.data.data.counts.likes + res.data.data.counts.dislikes;
@@ -391,7 +392,7 @@ export default function PostsPage() {
 
     const handlePin = async (postId: string) => {
         try {
-            await api.patch(`/posts/${postId}/pin`);
+            await apiClient.instance.patch(`/posts/${postId}/pin`);
             loadPosts();
         } catch { /* ignore */ }
     };
@@ -401,7 +402,7 @@ export default function PostsPage() {
             <div className="max-w-2xl mx-auto space-y-4">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-xl font-bold text-[#0F3D2E] dark:text-[#D4AF37]">Fellowship Posts</h1>
+                        <h1 className="text-xl font-bold text-[#7A1C1C] dark:text-[#D4AF37]">Fellowship Posts</h1>
                         <p className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0] mt-0.5">Updates from your community</p>
                     </div>
                 </div>
@@ -409,7 +410,7 @@ export default function PostsPage() {
                     <div className="w-12 h-12 bg-[#C9A227]/20 rounded-full flex items-center justify-center mx-auto mb-3">
                         <MessageCircle className="h-6 w-6 text-[#C9A227]" />
                     </div>
-                    <h2 className="text-lg font-bold text-[#0F3D2E] dark:text-[#D4AF37] mb-2">Account Pending Approval</h2>
+                    <h2 className="text-lg font-bold text-[#7A1C1C] dark:text-[#D4AF37] mb-2">Account Pending Approval</h2>
                     <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0]">
                         You will be able to view and interact with fellowship posts once an administrator approves your account.
                     </p>
@@ -423,12 +424,12 @@ export default function PostsPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-xl font-bold text-[#0F3D2E] dark:text-[#D4AF37]">Fellowship Posts</h1>
+                    <h1 className="text-xl font-bold text-[#7A1C1C] dark:text-[#D4AF37]">Fellowship Posts</h1>
                     <p className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0] mt-0.5">Updates from your community</p>
                 </div>
                 {canCreatePost && (
                     <Button onClick={() => setShowCreate(true)}
-                        className="rounded-xl bg-[#0F3D2E] dark:bg-[#D4AF37] text-white dark:text-[#0E0E0F] hover:bg-[#C9A227] dark:hover:bg-[#e0c040] hover:text-[#0F3D2E] transition-all flex items-center gap-2">
+                        className="rounded-xl bg-[#7A1C1C] dark:bg-[#D4AF37] text-white dark:text-[#0E0E0F] hover:bg-[#C9A227] dark:hover:bg-[#e0c040] hover:text-[#7A1C1C] transition-all flex items-center gap-2">
                         <Plus className="h-4 w-4" /> New Post
                     </Button>
                 )}
@@ -458,8 +459,8 @@ export default function PostsPage() {
 
             {!loading && posts.length === 0 && (
                 <div className="text-center py-16">
-                    <div className="w-16 h-16 rounded-full bg-[#0F3D2E]/10 dark:bg-[#D4AF37]/10 flex items-center justify-center mx-auto mb-4">
-                        <Heart className="h-7 w-7 text-[#0F3D2E]/40 dark:text-[#D4AF37]/40" />
+                    <div className="w-16 h-16 rounded-full bg-[#7A1C1C]/10 dark:bg-[#D4AF37]/10 flex items-center justify-center mx-auto mb-4">
+                        <Heart className="h-7 w-7 text-[#7A1C1C]/40 dark:text-[#D4AF37]/40" />
                     </div>
                     <p className="text-sm font-medium text-[#6b6b6b] dark:text-[#B0B0B0]">No posts yet</p>
                     <p className="text-xs text-[#6b6b6b]/60 dark:text-[#B0B0B0]/60 mt-1">Check back soon for fellowship updates</p>

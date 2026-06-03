@@ -1,14 +1,30 @@
 "use client";
 
 import { useState } from "react";
-import { useAgentDashboard, useAgentUsers, useAgentApprovals, useAgentData } from "./agent.hooks";
-import { User, ShieldCheck, CheckCircle, Ban, Search, Shield, Users, Activity, Settings, Bell, CircleCheck, CircleX } from "lucide-react";
+import { useAgentDashboard, useAgentUsers, useAgentApprovals, useAgentData, useMembershipReview, useSubClasses } from "./agent.hooks";
+import { User, ShieldCheck, CheckCircle, Ban, Search, Shield, Users, Activity, Settings, Bell, CircleCheck, CircleX, Layers } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { useAuthStore } from "@/store/authStore";
 
-type TabType = "dashboard" | "users" | "approvals" | "roles" | "logs";
+type TabType = "dashboard" | "users" | "approvals" | "roles" | "logs" | "subclasses";
 
 export function AgentControlView() {
-    const [activeTab, setActiveTab] = useState<TabType>("dashboard");
+    const { user } = useAuthStore();
+    const systemRole = user?.system_role || user?.role || 'USER';
+    const isServiceManager = systemRole === 'SERVICE_MANAGER';
+    const isMemberAffairs = user?.serviceClassName === 'አባላት ጉዳይ ክፍል';
+
+    // Default tab based on role
+    const [activeTab, setActiveTab] = useState<TabType>(isServiceManager ? "users" : "dashboard");
+
+    const tabs = [
+        { id: "dashboard", label: "Overview", icon: Activity, show: !isServiceManager },
+        { id: "users", label: isServiceManager ? "Department Roster" : "User Management", icon: Users, show: true },
+        { id: "subclasses", label: "Sub-Class Management", icon: Layers, show: true },
+        { id: "approvals", label: "Pending Approvals", icon: CheckCircle, show: !isServiceManager || isMemberAffairs },
+        { id: "roles", label: "Access Control", icon: ShieldCheck, show: !isServiceManager },
+        { id: "logs", label: "Activity Logs", icon: Settings, show: !isServiceManager },
+    ].filter(t => t.show);
 
     return (
         <div className="max-w-7xl mx-auto space-y-6">
@@ -19,18 +35,14 @@ export function AgentControlView() {
                     <div className="mb-6 px-3">
                         <h2 className="text-xl font-bold text-[#0F3D2E] dark:text-[#D4AF37] flex items-center gap-2">
                             <Shield className="h-6 w-6 text-[#C9A227] dark:text-[#D4AF37]" />
-                            Agent Control
+                            {isServiceManager ? "Class Manager" : "Agent Control"}
                         </h2>
-                        <p className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0] mt-1">Management & Administration</p>
+                        <p className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0] mt-1">
+                            {isServiceManager ? `${user?.serviceClassName || 'Department'} Management` : 'Management & Administration'}
+                        </p>
                     </div>
 
-                    {[
-                        { id: "dashboard", label: "Overview", icon: Activity },
-                        { id: "users", label: "User Management", icon: Users },
-                        { id: "approvals", label: "Pending Approvals", icon: CheckCircle },
-                        { id: "roles", label: "Access Control", icon: ShieldCheck },
-                        { id: "logs", label: "Activity Logs", icon: Settings },
-                    ].map((tab) => (
+                    {tabs.map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as TabType)}
@@ -48,11 +60,12 @@ export function AgentControlView() {
                 {/* Main Content Area */}
                 <div className="flex-1 bg-white dark:bg-[#1C1C1F] rounded-2xl border border-[#ddd8d0] dark:border-[#2a2a2d] shadow-sm min-h-[600px] overflow-hidden">
                     <div className="h-full">
-                        {activeTab === "dashboard" && <DashboardTab />}
+                        {activeTab === "dashboard" && !isServiceManager && <DashboardTab />}
                         {activeTab === "users" && <UsersTab />}
-                        {activeTab === "approvals" && <ApprovalsTab />}
-                        {activeTab === "roles" && <RolesTab />}
-                        {activeTab === "logs" && <LogsTab />}
+                        {activeTab === "subclasses" && <SubClassesTab />}
+                        {activeTab === "approvals" && (!isServiceManager || isMemberAffairs) && <ApprovalsTab />}
+                        {activeTab === "roles" && !isServiceManager && <RolesTab />}
+                        {activeTab === "logs" && !isServiceManager && <LogsTab />}
                     </div>
                 </div>
 
@@ -340,6 +353,86 @@ function LogsTab() {
                         </div>
                     </div>
                 ))}
+            </div>
+        </div>
+    );
+}
+
+function SubClassesTab() {
+    const { subClasses, loading, createSubClass, updateRoles } = useSubClasses();
+    const { users } = useAgentUsers(); // Need users to select sub-roles
+    const [newSubClassName, setNewSubClassName] = useState('');
+    const [creating, setCreating] = useState(false);
+
+    if (loading) return <div className="p-8 text-center text-[#6b6b6b] dark:text-[#B0B0B0] animate-pulse">Loading sub-classes...</div>;
+
+    const handleCreate = async () => {
+        if (!newSubClassName.trim()) return;
+        setCreating(true);
+        await createSubClass(newSubClassName);
+        setNewSubClassName('');
+        setCreating(false);
+    };
+
+    const handleRoleUpdate = async (subClassId: string, roleType: 'sub_chair_id' | 'sub_vice_id' | 'sub_secretary_id', userId: string) => {
+        await updateRoles(subClassId, { [roleType]: userId || null });
+    };
+
+    return (
+        <div className="p-6 space-y-6 animate-in fade-in duration-500">
+            <h3 className="text-lg font-bold text-[#0F3D2E] dark:text-[#D4AF37]">Sub-Class Management</h3>
+            <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0]">Manage sub-classes and assign sub-chair, sub-vice, and sub-secretary roles.</p>
+
+            <div className="bg-[#F8F5F0] dark:bg-[#0E0E0F] p-4 rounded-xl border border-[#ddd8d0] dark:border-[#2a2a2d] flex items-center gap-4">
+                <input 
+                    type="text" 
+                    placeholder="New sub-class name..." 
+                    className="flex-1 bg-white dark:bg-[#1C1C1F] border border-[#ddd8d0] dark:border-[#2a2a2d] rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-[#0F3D2E] dark:focus:border-[#D4AF37]"
+                    value={newSubClassName}
+                    onChange={(e) => setNewSubClassName(e.target.value)}
+                />
+                <button 
+                    onClick={handleCreate}
+                    disabled={creating || !newSubClassName.trim()}
+                    className="bg-[#0F3D2E] text-[#C9A227] dark:bg-[#1E4D3A] dark:text-[#D4AF37] px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
+                >
+                    Create Sub-Class
+                </button>
+            </div>
+
+            <div className="space-y-4 mt-6">
+                {subClasses.map(sc => (
+                    <div key={sc.id} className="bg-white dark:bg-[#1C1C1F] border border-[#ddd8d0] dark:border-[#2a2a2d] rounded-xl p-5 shadow-sm">
+                        <h4 className="text-md font-bold text-[#1a1a1a] dark:text-[#F5F5F5] mb-4">{sc.sub_class_name}</h4>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {[
+                                { key: 'sub_chair_id', label: 'Sub-Chair', user: sc.users_sub_classes_sub_chair_idTousers },
+                                { key: 'sub_vice_id', label: 'Sub-Vice', user: sc.users_sub_classes_sub_vice_idTousers },
+                                { key: 'sub_secretary_id', label: 'Sub-Secretary', user: sc.users_sub_classes_sub_secretary_idTousers },
+                            ].map(role => (
+                                <div key={role.key} className="space-y-1">
+                                    <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">{role.label}</label>
+                                    <select 
+                                        className="w-full bg-[#F8F5F0] dark:bg-[#0E0E0F] border border-[#ddd8d0] dark:border-[#2a2a2d] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0F3D2E] dark:focus:border-[#D4AF37]"
+                                        value={role.user?.id || ''}
+                                        onChange={(e) => handleRoleUpdate(sc.id, role.key as any, e.target.value)}
+                                    >
+                                        <option value="">-- Unassigned --</option>
+                                        {users.map(u => (
+                                            <option key={u.id} value={u.id}>{u.fullName}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+                {subClasses.length === 0 && (
+                    <div className="text-center py-8 text-[#6b6b6b] dark:text-[#B0B0B0]">
+                        No sub-classes found. Create one above.
+                    </div>
+                )}
             </div>
         </div>
     );

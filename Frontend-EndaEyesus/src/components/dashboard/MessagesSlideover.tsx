@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { MessageSquare, X, Send } from "lucide-react";
-import api from "@/lib/api";
+import apiClient from "@/api";
 import { Message, User } from "@/lib/types";
 import { useAuthStore } from "@/store/authStore";
 import {
@@ -41,7 +41,7 @@ export function MessagesSlideover() {
 
     const loadConversations = async () => {
         try {
-            const res = await api.get<{ data: any }>('/messages/conversations');
+            const res = await apiClient.instance.get<{ data: any }>('/messages/conversations');
             setConversations(res.data.data);
         } catch (e) { console.error(e); }
     };
@@ -49,7 +49,7 @@ export function MessagesSlideover() {
     const loadChatHistory = async (userId: string) => {
         setLoading(true);
         try {
-            const res = await api.get<{ data: Message[] }>(`/messages/${userId}`);
+            const res = await apiClient.instance.get<{ data: Message[] }>(`/messages/${userId}`);
             setMessages(res.data.data);
         } catch (e) { console.error(e); }
         finally { setLoading(false); }
@@ -72,7 +72,7 @@ export function MessagesSlideover() {
         setMessages(prev => [tempMsg, ...prev]);
 
         try {
-            const res = await api.post<{ data: Message }>(`/messages/${activeChat.id}`, { content: text });
+            const res = await apiClient.instance.post<{ data: Message }>(`/messages/${activeChat.id}`, { content: text });
             setMessages(prev => prev.map(m => m.id === tempMsg.id ? res.data.data : m));
             loadConversations(); // Update side list preview
         } catch (e) {
@@ -95,7 +95,7 @@ export function MessagesSlideover() {
             </SheetTrigger>
             <SheetContent className="w-[400px] sm:max-w-md p-0 flex flex-col border-l border-[#ddd8d0] dark:border-[#2a2a2d] bg-white dark:bg-[#1C1C1F]">
                 <SheetHeader className="p-4 border-b border-[#ddd8d0] dark:border-[#2a2a2d]">
-                    <SheetTitle className="text-[#0F3D2E] dark:text-[#D4AF37] flex items-center gap-2">
+                    <SheetTitle className="text-[#7A1C1C] dark:text-[#D4AF37] flex items-center gap-2">
                         {activeChat ? (
                             <button onClick={() => setActiveChat(null)} className="hover:bg-[#F8F5F0] dark:hover:bg-[#252529] p-1 rounded-md text-xs font-medium text-[#6b6b6b]">
                                 ← Back
@@ -118,7 +118,7 @@ export function MessagesSlideover() {
                                         className="flex items-center gap-3 p-3 rounded-xl hover:bg-[#F8F5F0] dark:hover:bg-[#252529] cursor-pointer transition-colors border border-transparent hover:border-[#ddd8d0] dark:hover:border-[#2a2a2d]"
                                     >
                                         <Avatar className="h-10 w-10">
-                                            <AvatarFallback className="bg-[#0F3D2E] text-white text-xs">
+                                            <AvatarFallback className="bg-[#7A1C1C] text-white text-xs">
                                                 {conv.user.fullName.slice(0, 2).toUpperCase()}
                                             </AvatarFallback>
                                         </Avatar>
@@ -126,7 +126,7 @@ export function MessagesSlideover() {
                                             <div className="flex justify-between items-baseline">
                                                 <p className="text-sm font-semibold text-[#1a1a1a] dark:text-[#F5F5F5] truncate">{conv.user.fullName}</p>
                                             </div>
-                                            <p className={`text-xs truncate ${!conv.latest.isRead && conv.latest.receiverID === currentUser?.id ? 'text-[#0F3D2E] dark:text-[#D4AF37] font-semibold' : 'text-[#6b6b6b] dark:text-[#B0B0B0]'}`}>
+                                            <p className={`text-xs truncate ${!conv.latest.isRead && conv.latest.receiverID === currentUser?.id ? 'text-[#7A1C1C] dark:text-[#D4AF37] font-semibold' : 'text-[#6b6b6b] dark:text-[#B0B0B0]'}`}>
                                                 {conv.latest.senderID === currentUser?.id ? 'You: ' : ''}{conv.latest.content}
                                             </p>
                                         </div>
@@ -138,7 +138,7 @@ export function MessagesSlideover() {
                         // Chat Window
                         <div className="flex flex-col h-full">
                             <div className="p-3 bg-[#F8F5F0] dark:bg-[#252529] border-b border-[#ddd8d0] dark:border-[#2a2a2d]">
-                                <p className="font-semibold text-sm text-[#0F3D2E] dark:text-[#D4AF37]">{activeChat.name}</p>
+                                <p className="font-semibold text-sm text-[#7A1C1C] dark:text-[#D4AF37]">{activeChat.name}</p>
                                 <p className="text-[10px] text-[#6b6b6b] uppercase tracking-wider">{activeChat.role.replace('_', ' ')}</p>
                             </div>
 
@@ -147,7 +147,7 @@ export function MessagesSlideover() {
                                     const isMe = msg.senderID === currentUser?.id;
                                     return (
                                         <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                                            <div className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${isMe ? 'bg-[#0F3D2E] text-white rounded-br-none' : 'bg-[#F8F5F0] dark:bg-[#2a2a2d] text-[#1a1a1a] dark:text-[#F5F5F5] rounded-bl-none border border-[#ddd8d0] dark:border-[#3a3a3d]'}`}>
+                                            <div className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${isMe ? 'bg-[#7A1C1C] text-white rounded-br-none' : 'bg-[#F8F5F0] dark:bg-[#2a2a2d] text-[#1a1a1a] dark:text-[#F5F5F5] rounded-bl-none border border-[#ddd8d0] dark:border-[#3a3a3d]'}`}>
                                                 {msg.content}
                                             </div>
                                         </div>
@@ -168,7 +168,7 @@ export function MessagesSlideover() {
                                     <button
                                         onClick={sendMessage}
                                         disabled={!inputText.trim()}
-                                        className="p-2 rounded-full bg-[#0F3D2E] text-white hover:bg-[#C9A227] transition-colors disabled:opacity-50"
+                                        className="p-2 rounded-full bg-[#7A1C1C] text-white hover:bg-[#C9A227] transition-colors disabled:opacity-50"
                                     >
                                         <Send className="h-4 w-4" />
                                     </button>

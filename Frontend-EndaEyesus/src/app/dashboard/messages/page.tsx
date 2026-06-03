@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useAuthStore } from "@/store/authStore";
-import api from "@/lib/api";
+import apiClient from "@/api";
 import { Search, Send, MessageSquare, ArrowLeft } from "lucide-react";
 
 interface UserInfo {
@@ -90,7 +90,7 @@ export default function MessagesPage() {
     const loadConversations = async () => {
         setLoadingConvos(true);
         try {
-            const res = await api.get<{ data: Conversation[] }>("/messages/conversations");
+            const res = await apiClient.instance.get<{ data: Conversation[] }>("/messages/conversations");
             setConversations(res.data.data);
         } catch (e) { console.error("Failed to load conversations"); }
         finally { setLoadingConvos(false); }
@@ -100,7 +100,7 @@ export default function MessagesPage() {
         setActiveUser(targetUser);
         setLoadingMessages(true);
         try {
-            const res = await api.get<{ data: Message[] }>(`/messages/${targetUser.id}`);
+            const res = await apiClient.instance.get<{ data: Message[] }>(`/messages/${targetUser.id}`);
             setMessages(res.data.data);
 
             // Re-fetch conversations to clear unread counts easily
@@ -118,7 +118,7 @@ export default function MessagesPage() {
         }
         setIsSearching(true);
         try {
-            const res = await api.get<{ data: UserInfo[] }>(`/messages/search-users?q=${encodeURIComponent(query)}`);
+            const res = await apiClient.instance.get<{ data: UserInfo[] }>(`/messages/search-users?q=${encodeURIComponent(query)}`);
             setSearchResults(res.data.data);
         } catch (e) { console.error("Search failed"); }
         finally { setIsSearching(false); }
@@ -130,7 +130,7 @@ export default function MessagesPage() {
 
         setIsSending(true);
         try {
-            const res = await api.post<{ data: Message }>(`/messages/${activeUser.id}`, { content: messageInput });
+            const res = await apiClient.instance.post<{ data: Message }>(`/messages/${activeUser.id}`, { content: messageInput });
 
             // PESSIMISTIC UI: Only update state when API is successful!
             setMessages(prev => [...prev, res.data.data]);
@@ -151,7 +151,7 @@ export default function MessagesPage() {
             <div className={`w-full md:w-80 border-r border-[#f0ece4] dark:border-[#2a2a2d] flex flex-col ${activeUser ? 'hidden md:flex' : 'flex'}`}>
                 {/* Header & Search */}
                 <div className="p-4 border-b border-[#f0ece4] dark:border-[#2a2a2d]">
-                    <h2 className="text-xl font-bold text-[#0F3D2E] dark:text-[#D4AF37] mb-4">Messages</h2>
+                    <h2 className="text-xl font-bold text-[#7A1C1C] dark:text-[#D4AF37] mb-4">Messages</h2>
                     <div className="relative">
                         <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#6b6b6b] dark:text-[#B0B0B0]" />
                         <input
@@ -207,7 +207,7 @@ export default function MessagesPage() {
                                         <button
                                             key={c.user.id}
                                             onClick={() => loadChat(c.user)}
-                                            className={`w-full flex items-center gap-3 p-3 rounded-xl transition-colors text-left ${isActive ? 'bg-[#0F3D2E]/5 dark:bg-[#D4AF37]/10' : 'hover:bg-[#F8F5F0] dark:hover:bg-[#252529]'}`}
+                                            className={`w-full flex items-center gap-3 p-3 rounded-xl transition-colors text-left ${isActive ? 'bg-[#7A1C1C]/5 dark:bg-[#D4AF37]/10' : 'hover:bg-[#F8F5F0] dark:hover:bg-[#252529]'}`}
                                         >
                                             <UserAvatar user={c.user} />
                                             <div className="flex-1 min-w-0">
@@ -256,7 +256,7 @@ export default function MessagesPage() {
                             </button>
                             <UserAvatar user={activeUser} size="sm" />
                             <div className="flex-1">
-                                <h3 className="text-sm font-bold text-[#0F3D2E] dark:text-[#D4AF37]">{activeUser.fullName}</h3>
+                                <h3 className="text-sm font-bold text-[#7A1C1C] dark:text-[#D4AF37]">{activeUser.fullName}</h3>
                                 <p className="text-[10px] text-[#6b6b6b] dark:text-[#B0B0B0]">@{activeUser.username}</p>
                             </div>
                         </div>
@@ -284,7 +284,7 @@ export default function MessagesPage() {
                                                 </span>
                                             )}
                                             <div className={`max-w-[75%] px-4 py-2 text-sm rounded-2xl ${isMe
-                                                    ? 'bg-[#0F3D2E] text-white dark:bg-[#D4AF37] dark:text-[#0E0E0F] rounded-br-[4px]'
+                                                    ? 'bg-[#7A1C1C] text-white dark:bg-[#D4AF37] dark:text-[#0E0E0F] rounded-br-[4px]'
                                                     : 'bg-white text-[#1a1a1a] dark:bg-[#1C1C1F] dark:text-[#F5F5F5] border border-[#f0ece4] dark:border-[#2a2a2d] shadow-sm rounded-bl-[4px]'
                                                 }`}>
                                                 <p className="whitespace-pre-wrap break-words">{m.content}</p>
@@ -310,7 +310,7 @@ export default function MessagesPage() {
                                 <button
                                     type="submit"
                                     disabled={!messageInput.trim() || isSending}
-                                    className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-[#0F3D2E] dark:bg-[#D4AF37] text-white dark:text-[#0E0E0F] transition-all hover:bg-[#C9A227] dark:hover:bg-[#e0c040] disabled:opacity-50"
+                                    className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-[#7A1C1C] dark:bg-[#D4AF37] text-white dark:text-[#0E0E0F] transition-all hover:bg-[#C9A227] dark:hover:bg-[#e0c040] disabled:opacity-50"
                                 >
                                     <Send className="w-4 h-4 ml-0.5" />
                                 </button>
@@ -322,7 +322,7 @@ export default function MessagesPage() {
                         <div className="w-16 h-16 bg-white dark:bg-[#1C1C1F] rounded-2xl border border-[#f0ece4] dark:border-[#2a2a2d] shadow-sm flex items-center justify-center mb-4">
                             <MessageSquare className="w-8 h-8 text-[#C9A227]" />
                         </div>
-                        <h3 className="text-xl font-bold text-[#0F3D2E] dark:text-[#D4AF37] mb-2">Your Messages</h3>
+                        <h3 className="text-xl font-bold text-[#7A1C1C] dark:text-[#D4AF37] mb-2">Your Messages</h3>
                         <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0] max-w-sm">
                             Select a conversation from the sidebar or search for someone to start messaging.
                         </p>

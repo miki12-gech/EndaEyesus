@@ -187,7 +187,7 @@ export default function HistoryView({ albums, thenAndNow }: HistoryViewProps) {
 
                 {/* Then & Now Section */}
                 <section className="py-20 border-t border-[#D4AF37]/20 relative">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-[#1E4D3A]/5 rounded-full blur-3xl -z-10"></div>
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-[#9B2323]/5 rounded-full blur-3xl -z-10"></div>
 
                     <div className="text-center mb-16">
                         <h2 className="text-4xl font-serif text-[#D4AF37] font-bold mb-4">Then & Now</h2>

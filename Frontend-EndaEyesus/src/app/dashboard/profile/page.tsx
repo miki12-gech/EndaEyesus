@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useAuthStore } from "@/store/authStore";
 import { useRef, useState } from "react";
-import api from "@/lib/api";
+import apiClient from "@/api";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") || "http://localhost:8080";
 
@@ -33,7 +33,7 @@ export default function ProfilePage() {
         try {
             const fd = new FormData();
             fd.append("image", file);
-            const res = await api.post<{ data: { imageURL: string } }>("/upload/image", fd, {
+            const res = await apiClient.instance.post<{ data: { imageURL: string } }>("/upload/image", fd, {
                 headers: { "Content-Type": "multipart/form-data" },
             });
             updateUser({ profileImage: res.data.data.imageURL });
@@ -45,16 +45,25 @@ export default function ProfilePage() {
         }
     };
 
-    const roleBadge = user?.role === "SUPER_ADMIN"
-        ? { label: "Super Admin", color: "#C9A227" }
-        : user?.role === "CLASS_LEADER"
-            ? { label: "Class Leader", color: "#0F3D2E" }
-            : { label: "Member", color: "#0F3D2E" };
+    const getRoleBadge = (role: string) => {
+        switch (role) {
+            case "SECRETARIAT_CHAIRMAN": return { label: "Chairman", color: "#C9A227" };
+            case "SECRETARIAT_VICE":     return { label: "Vice Chairman", color: "#C9A227" };
+            case "SECRETARIAT_SECRETARY": return { label: "Secretary", color: "#C9A227" };
+            case "SERVICE_MANAGER":     return { label: "Service Manager", color: "#C9A227" };
+            case "SUPER_ADMIN":         return { label: "Super Admin", color: "#C9A227" };
+            case "TEACHER":             return { label: "Teacher", color: "#7A1C1C" };
+            case "CLASS_LEADER":        return { label: "Class Leader", color: "#7A1C1C" };
+            case "MEMBER":              return { label: "Member", color: "#7A1C1C" };
+            default:                    return { label: "Registered User", color: "#6b6b6b" };
+        }
+    };
+    const roleBadge = getRoleBadge(user?.system_role || user?.role || "USER");
 
     return (
         <div className="max-w-3xl mx-auto space-y-5">
             {/* Back button */}
-            <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-sm text-[#6b6b6b] dark:text-[#B0B0B0] hover:text-[#0F3D2E] dark:hover:text-[#D4AF37] font-medium transition-colors group mb-1">
+            <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-sm text-[#6b6b6b] dark:text-[#B0B0B0] hover:text-[#7A1C1C] dark:hover:text-[#D4AF37] font-medium transition-colors group mb-1">
                 <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
                 Back to Dashboard
             </Link>
@@ -62,7 +71,7 @@ export default function ProfilePage() {
             {/* Profile Card */}
             <div className="bg-white dark:bg-[#1C1C1F] rounded-2xl border border-[#ddd8d0] dark:border-[#2a2a2d] shadow-sm overflow-hidden" style={{ borderTop: "4px solid #C9A227" }}>
                 {/* Cover banner */}
-                <div className="h-24 bg-[#0F3D2E] dark:bg-[#151516] relative">
+                <div className="h-24 bg-[#7A1C1C] dark:bg-[#151516] relative">
                     <div className="absolute inset-0 opacity-10">
                         <svg className="w-full h-full" viewBox="0 0 400 96" fill="none" aria-hidden="true">
                             <rect x="190" y="4" width="20" height="88" rx="4" fill="#C9A227" />
@@ -82,7 +91,7 @@ export default function ProfilePage() {
                                         alt={user.fullName}
                                     />
                                 )}
-                                <AvatarFallback className="text-2xl font-bold bg-[#0F3D2E] dark:bg-[#1E4D3A] text-[#C9A227] dark:text-[#D4AF37]">
+                                <AvatarFallback className="text-2xl font-bold bg-[#7A1C1C] dark:bg-[#9B2323] text-[#C9A227] dark:text-[#D4AF37]">
                                     {initials}
                                 </AvatarFallback>
                             </Avatar>
@@ -102,14 +111,14 @@ export default function ProfilePage() {
                                 className="hidden" onChange={handlePhotoChange} aria-label="Upload profile photo" />
                         </div>
                         <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}
-                            className="border-[#0F3D2E] dark:border-[#D4AF37] text-[#0F3D2E] dark:text-[#D4AF37] hover:bg-[#0F3D2E] dark:hover:bg-[#D4AF37] hover:text-white dark:hover:text-[#0E0E0F] rounded-xl text-xs flex items-center gap-1.5 transition-all">
+                            className="border-[#7A1C1C] dark:border-[#D4AF37] text-[#7A1C1C] dark:text-[#D4AF37] hover:bg-[#7A1C1C] dark:hover:bg-[#D4AF37] hover:text-white dark:hover:text-[#0E0E0F] rounded-xl text-xs flex items-center gap-1.5 transition-all">
                             <Edit className="h-3.5 w-3.5" /> {uploading ? "Uploading..." : "Change Photo"}
                         </Button>
                     </div>
 
                     {/* Name & identity */}
                     <div className="mb-4">
-                        <h1 className="text-xl font-bold text-[#0F3D2E] dark:text-[#D4AF37]">{user?.fullName || "Guest Member"}</h1>
+                        <h1 className="text-xl font-bold text-[#7A1C1C] dark:text-[#D4AF37]">{user?.fullName || "Guest Member"}</h1>
                         <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0]">@{user?.username || "username"}</p>
                         <div className="flex flex-wrap gap-2 mt-2">
                             <Badge style={{ backgroundColor: roleBadge.color }} className="text-white text-[10px] hover:opacity-90 border-0">
@@ -150,8 +159,8 @@ export default function ProfilePage() {
                             .filter((item) => item.value)
                             .map(({ icon: Icon, label, value }) => (
                                 <div key={label} className="flex items-start gap-3">
-                                    <div className="w-8 h-8 rounded-lg bg-[#0F3D2E]/10 dark:bg-[#1E4D3A]/30 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <Icon className="h-4 w-4 text-[#0F3D2E] dark:text-[#D4AF37]" />
+                                    <div className="w-8 h-8 rounded-lg bg-[#7A1C1C]/10 dark:bg-[#9B2323]/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <Icon className="h-4 w-4 text-[#7A1C1C] dark:text-[#D4AF37]" />
                                     </div>
                                     <div className="min-w-0">
                                         <p className="text-[10px] text-[#6b6b6b] dark:text-[#B0B0B0] font-medium uppercase tracking-wide">{label}</p>
@@ -165,7 +174,7 @@ export default function ProfilePage() {
 
             {/* Account info */}
             <div className="bg-white dark:bg-[#1C1C1F] rounded-xl p-5 border border-[#ddd8d0] dark:border-[#2a2a2d] shadow-sm" style={{ borderLeft: "3px solid #C9A227" }}>
-                <h2 className="text-sm font-semibold text-[#0F3D2E] dark:text-[#D4AF37] mb-3">Account</h2>
+                <h2 className="text-sm font-semibold text-[#7A1C1C] dark:text-[#D4AF37] mb-3">Account</h2>
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <p className="text-[10px] text-[#6b6b6b] dark:text-[#B0B0B0] uppercase tracking-wide">Status</p>
@@ -173,9 +182,23 @@ export default function ProfilePage() {
                     </div>
                     <div>
                         <p className="text-[10px] text-[#6b6b6b] dark:text-[#B0B0B0] uppercase tracking-wide">Role</p>
-                        <p className="text-xs font-semibold text-[#1a1a1a] dark:text-[#F5F5F5] mt-0.5">{user?.role || "—"}</p>
+                        <p className="text-xs font-semibold text-[#1a1a1a] dark:text-[#F5F5F5] mt-0.5">{roleBadge.label}</p>
                     </div>
                 </div>
+            </div>
+
+            {/* Logout */}
+            <div className="flex justify-center pt-4">
+                <Button 
+                    variant="destructive" 
+                    className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white flex items-center gap-2"
+                    onClick={() => {
+                        useAuthStore.getState().logout();
+                        window.location.href = "/login";
+                    }}
+                >
+                    Log Out
+                </Button>
             </div>
         </div>
     );

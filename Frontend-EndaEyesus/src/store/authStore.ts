@@ -7,13 +7,13 @@ export interface AuthUser {
     username: string;
     fullName: string;
     email: string;
-    sex: Sex;
-    department: string;
-    serviceClassID: string;
-    classLeaderOf: string | null;
-    academicYear: AcademicYear;
+    sex?: Sex;
+    department?: string;
+    serviceClassID?: string | null;
+    classLeaderOf?: string | null;
+    academicYear?: AcademicYear | null;
     role: Role;
-    status: Status;
+    status?: Status;
     profileImage?: string | null;
     bio?: string | null;
     birthDate?: string | null;
@@ -21,6 +21,10 @@ export interface AuthUser {
     phoneNumber?: string;
     // UI convenience
     serviceClassName?: string;
+    // New schema fields
+    full_name_three_parts?: string;
+    system_role?: string;
+    service_class_id?: string | null;
 }
 
 interface AuthStore {
