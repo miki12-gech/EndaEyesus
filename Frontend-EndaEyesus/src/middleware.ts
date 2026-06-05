@@ -29,7 +29,7 @@ export function middleware(req: NextRequest) {
             return NextResponse.redirect(new URL('/login', req.url));
         }
         // Protect admin panel from non-administrators
-        const isAdmin = ['SECRETARIAT_CHAIRMAN', 'SECRETARIAT_VICE', 'SECRETARIAT_SECRETARY', 'SUPER_ADMIN'].includes(role || '');
+        const isAdmin = ['SECRETARIAT_CHAIRMAN', 'SECRETARIAT_VICE', 'SECRETARIAT_SECRETARY', 'SUPER_ADMIN', 'SERVICE_MANAGER'].includes(role || '');
         if (pathname.startsWith('/dashboard/agent') && !isAdmin) {
             return NextResponse.redirect(new URL('/dashboard', req.url));
         }

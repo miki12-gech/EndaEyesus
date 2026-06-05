@@ -10,7 +10,7 @@ import { NotificationDropdown } from "./NotificationDropdown";
 import { MessagesSlideover } from "./MessagesSlideover";
 import { GraduationCap, BookOpen, User, Shield } from "lucide-react";
 
-const ADMIN_ROLES = ["SECRETARIAT_CHAIRMAN", "SECRETARIAT_VICE", "SECRETARIAT_SECRETARY", "SUPER_ADMIN"];
+const ADMIN_ROLES = ["SECRETARIAT_CHAIRMAN", "SECRETARIAT_VICE", "SECRETARIAT_SECRETARY", "SUPER_ADMIN", "SERVICE_MANAGER"];
 const MEMBER_ROLES = ["MEMBER", "TEACHER", "SERVICE_MANAGER", "SECRETARIAT_SECRETARY", "SECRETARIAT_VICE", "SECRETARIAT_CHAIRMAN", "SUPER_ADMIN", "CLASS_LEADER"];
 
 const PAGE_TITLES: Record<string, string> = {
