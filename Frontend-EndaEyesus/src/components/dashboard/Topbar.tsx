@@ -8,7 +8,7 @@ import { useAuthStore } from "@/store/authStore";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { NotificationDropdown } from "./NotificationDropdown";
 import { MessagesSlideover } from "./MessagesSlideover";
-import { GraduationCap, BookOpen, User, Shield } from "lucide-react";
+import { GraduationCap, BookOpen, User, Shield, Users, FileText, Activity } from "lucide-react";
 
 const ADMIN_ROLES = ["SECRETARIAT_CHAIRMAN", "SECRETARIAT_VICE", "SECRETARIAT_SECRETARY", "SUPER_ADMIN", "SERVICE_MANAGER"];
 const MEMBER_ROLES = ["MEMBER", "TEACHER", "SERVICE_MANAGER", "SECRETARIAT_SECRETARY", "SECRETARIAT_VICE", "SECRETARIAT_CHAIRMAN", "SUPER_ADMIN", "CLASS_LEADER"];
@@ -21,6 +21,9 @@ const PAGE_TITLES: Record<string, string> = {
     "/dashboard/announcements": "Announcements",
     "/dashboard/profile": "Profile",
     "/dashboard/agent": "Admin Panel",
+    "/dashboard/agent/roles": "Role Management",
+    "/dashboard/agent/members": "Member Census",
+    "/dashboard/agent/audit-logs": "Audit Logs",
 };
 
 interface TopbarProps {
@@ -47,6 +50,9 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
         { href: "/dashboard/library", label: "Library", icon: BookOpen, show: true },
         { href: "/dashboard/about", label: "About", icon: User, show: true },
         { href: "/dashboard/agent", label: "Admin", icon: Shield, show: isAdmin },
+        { href: "/dashboard/agent/roles", label: "Roles", icon: Shield, show: role === 'SECRETARIAT_CHAIRMAN' },
+        { href: "/dashboard/agent/members", label: "Members", icon: Users, show: role === 'SECRETARIAT_CHAIRMAN' },
+        { href: "/dashboard/agent/audit-logs", label: "Audit Logs", icon: Activity, show: role === 'SECRETARIAT_CHAIRMAN' },
     ].filter((item) => item.show);
 
     return (

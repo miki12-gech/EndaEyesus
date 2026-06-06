@@ -1,10 +1,12 @@
 "use client";
 
-import { Bell, Calendar, Plus, ArrowLeft } from "lucide-react";
+import { Bell, Calendar, Plus, ArrowLeft, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import apiClient from "@/api";
 import { useAuthStore } from "@/store/authStore";
+import chairmanApiService from "@/lib/chairmanApi";
+import { RichTextEditor } from "@/components/ui/RichTextEditor";
 
 const TARGET_COLORS: Record<string, string> = {
     ALL: "#7A1C1C",
@@ -22,16 +24,25 @@ export default function AnnouncementsPage() {
     const { user } = useAuthStore();
     const userRole = user?.system_role || user?.role || "USER";
     const canCreateAnn = ["SECRETARIAT_CHAIRMAN", "SECRETARIAT_VICE", "SECRETARIAT_SECRETARY", "SERVICE_MANAGER", "SUPER_ADMIN"].includes(userRole);
+    const isChairman = userRole === "SECRETARIAT_CHAIRMAN" || userRole === "SUPER_ADMIN";
     const [announcements, setAnnouncements] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Create announcement form (SUPER_ADMIN only)
+    // Create announcement form
     const [showForm, setShowForm] = useState(false);
     const [formTitle, setFormTitle] = useState("");
     const [formContent, setFormContent] = useState("");
     const [formTarget, setFormTarget] = useState<"ALL" | "CLASS" | "LEADERS">("ALL");
     const [submitting, setSubmitting] = useState(false);
     const [formError, setFormError] = useState("");
+
+    // Edit announcement form
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editTitle, setEditTitle] = useState("");
+    const [editContent, setEditContent] = useState("");
+    const [editTarget, setEditTarget] = useState<"ALL" | "CLASS" | "LEADERS">("ALL");
+    const [editSubmitting, setEditSubmitting] = useState(false);
+    const [editError, setEditError] = useState("");
 
     const fetchAnnouncements = () => {
         apiClient.announcements.listAnnouncements()
@@ -57,11 +68,10 @@ export default function AnnouncementsPage() {
             const payload: any = {
                 title: formTitle,
                 content: formContent,
-                is_public: formTarget === "ALL",
+                targetType: formTarget,
+                targetClassID: formTarget === "CLASS" ? (user?.classLeaderOf || user?.serviceClassID) : null,
+                isPinned: false,
             };
-            if (formTarget === "CLASS") {
-                payload.target_class_id = user?.classLeaderOf || user?.serviceClassID;
-            }
             await apiClient.announcements.createAnnouncement(payload);
             fetchAnnouncements();
             setShowForm(false);
@@ -71,6 +81,47 @@ export default function AnnouncementsPage() {
         } finally {
             setSubmitting(false);
         }
+    };
+
+    const handleEdit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editTitle.trim() || !editContent.trim()) { setEditError("Title and content are required."); return; }
+        setEditSubmitting(true);
+        setEditError("");
+        try {
+            const payload: any = {
+                title: editTitle,
+                content: editContent,
+                targetType: editTarget,
+                targetClassID: editTarget === "CLASS" ? (user?.classLeaderOf || user?.serviceClassID) : null,
+            };
+            await chairmanApiService.updateAnnouncement(editingId!, payload);
+            fetchAnnouncements();
+            setEditingId(null);
+            setEditTitle(""); setEditContent(""); setEditTarget("ALL");
+        } catch (err: any) {
+            setEditError(err.response?.data?.message || "Failed to update announcement.");
+        } finally {
+            setEditSubmitting(false);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm("Are you sure you want to delete this announcement?")) return;
+        try {
+            await chairmanApiService.deleteAnnouncement(id);
+            fetchAnnouncements();
+        } catch (err: any) {
+            alert(err.response?.data?.message || "Failed to delete announcement.");
+        }
+    };
+
+    const startEdit = (announcement: any) => {
+        setEditingId(announcement.id);
+        setEditTitle(announcement.title);
+        setEditContent(announcement.content);
+        setEditTarget(announcement.is_public ? "ALL" : "CLASS");
+        setEditError("");
     };
 
     if (user?.status === "PENDING") {
@@ -138,8 +189,7 @@ export default function AnnouncementsPage() {
                     </div>
                     <input value={formTitle} onChange={(e) => setFormTitle(e.target.value)} placeholder="Title"
                         className="w-full h-10 rounded-xl border border-[#ddd8d0] dark:border-[#2a2a2d] bg-[#F8F5F0] dark:bg-[#252529] text-sm px-3 dark:text-[#F5F5F5]" />
-                    <textarea value={formContent} onChange={(e) => setFormContent(e.target.value)} placeholder="Content..." rows={3}
-                        className="w-full rounded-xl border border-[#ddd8d0] dark:border-[#2a2a2d] bg-[#F8F5F0] dark:bg-[#252529] text-sm px-3 py-2 dark:text-[#F5F5F5] resize-none" />
+                    <RichTextEditor content={formContent} onChange={setFormContent} placeholder="Content..." />
                     {formError && <p className="text-xs text-red-500">⚠ {formError}</p>}
                     <div className="flex gap-2">
                         <button type="button" onClick={() => setShowForm(false)}
@@ -184,6 +234,7 @@ export default function AnnouncementsPage() {
             <div className="space-y-4">
                 {announcements.map((a) => {
                     const color = TARGET_COLORS[a.is_public ? "ALL" : "CLASS"] || "#7A1C1C";
+                    const isEditing = editingId === a.id;
                     return (
                         <article key={a.id}
                             className="bg-white dark:bg-[#1C1C1F] rounded-xl p-5 border border-[#ddd8d0] dark:border-[#2a2a2d] shadow-sm hover:shadow-md transition-shadow"
@@ -194,41 +245,89 @@ export default function AnnouncementsPage() {
                                     <Calendar className="h-5 w-5" style={{ color }} />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: color }}>
-                                            {a.is_public ? "PUBLIC" : "CLASS"}
-                                        </span>
-                                        <span className="text-[10px] text-[#6b6b6b] dark:text-[#B0B0B0]">{formatDate(a.published_at || new Date().toISOString())}</span>
-                                        {a.author && (
-                                            <span className="text-[10px] text-[#6b6b6b] dark:text-[#B0B0B0]">· by {a.author.full_name_three_parts}</span>
-                                        )}
-                                    </div>
-                                    <h2 className="text-sm font-bold text-[#7A1C1C] dark:text-[#F5F5F5] leading-snug mb-2">{a.title}</h2>
-                                    <p className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0] leading-relaxed whitespace-pre-wrap">{a.content}</p>
-                                    
-                                    {/* Interactions */}
-                                    <div className="mt-4 flex items-center gap-4 border-t border-[#ddd8d0] dark:border-[#2a2a2d] pt-3">
-                                        <button 
-                                            onClick={() => apiClient.announcements.reactToAnnouncement(a.id, { type: "LIKE" })}
-                                            className="flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] dark:text-[#B0B0B0] hover:text-[#7A1C1C] dark:hover:text-[#D4AF37] transition-colors">
-                                            <span className="text-sm">👍</span> 
-                                            <span>{a.reaction_counts?.likes || 0}</span>
-                                        </button>
-                                        <button 
-                                            onClick={() => apiClient.announcements.reactToAnnouncement(a.id, { type: "STAR" })}
-                                            className="flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] dark:text-[#B0B0B0] hover:text-[#C9A227] dark:hover:text-[#D4AF37] transition-colors">
-                                            <span className="text-sm">⭐</span> 
-                                            <span>{a.reaction_counts?.stars || 0}</span>
-                                        </button>
-                                        <button 
-                                            onClick={() => {
-                                                const comment = window.prompt("Enter your comment:");
-                                                if (comment) apiClient.announcements.commentOnAnnouncement(a.id, { content: comment });
-                                            }}
-                                            className="flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] dark:text-[#B0B0B0] hover:text-[#7A1C1C] dark:hover:text-[#D4AF37] transition-colors ml-auto">
-                                            <span>💬 Comment</span>
-                                        </button>
-                                    </div>
+                                    {/* Chairman Edit/Delete Buttons */}
+                                    {isChairman && !isEditing && (
+                                        <div className="flex justify-end gap-2 mb-2">
+                                            <button
+                                                onClick={() => startEdit(a)}
+                                                className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-[#F8F5F0] dark:bg-[#252529] text-[#7A1C1C] dark:text-[#D4AF37] hover:bg-[#7A1C1C]/10 dark:hover:bg-[#D4AF37]/10 transition-colors"
+                                            >
+                                                <Edit className="h-3 w-3" /> Edit
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(a.id)}
+                                                className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-[#7A1C1C]/10 dark:bg-[#8B2C2C]/10 text-[#7A1C1C] dark:text-[#8B2C2C] hover:bg-[#7A1C1C]/20 dark:hover:bg-[#8B2C2C]/20 transition-colors"
+                                            >
+                                                <Trash2 className="h-3 w-3" /> Delete
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* Edit Form */}
+                                    {isEditing && (
+                                        <form onSubmit={handleEdit} className="mb-4 space-y-3">
+                                            <div className="flex gap-2">
+                                                {(["ALL", "CLASS", "LEADERS"] as const).map((t) => (
+                                                    <button key={t} type="button" onClick={() => setEditTarget(t)}
+                                                        className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase border transition-all ${editTarget === t ? "bg-[#7A1C1C] dark:bg-[#D4AF37] text-white dark:text-[#0E0E0F] border-transparent" : "border-[#ddd8d0] dark:border-[#2a2a2d] text-[#6b6b6b] dark:text-[#B0B0B0]"}`}>
+                                                        {t}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} placeholder="Title"
+                                                className="w-full h-10 rounded-xl border border-[#ddd8d0] dark:border-[#2a2a2d] bg-[#F8F5F0] dark:bg-[#252529] text-sm px-3 dark:text-[#F5F5F5]" />
+                                            <RichTextEditor content={editContent} onChange={setEditContent} placeholder="Content..." />
+                                            {editError && <p className="text-xs text-red-500">⚠ {editError}</p>}
+                                            <div className="flex gap-2">
+                                                <button type="button" onClick={() => setEditingId(null)}
+                                                    className="flex-1 py-2 rounded-xl border border-[#ddd8d0] dark:border-[#2a2a2d] text-sm text-[#6b6b6b] dark:text-[#B0B0B0] hover:bg-[#F8F5F0] dark:hover:bg-[#252529] transition-colors">Cancel</button>
+                                                <button type="submit" disabled={editSubmitting}
+                                                    className="flex-[2] py-2 rounded-xl bg-[#7A1C1C] dark:bg-[#D4AF37] text-white dark:text-[#0E0E0F] text-sm font-semibold hover:bg-[#C9A227] dark:hover:bg-[#e0c040] hover:text-[#7A1C1C] transition-all disabled:opacity-60">
+                                                    {editSubmitting ? "Updating..." : "Update Announcement"}
+                                                </button>
+                                            </div>
+                                        </form>
+                                    )}
+
+                                    {!isEditing && (
+                                        <>
+                                            <div className="flex flex-wrap items-center gap-2 mb-2">
+                                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: color }}>
+                                                    {a.is_public ? "PUBLIC" : "CLASS"}
+                                                </span>
+                                                <span className="text-[10px] text-[#6b6b6b] dark:text-[#B0B0B0]">{formatDate(a.published_at || new Date().toISOString())}</span>
+                                                {a.author && (
+                                                    <span className="text-[10px] text-[#6b6b6b] dark:text-[#B0B0B0]">· by {a.author.full_name_three_parts}</span>
+                                                )}
+                                            </div>
+                                            <h2 className="text-sm font-bold text-[#7A1C1C] dark:text-[#F5F5F5] leading-snug mb-2">{a.title}</h2>
+                                            <p className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0] leading-relaxed whitespace-pre-wrap">{a.content}</p>
+                                            
+                                            {/* Interactions */}
+                                            <div className="mt-4 flex items-center gap-4 border-t border-[#ddd8d0] dark:border-[#2a2a2d] pt-3">
+                                                <button 
+                                                    onClick={() => apiClient.announcements.reactToAnnouncement(a.id, { type: "LIKE" })}
+                                                    className="flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] dark:text-[#B0B0B0] hover:text-[#7A1C1C] dark:hover:text-[#D4AF37] transition-colors">
+                                                    <span className="text-sm">👍</span> 
+                                                    <span>{a.reaction_counts?.likes || 0}</span>
+                                                </button>
+                                                <button 
+                                                    onClick={() => apiClient.announcements.reactToAnnouncement(a.id, { type: "STAR" })}
+                                                    className="flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] dark:text-[#B0B0B0] hover:text-[#C9A227] dark:hover:text-[#D4AF37] transition-colors">
+                                                    <span className="text-sm">⭐</span> 
+                                                    <span>{a.reaction_counts?.stars || 0}</span>
+                                                </button>
+                                                <button 
+                                                    onClick={() => {
+                                                        const comment = window.prompt("Enter your comment:");
+                                                        if (comment) apiClient.announcements.commentOnAnnouncement(a.id, { content: comment });
+                                                    }}
+                                                    className="flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] dark:text-[#B0B0B0] hover:text-[#7A1C1C] dark:hover:text-[#D4AF37] transition-colors ml-auto">
+                                                    <span>💬 Comment</span>
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </article>

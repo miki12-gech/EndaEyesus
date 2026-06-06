@@ -1,11 +1,12 @@
 "use client";
 
-import { Bell, BookOpen, Users, Calendar, ChevronRight, Sparkles, FileText, GraduationCap, Shield, Star } from "lucide-react";
+import { Bell, BookOpen, Users, Calendar, ChevronRight, Sparkles, FileText, GraduationCap, Shield, Star, Activity, UserCheck, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/store/authStore";
 import { useEffect, useState } from "react";
 import apiClient from "@/api";
 import ApplyMembershipModal from "@/components/dashboard/ApplyMembershipModal";
+import chairmanApiService from "@/lib/chairmanApi";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") || "http://localhost:8080";
 
@@ -37,10 +38,15 @@ export default function DashboardPage() {
     const isAdmin = ADMIN_ROLES.includes(role);
     const isMember = MEMBER_ROLES.includes(role);
     const isNewUser = !isMember;
+    const isChairman = role === 'SECRETARIAT_CHAIRMAN';
 
     const [announcements, setAnnouncements] = useState<any[]>([]);
     const [loadingAnn, setLoadingAnn] = useState(true);
     const [showMembershipModal, setShowMembershipModal] = useState(false);
+
+    // Chairman-specific state
+    const [chairmanStats, setChairmanStats] = useState<any>(null);
+    const [loadingStats, setLoadingStats] = useState(false);
 
     useEffect(() => {
         // Load announcements via new API client
@@ -48,7 +54,29 @@ export default function DashboardPage() {
             .then((res) => setAnnouncements(res.data?.items || []))
             .catch(() => setAnnouncements([]))
             .finally(() => setLoadingAnn(false));
-    }, []);
+
+        // Load Chairman stats if user is Chairman
+        if (isChairman) {
+            setLoadingStats(true);
+            Promise.all([
+                chairmanApiService.getMemberCensus(),
+                chairmanApiService.getAuditLogs({ limit: 5 })
+            ])
+            .then(([censusRes, logsRes]) => {
+                const members = censusRes.data || [];
+                const logs = logsRes.data || [];
+                setChairmanStats({
+                    totalMembers: members.length,
+                    activeMembers: members.filter((m: any) => m.role === 'MEMBER').length,
+                    pendingMembers: members.filter((m: any) => m.role === 'USER').length,
+                    recentLogs: logs,
+                    recentRoleChanges: logs.filter((l: any) => l.action?.includes('ROLE')).slice(0, 3)
+                });
+            })
+            .catch(() => setChairmanStats(null))
+            .finally(() => setLoadingStats(false));
+        }
+    }, [isChairman]);
 
     const handleMembershipSuccess = (result: { status: string; service_class_id?: string }) => {
         if (result.status === "MEMBER_UPGRADED") {
@@ -60,6 +88,84 @@ export default function DashboardPage() {
 
     return (
         <div className="max-w-5xl mx-auto space-y-6">
+
+            {/* ── Chairman Widgets ── */}
+            {isChairman && (
+                <div className="space-y-4">
+                    <h2 className="text-base font-semibold text-[#7A1C1C] dark:text-[#D4AF37]">Chairman Overview</h2>
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="bg-white dark:bg-[#1C1C1F] rounded-xl p-4 border border-[#ddd8d0] dark:border-[#2a2a2d]">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-[#7A1C1C]/10 flex items-center justify-center">
+                                    <Users className="h-5 w-5 text-[#7A1C1C] dark:text-[#8B2C2C]" />
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold text-[#7A1C1C] dark:text-[#D4AF37]">
+                                        {loadingStats ? '...' : chairmanStats?.totalMembers || 0}
+                                    </p>
+                                    <p className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0]">Total Members</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-white dark:bg-[#1C1C1F] rounded-xl p-4 border border-[#ddd8d0] dark:border-[#2a2a2d]">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-[#0F3D2E]/10 flex items-center justify-center">
+                                    <UserCheck className="h-5 w-5 text-[#0F3D2E] dark:text-[#1E4D3A]" />
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold text-[#0F3D2E] dark:text-[#D4AF37]">
+                                        {loadingStats ? '...' : chairmanStats?.activeMembers || 0}
+                                    </p>
+                                    <p className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0]">Active Members</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-white dark:bg-[#1C1C1F] rounded-xl p-4 border border-[#ddd8d0] dark:border-[#2a2a2d]">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-[#C9A227]/10 flex items-center justify-center">
+                                    <AlertCircle className="h-5 w-5 text-[#C9A227] dark:text-[#D4AF37]" />
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold text-[#C9A227] dark:text-[#D4AF37]">
+                                        {loadingStats ? '...' : chairmanStats?.pendingMembers || 0}
+                                    </p>
+                                    <p className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0]">Pending</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-white dark:bg-[#1C1C1F] rounded-xl p-4 border border-[#ddd8d0] dark:border-[#2a2a2d]">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-[#0E0E0F]/10 flex items-center justify-center">
+                                    <Activity className="h-5 w-5 text-[#0E0E0F] dark:text-[#252529]" />
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold text-[#0E0E0F] dark:text-[#252529]">
+                                        {loadingStats ? '...' : chairmanStats?.recentLogs?.length || 0}
+                                    </p>
+                                    <p className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0]">Recent Actions</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Recent Role Changes */}
+                    {chairmanStats?.recentRoleChanges && chairmanStats.recentRoleChanges.length > 0 && (
+                        <div className="bg-white dark:bg-[#1C1C1F] rounded-xl p-4 border border-[#ddd8d0] dark:border-[#2a2a2d]">
+                            <h3 className="text-sm font-semibold text-[#7A1C1C] dark:text-[#D4AF37] mb-3">Recent Role Changes</h3>
+                            <div className="space-y-2">
+                                {chairmanStats.recentRoleChanges.map((log: any) => (
+                                    <div key={log.id} className="flex items-center gap-3 text-xs">
+                                        <div className="w-2 h-2 rounded-full bg-[#C9A227]" />
+                                        <span className="text-[#6b6b6b] dark:text-[#B0B0B0]">
+                                            {log.action} - {new Date(log.created_at).toLocaleString()}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* ── New User Banner ── */}
             {isNewUser && (
