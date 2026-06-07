@@ -12,6 +12,8 @@ import { Save, Edit2, X, Upload, User, Mail, Phone, MapPin, GraduationCap, BookO
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") || "http://localhost:8080";
+
 export default function ProfilePage() {
     const { user: authUser, updateUser } = useAuthStore();
     const [loading, setLoading] = useState(true);
@@ -155,7 +157,7 @@ export default function ProfilePage() {
                     <div className="absolute -bottom-10 left-6 flex items-end gap-4">
                         <div className="relative">
                             <Avatar className="h-24 w-24 border-4 border-white dark:border-[#1C1C1F] shadow-lg">
-                                <AvatarImage src={formData.profile_image_url || "/assets/avatar.png"} alt={formData.full_name_three_parts} />
+                                <AvatarImage src={formData.profile_image_url ? (formData.profile_image_url.startsWith("http") ? formData.profile_image_url : `${API_BASE}${formData.profile_image_url}`) : "/assets/avatar.png"} alt={formData.full_name_three_parts} />
                                 <AvatarFallback className="bg-[#7A1C1C] text-[#C9A227] text-2xl">
                                     {formData.full_name_three_parts?.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase() || "?"}
                                 </AvatarFallback>

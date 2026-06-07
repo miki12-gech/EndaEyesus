@@ -9,6 +9,8 @@ import { useAuthStore } from "@/store/authStore";
 import chairmanApiService from "@/lib/chairmanApi";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") || "http://localhost:8080";
+
 const TARGET_COLORS: Record<string, string> = {
     ALL: "#7A1C1C",
     CLASS: "#C9A227",
@@ -314,7 +316,7 @@ export default function AnnouncementsPage() {
                                 {/* Creator Profile Image */}
                                 <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden bg-gradient-to-br from-[#7A1C1C] to-[#C9A227] dark:from-[#D4AF37] dark:to-[#1E4D3A]">
                                     {a.author?.profileImageUrl ? (
-                                        <img src={a.author.profileImageUrl} alt={a.author.fullName} className="w-full h-full object-cover" />
+                                        <img src={a.author.profileImageUrl.startsWith("http") ? a.author.profileImageUrl : `${API_BASE}${a.author.profileImageUrl}`} alt={a.author.fullName} className="w-full h-full object-cover" />
                                     ) : a.author?.fullName ? (
                                         <span className="text-lg font-bold text-white">
                                             {a.author.fullName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()}
@@ -476,7 +478,7 @@ export default function AnnouncementsPage() {
                                                             <div key={comment.id} className="flex gap-2">
                                                                 <div className="w-6 h-6 rounded-full bg-[#7A1C1C]/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
                                                                     {comment.author?.profileImageUrl ? (
-                                                                        <img src={comment.author.profileImageUrl} alt={comment.author.fullName} className="w-full h-full object-cover" />
+                                                                        <img src={comment.author.profileImageUrl.startsWith("http") ? comment.author.profileImageUrl : `${API_BASE}${comment.author.profileImageUrl}`} alt={comment.author.fullName} className="w-full h-full object-cover" />
                                                                     ) : (
                                                                         <span className="text-[10px] font-bold text-[#7A1C1C] dark:text-[#D4AF37]">
                                                                             {comment.author?.fullName?.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase() || "??"}
