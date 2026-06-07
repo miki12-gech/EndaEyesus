@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Calendar, Plus, ArrowLeft, Edit, Trash2 } from "lucide-react";
+import { Bell, Calendar, Plus, ArrowLeft, Edit, Trash2, MoreVertical } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import apiClient from "@/api";
@@ -52,6 +52,7 @@ export default function AnnouncementsPage() {
     const [visibleCommentCounts, setVisibleCommentCounts] = useState<Record<string, number>>({});
     const [replyingTo, setReplyingTo] = useState<string | null>(null);
     const [replyContent, setReplyContent] = useState("");
+    const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
 
     const fetchAnnouncements = () => {
         apiClient.announcements.listAnnouncements()
@@ -309,28 +310,54 @@ export default function AnnouncementsPage() {
                             className="bg-white dark:bg-[#1C1C1F] rounded-xl p-5 border border-[#ddd8d0] dark:border-[#2a2a2d] shadow-sm hover:shadow-md transition-shadow"
                             style={{ borderLeft: `4px solid ${color}` }}>
                             <div className="flex items-start gap-3">
-                                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
-                                    style={{ backgroundColor: `${color}15` }}>
-                                    <Calendar className="h-5 w-5" style={{ color }} />
+                                {/* Creator Profile Image */}
+                                <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-[#7A1C1C] to-[#C9A227] dark:from-[#D4AF37] dark:to-[#1E4D3A]">
+                                    {a.author?.fullName ? (
+                                        <span className="text-lg font-bold text-white">
+                                            {a.author.fullName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()}
+                                        </span>
+                                    ) : (
+                                        <span className="text-lg font-bold text-white">?</span>
+                                    )}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    {/* Chairman Edit/Delete Buttons */}
-                                    {isChairman && !isEditing && (
-                                        <div className="flex justify-end gap-2 mb-2">
-                                            <button
-                                                onClick={() => startEdit(a)}
-                                                className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-[#F8F5F0] dark:bg-[#252529] text-[#7A1C1C] dark:text-[#D4AF37] hover:bg-[#7A1C1C]/10 dark:hover:bg-[#D4AF37]/10 transition-colors"
-                                            >
-                                                <Edit className="h-3 w-3" /> Edit
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(a.id)}
-                                                className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-[#7A1C1C]/10 dark:bg-[#8B2C2C]/10 text-[#7A1C1C] dark:text-[#8B2C2C] hover:bg-[#7A1C1C]/20 dark:hover:bg-[#8B2C2C]/20 transition-colors"
-                                            >
-                                                <Trash2 className="h-3 w-3" /> Delete
-                                            </button>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm font-bold text-[#1a1a1a] dark:text-[#F5F5F5]">
+                                                {a.author?.fullName || "Anonymous"}
+                                            </span>
+                                            <span className="text-[10px] text-[#6b6b6b] dark:text-[#B0B0B0]">
+                                                {formatDate(a.published_at || new Date().toISOString())}
+                                            </span>
                                         </div>
-                                    )}
+                                        {/* Chairman Edit/Delete Dropdown */}
+                                        {isChairman && !isEditing && (
+                                            <div className="relative">
+                                                <button
+                                                    onClick={() => setDropdownOpen(dropdownOpen === a.id ? null : a.id)}
+                                                    className="p-1 rounded-full hover:bg-[#F8F5F0] dark:hover:bg-[#252529] transition-colors"
+                                                >
+                                                    <MoreVertical className="h-4 w-4 text-[#6b6b6b] dark:text-[#B0B0B0]" />
+                                                </button>
+                                                {dropdownOpen === a.id && (
+                                                    <div className="absolute right-0 mt-1 w-32 bg-white dark:bg-[#1C1C1F] rounded-lg shadow-lg border border-[#ddd8d0] dark:border-[#2a2a2d] z-10">
+                                                        <button
+                                                            onClick={() => { startEdit(a); setDropdownOpen(null); }}
+                                                            className="flex items-center gap-2 w-full px-3 py-2 text-xs text-left hover:bg-[#F8F5F0] dark:hover:bg-[#252529] transition-colors"
+                                                        >
+                                                            <Edit className="h-3 w-3" /> Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={() => { handleDelete(a.id); setDropdownOpen(null); }}
+                                                            className="flex items-center gap-2 w-full px-3 py-2 text-xs text-left text-[#7A1C1C] dark:text-[#f87171] hover:bg-[#7A1C1C]/10 dark:hover:bg-[#8B2C2C]/10 transition-colors"
+                                                        >
+                                                            <Trash2 className="h-3 w-3" /> Delete
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
 
                                     {/* Edit Form */}
                                     {isEditing && (
@@ -364,10 +391,6 @@ export default function AnnouncementsPage() {
                                                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: color }}>
                                                     {a.is_public ? "PUBLIC" : "CLASS"}
                                                 </span>
-                                                <span className="text-[10px] text-[#6b6b6b] dark:text-[#B0B0B0]">{formatDate(a.published_at || new Date().toISOString())}</span>
-                                                {a.author && (
-                                                    <span className="text-[10px] text-[#6b6b6b] dark:text-[#B0B0B0]">· by {a.author.full_name_three_parts}</span>
-                                                )}
                                             </div>
                                             <h2 className="text-sm font-bold text-[#7A1C1C] dark:text-[#F5F5F5] leading-snug mb-2">{a.title}</h2>
                                             
