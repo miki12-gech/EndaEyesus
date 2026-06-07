@@ -219,7 +219,7 @@ export default function AnnouncementsPage() {
     }
 
     return (
-        <div className="max-w-3xl mx-auto space-y-5">
+        <div className="w-full space-y-5">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-[#7A1C1C] dark:bg-[#9B2323] flex items-center justify-center">
@@ -284,11 +284,21 @@ export default function AnnouncementsPage() {
                                 <button type="button" onClick={() => setFormImageUrls([])} className="text-xs text-red-500 hover:text-red-700">Clear</button>
                             </div>
                             {formImageUrls.length > 0 && (
-                                <div className="flex flex-wrap gap-2 mt-2">
+                                <div className="flex flex-wrap gap-3 mt-3">
                                     {formImageUrls.map((url, idx) => (
-                                        <div key={idx} className="relative group">
-                                            <img src={url.startsWith("http") ? url : `${API_BASE}${url}`} alt="" className="w-16 h-16 object-cover rounded" />
-                                            <button type="button" onClick={() => setFormImageUrls(prev => prev.filter((_, i) => i !== idx))} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs opacity-0 group-hover:opacity-100">×</button>
+                                        <div key={idx} className="relative group flex-shrink-0">
+                                            <img 
+                                                src={url.startsWith("http") ? url : `${API_BASE}${url}`} 
+                                                alt="" 
+                                                className="w-32 h-32 object-cover rounded-lg shadow-md transition-transform duration-300 group-hover:scale-105" 
+                                            />
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setFormImageUrls(prev => prev.filter((_, i) => i !== idx))} 
+                                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-red-600"
+                                            >
+                                                ×
+                                            </button>
                                         </div>
                                     ))}
                                 </div>
@@ -320,11 +330,21 @@ export default function AnnouncementsPage() {
                                 <button type="button" onClick={() => setFormVideoUrls([])} className="text-xs text-red-500 hover:text-red-700">Clear</button>
                             </div>
                             {formVideoUrls.length > 0 && (
-                                <div className="flex flex-wrap gap-2 mt-2">
+                                <div className="flex flex-wrap gap-3 mt-3">
                                     {formVideoUrls.map((url, idx) => (
-                                        <div key={idx} className="relative group">
-                                            <video src={url.startsWith("http") ? url : `${API_BASE}${url}`} className="w-16 h-16 object-cover rounded" />
-                                            <button type="button" onClick={() => setFormVideoUrls(prev => prev.filter((_, i) => i !== idx))} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs opacity-0 group-hover:opacity-100">×</button>
+                                        <div key={idx} className="relative group flex-shrink-0">
+                                            <video 
+                                                src={url.startsWith("http") ? url : `${API_BASE}${url}`} 
+                                                className="w-32 h-32 object-cover rounded-lg shadow-md"
+                                                controls
+                                            />
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setFormVideoUrls(prev => prev.filter((_, i) => i !== idx))} 
+                                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-red-600"
+                                            >
+                                                ×
+                                            </button>
                                         </div>
                                     ))}
                                 </div>
@@ -356,11 +376,20 @@ export default function AnnouncementsPage() {
                                 <button type="button" onClick={() => setFormPdfUrls([])} className="text-xs text-red-500 hover:text-red-700">Clear</button>
                             </div>
                             {formPdfUrls.length > 0 && (
-                                <div className="flex flex-wrap gap-2 mt-2">
+                                <div className="flex flex-wrap gap-3 mt-3">
                                     {formPdfUrls.map((url, idx) => (
-                                        <div key={idx} className="relative group bg-[#7A1C1C]/10 dark:bg-[#D4AF37]/10 px-2 py-1 rounded">
-                                            <span className="text-xs text-[#7A1C1C] dark:text-[#D4AF37]">PDF {idx + 1}</span>
-                                            <button type="button" onClick={() => setFormPdfUrls(prev => prev.filter((_, i) => i !== idx))} className="ml-2 text-red-500 hover:text-red-700">×</button>
+                                        <div key={idx} className="relative group flex-shrink-0 bg-[#7A1C1C]/10 dark:bg-[#D4AF37]/10 px-4 py-3 rounded-lg border border-[#7A1C1C]/20 dark:border-[#D4AF37]/20">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-2xl">📄</span>
+                                                <span className="text-xs font-semibold text-[#7A1C1C] dark:text-[#D4AF37]">PDF {idx + 1}</span>
+                                            </div>
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setFormPdfUrls(prev => prev.filter((_, i) => i !== idx))} 
+                                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-red-600"
+                                            >
+                                                ×
+                                            </button>
                                         </div>
                                     ))}
                                 </div>
@@ -512,11 +541,21 @@ export default function AnnouncementsPage() {
                                                         <button type="button" onClick={() => setEditImageUrls([])} className="text-xs text-red-500 hover:text-red-700">Clear</button>
                                                     </div>
                                                     {editImageUrls.length > 0 && (
-                                                        <div className="flex flex-wrap gap-2 mt-2">
+                                                        <div className="flex flex-wrap gap-3 mt-3">
                                                             {editImageUrls.map((url, idx) => (
-                                                                <div key={idx} className="relative group">
-                                                                    <img src={url.startsWith("http") ? url : `${API_BASE}${url}`} alt="" className="w-16 h-16 object-cover rounded" />
-                                                                    <button type="button" onClick={() => setEditImageUrls(prev => prev.filter((_, i) => i !== idx))} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs opacity-0 group-hover:opacity-100">×</button>
+                                                                <div key={idx} className="relative group flex-shrink-0">
+                                                                    <img 
+                                                                        src={url.startsWith("http") ? url : `${API_BASE}${url}`} 
+                                                                        alt="" 
+                                                                        className="w-32 h-32 object-cover rounded-lg shadow-md transition-transform duration-300 group-hover:scale-105" 
+                                                                    />
+                                                                    <button 
+                                                                        type="button" 
+                                                                        onClick={() => setEditImageUrls(prev => prev.filter((_, i) => i !== idx))} 
+                                                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-red-600"
+                                                                    >
+                                                                        ×
+                                                                    </button>
                                                                 </div>
                                                             ))}
                                                         </div>
@@ -548,11 +587,21 @@ export default function AnnouncementsPage() {
                                                         <button type="button" onClick={() => setEditVideoUrls([])} className="text-xs text-red-500 hover:text-red-700">Clear</button>
                                                     </div>
                                                     {editVideoUrls.length > 0 && (
-                                                        <div className="flex flex-wrap gap-2 mt-2">
+                                                        <div className="flex flex-wrap gap-3 mt-3">
                                                             {editVideoUrls.map((url, idx) => (
-                                                                <div key={idx} className="relative group">
-                                                                    <video src={url.startsWith("http") ? url : `${API_BASE}${url}`} className="w-16 h-16 object-cover rounded" />
-                                                                    <button type="button" onClick={() => setEditVideoUrls(prev => prev.filter((_, i) => i !== idx))} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs opacity-0 group-hover:opacity-100">×</button>
+                                                                <div key={idx} className="relative group flex-shrink-0">
+                                                                    <video 
+                                                                        src={url.startsWith("http") ? url : `${API_BASE}${url}`} 
+                                                                        className="w-32 h-32 object-cover rounded-lg shadow-md"
+                                                                        controls
+                                                                    />
+                                                                    <button 
+                                                                        type="button" 
+                                                                        onClick={() => setEditVideoUrls(prev => prev.filter((_, i) => i !== idx))} 
+                                                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-red-600"
+                                                                    >
+                                                                        ×
+                                                                    </button>
                                                                 </div>
                                                             ))}
                                                         </div>
@@ -584,11 +633,20 @@ export default function AnnouncementsPage() {
                                                         <button type="button" onClick={() => setEditPdfUrls([])} className="text-xs text-red-500 hover:text-red-700">Clear</button>
                                                     </div>
                                                     {editPdfUrls.length > 0 && (
-                                                        <div className="flex flex-wrap gap-2 mt-2">
+                                                        <div className="flex flex-wrap gap-3 mt-3">
                                                             {editPdfUrls.map((url, idx) => (
-                                                                <div key={idx} className="relative group bg-[#7A1C1C]/10 dark:bg-[#D4AF37]/10 px-2 py-1 rounded">
-                                                                    <span className="text-xs text-[#7A1C1C] dark:text-[#D4AF37]">PDF {idx + 1}</span>
-                                                                    <button type="button" onClick={() => setEditPdfUrls(prev => prev.filter((_, i) => i !== idx))} className="ml-2 text-red-500 hover:text-red-700">×</button>
+                                                                <div key={idx} className="relative group flex-shrink-0 bg-[#7A1C1C]/10 dark:bg-[#D4AF37]/10 px-4 py-3 rounded-lg border border-[#7A1C1C]/20 dark:border-[#D4AF37]/20">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="text-2xl">📄</span>
+                                                                        <span className="text-xs font-semibold text-[#7A1C1C] dark:text-[#D4AF37]">PDF {idx + 1}</span>
+                                                                    </div>
+                                                                    <button 
+                                                                        type="button" 
+                                                                        onClick={() => setEditPdfUrls(prev => prev.filter((_, i) => i !== idx))} 
+                                                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-red-600"
+                                                                    >
+                                                                        ×
+                                                                    </button>
                                                                 </div>
                                                             ))}
                                                         </div>

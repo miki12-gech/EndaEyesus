@@ -52,7 +52,6 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
         { href: "/dashboard/agent", label: "Admin", icon: Shield, show: isAdmin },
         { href: "/dashboard/agent/roles", label: "Roles", icon: Shield, show: role === 'SECRETARIAT_CHAIRMAN' },
         { href: "/dashboard/agent/members", label: "Members", icon: Users, show: role === 'SECRETARIAT_CHAIRMAN' },
-        { href: "/dashboard/agent/audit-logs", label: "Audit Logs", icon: Activity, show: role === 'SECRETARIAT_CHAIRMAN' },
     ].filter((item) => item.show);
 
     return (
@@ -76,12 +75,12 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
             </div>
 
             {/* Middle: Navigation */}
-            <nav className="hidden lg:flex items-center space-x-2 flex-1 justify-center">
+            <nav className="hidden lg:flex items-center space-x-1 flex-1 justify-start px-4">
                 {navItems.map(({ href, label, icon: Icon }) => (
                     <Link
                         key={href}
                         href={href}
-                        className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
                             pathname === href 
                                 ? "bg-[#F8F5F0] dark:bg-[#252529] text-[#C9A227] dark:text-[#D4AF37]" 
                                 : "text-[#7A1C1C] dark:text-[#F5F5F5] hover:bg-[#F8F5F0] dark:hover:bg-[#252529]"
