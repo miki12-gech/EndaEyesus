@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Topbar } from "@/components/dashboard/Topbar";
+import { Sidebar } from "@/components/dashboard/Sidebar";
 import { DashboardFooter } from "@/components/layout/dashboard-footer";
 
 export default function DashboardLayout({
@@ -14,7 +15,6 @@ export default function DashboardLayout({
     return (
         <div className="min-h-screen bg-[#F8F5F0] dark:bg-[#0E0E0F] transition-colors duration-300">
             {/* Mobile overlay */}
-                        {/* Mobile overlay */}
             {sidebarOpen && (
                 <div
                     className="fixed inset-0 bg-black/50 z-20 lg:hidden"
@@ -23,8 +23,10 @@ export default function DashboardLayout({
                 />
             )}
 
-            {/* Removed Sidebar */}
-            {/* <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} /> */}
+            {/* Sidebar only on mobile */}
+            <div className={`lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
+                <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+            </div>
             <Topbar onMenuOpen={() => setSidebarOpen(true)} />
 
             <main className="pt-14 lg:pt-16 min-h-screen flex flex-col w-full">

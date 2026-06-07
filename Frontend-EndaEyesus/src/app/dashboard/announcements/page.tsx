@@ -305,27 +305,65 @@ export default function AnnouncementsPage() {
                                             
                                             {/* Interactions */}
                                             <div className="mt-4 flex items-center gap-4 border-t border-[#ddd8d0] dark:border-[#2a2a2d] pt-3">
-                                                <button 
-                                                    onClick={() => apiClient.announcements.reactToAnnouncement(a.id, { type: "LIKE" })}
+                                                <button
+                                                    onClick={async () => {
+                                                        await apiClient.announcements.reactToAnnouncement(a.id, { type: "LIKE" });
+                                                        fetchAnnouncements();
+                                                    }}
                                                     className="flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] dark:text-[#B0B0B0] hover:text-[#7A1C1C] dark:hover:text-[#D4AF37] transition-colors">
-                                                    <span className="text-sm">👍</span> 
+                                                    <span className="text-sm">👍</span>
                                                     <span>{a.reaction_counts?.likes || 0}</span>
                                                 </button>
-                                                <button 
-                                                    onClick={() => apiClient.announcements.reactToAnnouncement(a.id, { type: "STAR" })}
+                                                <button
+                                                    onClick={async () => {
+                                                        await apiClient.announcements.reactToAnnouncement(a.id, { type: "STAR" });
+                                                        fetchAnnouncements();
+                                                    }}
                                                     className="flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] dark:text-[#B0B0B0] hover:text-[#C9A227] dark:hover:text-[#D4AF37] transition-colors">
-                                                    <span className="text-sm">⭐</span> 
+                                                    <span className="text-sm">⭐</span>
                                                     <span>{a.reaction_counts?.stars || 0}</span>
                                                 </button>
-                                                <button 
+                                                <button
                                                     onClick={() => {
                                                         const comment = window.prompt("Enter your comment:");
-                                                        if (comment) apiClient.announcements.commentOnAnnouncement(a.id, { content: comment });
+                                                        if (comment) {
+                                                            apiClient.announcements.commentOnAnnouncement(a.id, { content: comment })
+                                                                .then(() => fetchAnnouncements());
+                                                        }
                                                     }}
                                                     className="flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] dark:text-[#B0B0B0] hover:text-[#7A1C1C] dark:hover:text-[#D4AF37] transition-colors ml-auto">
                                                     <span>💬 Comment</span>
                                                 </button>
                                             </div>
+
+                                            {/* Comments Section */}
+                                            {a.comments && a.comments.length > 0 && (
+                                                <div className="mt-4 pt-4 border-t border-[#ddd8d0] dark:border-[#2a2a2d]">
+                                                    <h4 className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0] mb-3">Comments ({a.comments.length})</h4>
+                                                    <div className="space-y-3">
+                                                        {a.comments.map((comment: any) => (
+                                                            <div key={comment.id} className="flex gap-2">
+                                                                <div className="w-6 h-6 rounded-full bg-[#7A1C1C]/10 flex items-center justify-center flex-shrink-0">
+                                                                    <span className="text-[10px] font-bold text-[#7A1C1C] dark:text-[#D4AF37]">
+                                                                        {comment.author?.fullName?.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase() || "??"}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="text-[10px] font-semibold text-[#1a1a1a] dark:text-[#F5F5F5]">
+                                                                            {comment.author?.fullName || "Anonymous"}
+                                                                        </span>
+                                                                        <span className="text-[9px] text-[#6b6b6b] dark:text-[#B0B0B0]">
+                                                                            {new Date(comment.created_at).toLocaleDateString()}
+                                                                        </span>
+                                                                    </div>
+                                                                    <p className="text-[11px] text-[#6b6b6b] dark:text-[#B0B0B0] mt-0.5">{comment.content}</p>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </>
                                     )}
                                 </div>

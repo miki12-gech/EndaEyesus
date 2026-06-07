@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
-import { Role, Status, AcademicYear, Sex } from '@/lib/types';
+import { Role, Status, AcademicYear, Sex, ClericalRank } from '@/lib/types';
 
 export interface AuthUser {
     id: string;
@@ -8,10 +8,13 @@ export interface AuthUser {
     fullName: string;
     email: string;
     sex?: Sex;
+    clericalRank?: ClericalRank;
     department?: string;
     serviceClassID?: string | null;
     classLeaderOf?: string | null;
     academicYear?: AcademicYear | null;
+    dormBlock?: string;
+    dormRoom?: string;
     role: Role;
     status?: Status;
     profileImage?: string | null;

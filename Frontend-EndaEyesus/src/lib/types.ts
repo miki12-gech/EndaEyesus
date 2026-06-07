@@ -3,6 +3,7 @@
 export type Role = 'SUPER_ADMIN' | 'CLASS_LEADER' | 'MEMBER' | 'USER' | 'TEACHER' | 'SERVICE_MANAGER' | 'SECRETARIAT_SECRETARY' | 'SECRETARIAT_VICE' | 'SECRETARIAT_CHAIRMAN';
 export type Status = 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'PENDING_OFFICE_APPROVAL';
 export type Sex = 'MALE' | 'FEMALE';
+export type ClericalRank = 'NONE' | 'DEACON' | 'PRIEST' | 'LECTOR' | 'OTHER';
 export type PostTargetType = 'GLOBAL' | 'CLASS';
 export type ReactionType = 'LIKE' | 'DISLIKE';
 export type AcademicYear =
@@ -24,12 +25,15 @@ export interface User {
     username: string;
     fullName: string;
     sex: Sex;
+    clericalRank: ClericalRank;
     department: string;
     serviceClassID: string;
     classLeaderOf: string | null;
     email: string;
     phoneNumber: string;
     academicYear: AcademicYear;
+    dormBlock?: string;
+    dormRoom?: string;
     role: Role;
     status: Status;
     profileImage?: string | null;

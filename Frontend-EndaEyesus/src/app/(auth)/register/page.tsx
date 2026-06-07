@@ -6,7 +6,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, ChevronRight, User, Mail, Lock, Home } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Eye, EyeOff, ChevronRight, User, Mail, Lock, Home, Phone, Upload } from "lucide-react";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { useAuthStore } from "@/store/authStore";
 import apiClient from "@/api";
@@ -34,6 +35,11 @@ export default function RegisterPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [sex, setSex] = useState("");
+    const [clericalRank, setClericalRank] = useState("NONE");
+    const [phoneNumber, setPhoneNumber] = useState("");
+    const [profileImage, setProfileImage] = useState<File | null>(null);
+    const [uploadingImage, setUploadingImage] = useState(false);
     
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
@@ -49,15 +55,40 @@ export default function RegisterPage() {
         if (!email.trim()) { setError("Email is required."); return; }
         if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
         if (password !== confirmPassword) { setError("Passwords do not match."); return; }
+        if (!sex) { setError("Sex is required."); return; }
 
         setIsSubmitting(true);
 
         try {
-            // Register using the generated apiClient
+            let profileImageUrl = "";
+            
+            // Upload profile image if provided
+            if (profileImage) {
+                setUploadingImage(true);
+                try {
+                    const fd = new FormData();
+                    fd.append("image", profileImage);
+                    const uploadRes = await apiClient.instance.post<{ data: { imageURL: string } }>("/upload/image", fd, {
+                        headers: { "Content-Type": "multipart/form-data" },
+                    });
+                    profileImageUrl = uploadRes.data.data.imageURL;
+                } catch (uploadErr) {
+                    console.error("Image upload failed:", uploadErr);
+                    // Continue without image
+                } finally {
+                    setUploadingImage(false);
+                }
+            }
+
+            // Register using the generated apiClient with new fields
             const regRes = await apiClient.auth.register({
                 full_name_three_parts: fullName,
                 email,
                 password,
+                sex: sex as "MALE" | "FEMALE",
+                clerical_rank: clericalRank as "NONE" | "DEACON" | "PRIEST" | "LECTOR" | "OTHER",
+                phone_number: phoneNumber || undefined,
+                profile_image_url: profileImageUrl || undefined,
             });
             const regToken = (regRes.data as any).token || 'authenticated';
 
@@ -144,6 +175,70 @@ export default function RegisterPage() {
                                     <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] dark:text-[#B0B0B0] hover:text-[#7A1C1C] dark:hover:text-[#D4AF37]" aria-label="Toggle confirm password">
                                         {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                     </button>
+                                </div>
+                            </div>
+
+                            {/* Sex */}
+                            <div className="space-y-1.5">
+                                <FieldLabel htmlFor="sex" required>Sex</FieldLabel>
+                                <Select value={sex} onValueChange={setSex}>
+                                    <SelectTrigger className={inputCls.replace("pl-10", "pl-3")}>
+                                        <SelectValue placeholder="Select sex" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="MALE">Male</SelectItem>
+                                        <SelectItem value="FEMALE">Female</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Clerical Rank */}
+                            <div className="space-y-1.5">
+                                <FieldLabel htmlFor="clericalRank">Clerical Rank (የክህነት መዓርግ)</FieldLabel>
+                                <Select value={clericalRank} onValueChange={setClericalRank}>
+                                    <SelectTrigger className={inputCls.replace("pl-10", "pl-3")}>
+                                        <SelectValue placeholder="Select clerical rank" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="NONE">None</SelectItem>
+                                        <SelectItem value="DEACON">Deacon</SelectItem>
+                                        <SelectItem value="PRIEST">Priest</SelectItem>
+                                        <SelectItem value="LECTOR">Lector</SelectItem>
+                                        <SelectItem value="OTHER">Other</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Phone Number */}
+                            <div className="space-y-1.5">
+                                <FieldLabel htmlFor="phoneNumber">Phone Number</FieldLabel>
+                                <div className="relative">
+                                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6b6b6b] dark:text-[#B0B0B0]" />
+                                    <Input id="phoneNumber" type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="09XXXXXXXX" className={inputCls} />
+                                </div>
+                            </div>
+
+                            {/* Profile Picture */}
+                            <div className="space-y-1.5">
+                                <FieldLabel htmlFor="profilePicture">Profile Picture</FieldLabel>
+                                <div className="relative">
+                                    <input
+                                        id="profilePicture"
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) setProfileImage(file);
+                                        }}
+                                        className="hidden"
+                                    />
+                                    <label
+                                        htmlFor="profilePicture"
+                                        className="flex items-center justify-center gap-2 w-full h-11 rounded-xl border-2 border-dashed border-[#ddd8d0] dark:border-[#2a2a2d] hover:border-[#7A1C1C] dark:hover:border-[#D4AF37] cursor-pointer transition-colors text-sm text-[#6b6b6b] dark:text-[#B0B0B0] hover:text-[#7A1C1C] dark:hover:text-[#D4AF37]"
+                                    >
+                                        <Upload className="h-4 w-4" />
+                                        {profileImage ? profileImage.name : "Upload profile picture (optional)"}
+                                    </label>
                                 </div>
                             </div>
 

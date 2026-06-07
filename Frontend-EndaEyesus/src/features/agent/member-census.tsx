@@ -2,20 +2,24 @@
 
 import { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/authStore";
-import { Shield, Users, Search, Download, Filter } from "lucide-react";
+import { Shield, Users, Search, Download, Filter, MapPin, Phone, GraduationCap, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import chairmanApiService from "@/lib/chairmanApi";
 
 export function MemberCensusView() {
     const { user } = useAuthStore();
     const systemRole = user?.system_role || user?.role || 'USER';
     const isChairman = systemRole === 'SECRETARIAT_CHAIRMAN';
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") || "http://localhost:8080";
 
     const [members, setMembers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredMembers, setFilteredMembers] = useState<any[]>([]);
+    const [selectedMember, setSelectedMember] = useState<any>(null);
 
     useEffect(() => {
         const fetchMembers = async () => {
@@ -157,35 +161,60 @@ export function MemberCensusView() {
                     <table className="w-full text-left text-sm">
                         <thead className="bg-[#F8F5F0] dark:bg-[#0E0E0F] text-[#6b6b6b] dark:text-[#B0B0B0]">
                             <tr>
+                                <th className="px-4 py-3 font-medium">Profile</th>
                                 <th className="px-4 py-3 font-medium">Name</th>
                                 <th className="px-4 py-3 font-medium">Email</th>
                                 <th className="px-4 py-3 font-medium">Role</th>
-                                <th className="px-4 py-3 font-medium">Service Class</th>
-                                <th className="px-4 py-3 font-medium">Department</th>
+                                <th className="px-4 py-3 font-medium">Class</th>
                                 <th className="px-4 py-3 font-medium">Phone</th>
-                                <th className="px-4 py-3 font-medium">Joined</th>
+                                <th className="px-4 py-3 font-medium">Dept</th>
+                                <th className="px-4 py-3 font-medium">Dorm</th>
+                                <th className="px-4 py-3 font-medium">Sex</th>
+                                <th className="px-4 py-3 font-medium">Rank</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[#ddd8d0] dark:divide-[#2a2a2d]">
-                            {filteredMembers.map((member) => (
-                                <tr key={member.id} className="hover:bg-[#F8F5F0]/50 dark:hover:bg-[#252529]/50 transition-colors">
-                                    <td className="px-4 py-4">
-                                        <p className="font-medium text-[#1a1a1a] dark:text-[#F5F5F5]">{member.fullName}</p>
-                                    </td>
-                                    <td className="px-4 py-4 text-[#6b6b6b] dark:text-[#B0B0B0]">{member.email}</td>
-                                    <td className="px-4 py-4">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${roleColors[member.role] || 'bg-gray-500 text-white'}`}>
-                                            {member.role}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-4 text-[#6b6b6b] dark:text-[#B0B0B0]">{member.serviceClassName || '-'}</td>
-                                    <td className="px-4 py-4 text-[#6b6b6b] dark:text-[#B0B0B0]">{member.academicDepartment || '-'}</td>
-                                    <td className="px-4 py-4 text-[#6b6b6b] dark:text-[#B0B0B0]">{member.phoneNumber || '-'}</td>
-                                    <td className="px-4 py-4 text-[#6b6b6b] dark:text-[#B0B0B0]">
-                                        {new Date(member.createdAt).toLocaleDateString()}
-                                    </td>
-                                </tr>
-                            ))}
+                            {filteredMembers.map((member) => {
+                                const initials = member.fullName?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || '??';
+                                return (
+                                    <tr 
+                                        key={member.id} 
+                                        className="hover:bg-[#F8F5F0]/50 dark:hover:bg-[#252529]/50 transition-colors cursor-pointer"
+                                        onClick={() => setSelectedMember(member)}
+                                    >
+                                        <td className="px-4 py-4">
+                                            <Avatar className="h-10 w-10">
+                                                {member.profileImage && (
+                                                    <AvatarImage
+                                                        src={member.profileImage.startsWith("http") ? member.profileImage : `${API_BASE}${member.profileImage}`}
+                                                        alt={member.fullName}
+                                                    />
+                                                )}
+                                                <AvatarFallback className="text-xs font-bold bg-[#7A1C1C] dark:bg-[#9B2323] text-[#C9A227] dark:text-[#D4AF37]">
+                                                    {initials}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                        </td>
+                                        <td className="px-4 py-4">
+                                            <p className="font-medium text-[#1a1a1a] dark:text-[#F5F5F5]">{member.fullName}</p>
+                                        </td>
+                                        <td className="px-4 py-4 text-[#6b6b6b] dark:text-[#B0B0B0]">{member.email}</td>
+                                        <td className="px-4 py-4">
+                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${roleColors[member.role] || 'bg-gray-500 text-white'}`}>
+                                                {member.role}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-4 text-[#6b6b6b] dark:text-[#B0B0B0]">{member.serviceClassName || '-'}</td>
+                                        <td className="px-4 py-4 text-[#6b6b6b] dark:text-[#B0B0B0]">{member.phoneNumber || '-'}</td>
+                                        <td className="px-4 py-4 text-[#6b6b6b] dark:text-[#B0B0B0]">{member.academicDepartment || '-'}</td>
+                                        <td className="px-4 py-4 text-[#6b6b6b] dark:text-[#B0B0B0]">
+                                            {member.dormBlock && member.dormRoom ? `${member.dormBlock}-${member.dormRoom}` : '-'}
+                                        </td>
+                                        <td className="px-4 py-4 text-[#6b6b6b] dark:text-[#B0B0B0]">{member.sex === 'MALE' ? 'M' : member.sex === 'FEMALE' ? 'F' : '-'}</td>
+                                        <td className="px-4 py-4 text-[#6b6b6b] dark:text-[#B0B0B0]">{member.clericalRank || '-'}</td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>
@@ -195,6 +224,111 @@ export function MemberCensusView() {
                     </div>
                 )}
             </div>
+
+            {/* Member Detail Sheet */}
+            {selectedMember && (
+                <Sheet open={!!selectedMember} onOpenChange={() => setSelectedMember(null)}>
+                    <SheetContent className="w-full sm:w-[500px] overflow-y-auto">
+                        <SheetHeader>
+                            <SheetTitle>Member Details</SheetTitle>
+                        </SheetHeader>
+                        <div className="space-y-6 mt-6">
+                            {/* Profile Header */}
+                            <div className="flex items-center gap-4">
+                                <Avatar className="h-20 w-20">
+                                    {selectedMember.profileImage && (
+                                        <AvatarImage
+                                            src={selectedMember.profileImage.startsWith("http") ? selectedMember.profileImage : `${API_BASE}${selectedMember.profileImage}`}
+                                            alt={selectedMember.fullName}
+                                        />
+                                    )}
+                                    <AvatarFallback className="text-2xl font-bold bg-[#7A1C1C] dark:bg-[#9B2323] text-[#C9A227] dark:text-[#D4AF37]">
+                                        {selectedMember.fullName?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || '??'}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <h3 className="text-xl font-bold text-[#7A1C1C] dark:text-[#D4AF37]">{selectedMember.fullName}</h3>
+                                    <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0]">{selectedMember.email}</p>
+                                    <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium ${roleColors[selectedMember.role] || 'bg-gray-500 text-white'}`}>
+                                        {selectedMember.role}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Personal Information */}
+                            <div className="space-y-4">
+                                <h4 className="text-sm font-semibold text-[#7A1C1C] dark:text-[#D4AF37] uppercase tracking-wide">Personal Information</h4>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="flex items-center gap-2">
+                                        <User className="h-4 w-4 text-[#6b6b6b] dark:text-[#B0B0B0]" />
+                                        <span className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0]">Sex: {selectedMember.sex === 'MALE' ? 'Male' : selectedMember.sex === 'FEMALE' ? 'Female' : 'Not specified'}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <GraduationCap className="h-4 w-4 text-[#6b6b6b] dark:text-[#B0B0B0]" />
+                                        <span className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0]">Rank: {selectedMember.clericalRank || 'None'}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Phone className="h-4 w-4 text-[#6b6b6b] dark:text-[#B0B0B0]" />
+                                        <span className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0]">{selectedMember.phoneNumber || 'Not provided'}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <MapPin className="h-4 w-4 text-[#6b6b6b] dark:text-[#B0B0B0]" />
+                                        <span className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0]">
+                                            {selectedMember.dormBlock && selectedMember.dormRoom ? `${selectedMember.dormBlock} Block, Room ${selectedMember.dormRoom}` : 'Not provided'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Academic Information */}
+                            <div className="space-y-4">
+                                <h4 className="text-sm font-semibold text-[#7A1C1C] dark:text-[#D4AF37] uppercase tracking-wide">Academic Information</h4>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0] uppercase">Department</p>
+                                        <p className="text-sm font-medium text-[#1a1a1a] dark:text-[#F5F5F5]">{selectedMember.academicDepartment || 'Not specified'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0] uppercase">Academic Year</p>
+                                        <p className="text-sm font-medium text-[#1a1a1a] dark:text-[#F5F5F5]">{selectedMember.academicYear || 'Not specified'}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Service Class */}
+                            <div className="space-y-4">
+                                <h4 className="text-sm font-semibold text-[#7A1C1C] dark:text-[#D4AF37] uppercase tracking-wide">Service Class</h4>
+                                <div>
+                                    <p className="text-sm font-medium text-[#1a1a1a] dark:text-[#F5F5F5]">{selectedMember.serviceClassName || 'Not assigned'}</p>
+                                </div>
+                            </div>
+
+                            {/* Account Information */}
+                            <div className="space-y-4">
+                                <h4 className="text-sm font-semibold text-[#7A1C1C] dark:text-[#D4AF37] uppercase tracking-wide">Account Information</h4>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0] uppercase">Status</p>
+                                        <p className="text-sm font-medium text-[#1a1a1a] dark:text-[#F5F5F5]">{selectedMember.status || 'Active'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0] uppercase">Joined</p>
+                                        <p className="text-sm font-medium text-[#1a1a1a] dark:text-[#F5F5F5]">{new Date(selectedMember.createdAt).toLocaleDateString()}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Bio */}
+                            {selectedMember.bio && (
+                                <div className="space-y-4">
+                                    <h4 className="text-sm font-semibold text-[#7A1C1C] dark:text-[#D4AF37] uppercase tracking-wide">Bio</h4>
+                                    <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0] italic">{selectedMember.bio}</p>
+                                </div>
+                            )}
+                        </div>
+                    </SheetContent>
+                </Sheet>
+            )}
         </div>
     );
 }

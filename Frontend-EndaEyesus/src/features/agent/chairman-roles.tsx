@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { Shield, UserPlus, UserMinus, ArrowRight, Search, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,8 @@ export function ChairmanRolesView() {
     });
     const [userSearchResults, setUserSearchResults] = useState<any[]>([]);
     const [searchingUsers, setSearchingUsers] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedUserName, setSelectedUserName] = useState('');
 
     // Transfer State
     const [transferData, setTransferData] = useState({
@@ -33,26 +35,50 @@ export function ChairmanRolesView() {
     });
     const [transferSearchResults, setTransferSearchResults] = useState<any[]>([]);
     const [transferSearching, setTransferSearching] = useState(false);
+    const [transferSearchQuery, setTransferSearchQuery] = useState('');
+    const [selectedTransferUserName, setSelectedTransferUserName] = useState('');
 
     // Service Classes
     const [serviceClasses, setServiceClasses] = useState<any[]>([]);
     const [loadingClasses, setLoadingClasses] = useState(false);
 
-    // Fetch service classes on mount
-    useState(() => {
+    // Current Role Assignments
+    const [currentAssignments, setCurrentAssignments] = useState<any[]>([]);
+    const [loadingAssignments, setLoadingAssignments] = useState(false);
+    const [roleFilter, setRoleFilter] = useState<string>('ALL');
+
+    // Fetch service classes and current assignments on mount
+    useEffect(() => {
         const fetchClasses = async () => {
             setLoadingClasses(true);
             try {
                 const res = await chairmanApiService.listServiceClasses();
-                setServiceClasses(res.data || []);
+                setServiceClasses(res.data || res || []);
             } catch (error) {
                 console.error('Failed to fetch service classes:', error);
             } finally {
                 setLoadingClasses(false);
             }
         };
+
+        const fetchAssignments = async () => {
+            setLoadingAssignments(true);
+            try {
+                const res = await chairmanApiService.listUsers();
+                const executives = (res.data || []).filter((u: any) =>
+                    ['SECRETARIAT_CHAIRMAN', 'SECRETARIAT_VICE', 'SECRETARIAT_SECRETARY', 'SERVICE_MANAGER'].includes(u.role)
+                );
+                setCurrentAssignments(executives);
+            } catch (error) {
+                console.error('Failed to fetch assignments:', error);
+            } finally {
+                setLoadingAssignments(false);
+            }
+        };
+
         fetchClasses();
-    });
+        fetchAssignments();
+    }, []);
 
     const searchUsers = async (query: string, forTransfer = false) => {
         if (!query || query.length < 2) {
@@ -68,7 +94,7 @@ export function ChairmanRolesView() {
         try {
             const res = await chairmanApiService.listUsers();
             const filtered = (res.data || []).filter((u: any) =>
-                u.full_name_three_parts?.toLowerCase().includes(query.toLowerCase()) ||
+                u.fullName?.toLowerCase().includes(query.toLowerCase()) ||
                 u.email?.toLowerCase().includes(query.toLowerCase())
             );
             if (forTransfer) {
@@ -105,6 +131,13 @@ export function ChairmanRolesView() {
             setMessage({ type: 'success', text: 'Role assigned successfully' });
             setAssignData({ targetUserId: '', role: '', serviceClassId: '' });
             setUserSearchResults([]);
+            setSelectedUserName('');
+            // Refresh assignments
+            const res = await chairmanApiService.listUsers();
+            const executives = (res.data || []).filter((u: any) =>
+                ['SECRETARIAT_CHAIRMAN', 'SECRETARIAT_VICE', 'SECRETARIAT_SECRETARY', 'SERVICE_MANAGER'].includes(u.role)
+            );
+            setCurrentAssignments(executives);
         } catch (error: any) {
             setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to assign role' });
         } finally {
@@ -120,6 +153,12 @@ export function ChairmanRolesView() {
         try {
             await chairmanApiService.revokeRole(userId);
             setMessage({ type: 'success', text: 'Role revoked successfully' });
+            // Refresh assignments
+            const res = await chairmanApiService.listUsers();
+            const executives = (res.data || []).filter((u: any) =>
+                ['SECRETARIAT_CHAIRMAN', 'SECRETARIAT_VICE', 'SECRETARIAT_SECRETARY', 'SERVICE_MANAGER'].includes(u.role)
+            );
+            setCurrentAssignments(executives);
         } catch (error: any) {
             setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to revoke role' });
         } finally {
@@ -133,16 +172,19 @@ export function ChairmanRolesView() {
             return;
         }
 
-        if (!confirm('Are you sure you want to transfer chairmanship? This action cannot be undone.')) return;
+        if (!confirm('Are you sure you want to transfer chairmanship? This action cannot be undone. You will be logged out and become an ordinary member.')) return;
 
         setLoading(true);
         setMessage(null);
         try {
             await chairmanApiService.transferChairman({ targetUserId: transferData.targetUserId });
-            setMessage({ type: 'success', text: 'Chairmanship transferred successfully. You will be logged out.' });
+            setMessage({ type: 'success', text: 'Chairmanship transferred successfully. Logging you out...' });
+            // Clear auth state and redirect to login
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
             setTimeout(() => {
                 window.location.href = '/login';
-            }, 2000);
+            }, 1500);
         } catch (error: any) {
             setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to transfer chairmanship' });
         } finally {
@@ -215,9 +257,11 @@ export function ChairmanRolesView() {
                                     <Input
                                         id="userSearch"
                                         placeholder="Search by name or email..."
-                                        value={assignData.targetUserId ? userSearchResults.find(u => u.id === assignData.targetUserId)?.full_name_three_parts || '' : ''}
+                                        value={assignData.targetUserId ? (selectedUserName || '') : searchQuery}
                                         onChange={(e) => {
                                             setAssignData({ ...assignData, targetUserId: '' });
+                                            setSelectedUserName('');
+                                            setSearchQuery(e.target.value);
                                             searchUsers(e.target.value);
                                         }}
                                         className="pl-10"
@@ -230,11 +274,13 @@ export function ChairmanRolesView() {
                                                 key={u.id}
                                                 onClick={() => {
                                                     setAssignData({ ...assignData, targetUserId: u.id });
+                                                    setSelectedUserName(u.fullName);
                                                     setUserSearchResults([]);
+                                                    setSearchQuery('');
                                                 }}
                                                 className="w-full px-4 py-3 text-left hover:bg-[#F8F5F0] dark:hover:bg-[#252529] transition-colors border-b border-[#ddd8d0] dark:border-[#2a2a2d] last:border-0"
                                             >
-                                                <p className="font-medium text-[#1a1a1a] dark:text-[#F5F5F5]">{u.full_name_three_parts}</p>
+                                                <p className="font-medium text-[#1a1a1a] dark:text-[#F5F5F5]">{u.fullName}</p>
                                                 <p className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0]">{u.email}</p>
                                             </button>
                                         ))}
@@ -289,6 +335,77 @@ export function ChairmanRolesView() {
                             </Button>
                         </div>
                     </div>
+
+                    {/* Current Role Assignments */}
+                    <div className="bg-white dark:bg-[#1C1C1F] rounded-xl border border-[#ddd8d0] dark:border-[#2a2a2d] p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-[#7A1C1C] dark:text-[#D4AF37]">Current Executive Roles</h3>
+                            <Select value={roleFilter} onValueChange={setRoleFilter}>
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Filter by role" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="ALL">All Roles</SelectItem>
+                                    <SelectItem value="SECRETARIAT_CHAIRMAN">Chairman</SelectItem>
+                                    <SelectItem value="SECRETARIAT_VICE">Vice Chairman</SelectItem>
+                                    <SelectItem value="SECRETARIAT_SECRETARY">Secretary</SelectItem>
+                                    <SelectItem value="SERVICE_MANAGER">Service Manager</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {loadingAssignments ? (
+                            <div className="text-center text-[#6b6b6b] dark:text-[#B0B0B0] py-8">Loading assignments...</div>
+                        ) : (
+                            <div className="space-y-3">
+                                {currentAssignments
+                                    .filter(a => roleFilter === 'ALL' || a.role === roleFilter)
+                                    .map((assignment) => (
+                                    <div key={assignment.id} className="flex items-center justify-between p-4 rounded-lg bg-[#F8F5F0] dark:bg-[#252529] border border-[#ddd8d0] dark:border-[#2a2a2d]">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-[#7A1C1C]/10 dark:bg-[#9B2323]/30 flex items-center justify-center">
+                                                <span className="text-sm font-bold text-[#7A1C1C] dark:text-[#D4AF37]">
+                                                    {assignment.fullName?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || '??'}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <p className="font-medium text-[#1a1a1a] dark:text-[#F5F5F5]">{assignment.fullName}</p>
+                                                <p className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0]">{assignment.email}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                                assignment.role === 'SECRETARIAT_CHAIRMAN' ? 'bg-[#C9A227] text-[#0E0E0F]' :
+                                                assignment.role === 'SECRETARIAT_VICE' ? 'bg-[#D4AF37] text-[#0E0E0F]' :
+                                                assignment.role === 'SECRETARIAT_SECRETARY' ? 'bg-[#D4AF37] text-[#0E0E0F]' :
+                                                'bg-[#0F3D2E] text-white'
+                                            }`}>
+                                                {assignment.role === 'SECRETARIAT_CHAIRMAN' ? 'Chairman' :
+                                                 assignment.role === 'SECRETARIAT_VICE' ? 'Vice Chair' :
+                                                 assignment.role === 'SECRETARIAT_SECRETARY' ? 'Secretary' :
+                                                 'Service Manager'}
+                                            </span>
+                                            {assignment.role !== 'SECRETARIAT_CHAIRMAN' && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => handleRevokeRole(assignment.id)}
+                                                    className="text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-900 dark:hover:bg-red-900/20"
+                                                >
+                                                    <UserMinus className="h-3 w-3 mr-1" /> Revoke
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                                {currentAssignments.filter(a => roleFilter === 'ALL' || a.role === roleFilter).length === 0 && (
+                                    <div className="text-center text-[#6b6b6b] dark:text-[#B0B0B0] py-8">
+                                        No role assignments found.
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
 
@@ -310,9 +427,11 @@ export function ChairmanRolesView() {
                                     <Input
                                         id="transferSearch"
                                         placeholder="Search by name or email..."
-                                        value={transferData.targetUserId ? transferSearchResults.find(u => u.id === transferData.targetUserId)?.full_name_three_parts || '' : ''}
+                                        value={transferData.targetUserId ? (selectedTransferUserName || '') : transferSearchQuery}
                                         onChange={(e) => {
                                             setTransferData({ ...transferData, targetUserId: '' });
+                                            setSelectedTransferUserName('');
+                                            setTransferSearchQuery(e.target.value);
                                             searchUsers(e.target.value, true);
                                         }}
                                         className="pl-10"
@@ -325,12 +444,14 @@ export function ChairmanRolesView() {
                                                 key={u.id}
                                                 onClick={() => {
                                                     setTransferData({ ...transferData, targetUserId: u.id });
+                                                    setSelectedTransferUserName(u.fullName);
                                                     setTransferSearchResults([]);
+                                                    setTransferSearchQuery('');
                                                 }}
                                                 className="w-full px-4 py-3 text-left hover:bg-[#F8F5F0] dark:hover:bg-[#252529] transition-colors border-b border-[#ddd8d0] dark:border-[#2a2a2d] last:border-0"
                                             >
-                                                <p className="font-medium text-[#1a1a1a] dark:text-[#F5F5F5]">{u.full_name_three_parts}</p>
-                                                <p className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0]">{u.email} • {u.system_role}</p>
+                                                <p className="font-medium text-[#1a1a1a] dark:text-[#F5F5F5]">{u.fullName}</p>
+                                                <p className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0]">{u.email} • {u.role}</p>
                                             </button>
                                         ))}
                                     </div>

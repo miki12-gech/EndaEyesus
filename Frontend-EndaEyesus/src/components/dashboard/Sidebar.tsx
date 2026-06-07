@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, BookOpen, Bell, User, LogOut, Shield, FileText, MessageSquare, X, GraduationCap, Users2 } from "lucide-react";
+import { Bell, GraduationCap, BookOpen, User, LogOut, Shield, Users, Activity, X } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 
 interface SidebarProps {
@@ -45,15 +45,14 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         : "?";
 
     const navItems = [
-        { href: "/dashboard", label: "Home", icon: Home, show: true },
-        { href: "/dashboard/posts", label: "Posts", icon: FileText, show: true },
-        { href: "/dashboard/courses/gubae-abew", label: "Gubae Abew", icon: GraduationCap, show: isMember },
-        { href: "/dashboard/my-class", label: "My Class", icon: BookOpen, show: true },
-        { href: "/dashboard/messages", label: "Messages", icon: MessageSquare, show: true },
         { href: "/dashboard/announcements", label: "Announcements", icon: Bell, show: true },
-        { href: "/dashboard/profile", label: "Profile", icon: User, show: true },
-        { href: "/dashboard/members", label: "Members", icon: Users2, show: isAdmin },
-        { href: "/dashboard/agent", label: "Admin Panel", icon: Shield, show: isAdmin },
+        { href: "/dashboard/courses", label: "Courses", icon: GraduationCap, show: true },
+        { href: "/dashboard/library", label: "Library", icon: BookOpen, show: true },
+        { href: "/dashboard/about", label: "About", icon: User, show: true },
+        { href: "/dashboard/agent", label: "Admin", icon: Shield, show: isAdmin },
+        { href: "/dashboard/agent/roles", label: "Roles", icon: Shield, show: role === 'SECRETARIAT_CHAIRMAN' },
+        { href: "/dashboard/agent/members", label: "Members", icon: Users, show: role === 'SECRETARIAT_CHAIRMAN' || role === 'SECRETARIAT_VICE' || role === 'SECRETARIAT_SECRETARY' },
+        { href: "/dashboard/agent/audit-logs", label: "Audit Logs", icon: Activity, show: role === 'SECRETARIAT_CHAIRMAN' },
     ].filter((item) => item.show);
 
     return (

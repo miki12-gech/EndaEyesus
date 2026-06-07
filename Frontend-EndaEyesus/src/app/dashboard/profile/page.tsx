@@ -1,13 +1,16 @@
 "use client";
 
-import { MapPin, BookOpen, GraduationCap, Phone, Mail, Music, Edit, User, Calendar, ArrowLeft, Upload } from "lucide-react";
+import { MapPin, BookOpen, GraduationCap, Phone, Mail, Music, Edit, User, Calendar, ArrowLeft, Upload, X, Save } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import Link from "next/link";
 import { useAuthStore } from "@/store/authStore";
 import { useRef, useState } from "react";
-import apiClient from "@/api";
+import api from "@/lib/api";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") || "http://localhost:8080";
 
@@ -21,6 +24,16 @@ export default function ProfilePage() {
     const { user, updateUser } = useAuthStore();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [editForm, setEditForm] = useState({
+        phoneNumber: user?.phoneNumber || "",
+        bio: user?.bio || "",
+        academicDept: user?.department || "",
+        academicYear: user?.academicYear || "",
+        dormBlock: user?.dormBlock || "",
+        dormRoom: user?.dormRoom || "",
+    });
 
     const initials = user?.fullName
         ? user.fullName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
@@ -33,15 +46,36 @@ export default function ProfilePage() {
         try {
             const fd = new FormData();
             fd.append("image", file);
-            const res = await apiClient.instance.post<{ data: { imageURL: string } }>("/upload/image", fd, {
+            const res = await api.post("/upload/image", fd, {
                 headers: { "Content-Type": "multipart/form-data" },
             });
-            updateUser({ profileImage: res.data.data.imageURL });
+            const imageUrl = res.data.data?.imageURL || res.data.url;
+            updateUser({ profileImage: imageUrl });
         } catch {
-            // Fallback: show local preview
             updateUser({ profileImage: URL.createObjectURL(file) });
         } finally {
             setUploading(false);
+        }
+    };
+
+    const handleSaveProfile = async () => {
+        setSaving(true);
+        try {
+            await api.patch("/users/profile", editForm);
+            updateUser({
+                phoneNumber: editForm.phoneNumber,
+                bio: editForm.bio,
+                department: editForm.academicDept,
+                academicYear: editForm.academicYear as any,
+                dormBlock: editForm.dormBlock,
+                dormRoom: editForm.dormRoom,
+            });
+            setIsEditing(false);
+        } catch (err: any) {
+            console.error("Failed to update profile:", err);
+            alert(err.response?.data?.message || "Failed to update profile");
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -62,15 +96,12 @@ export default function ProfilePage() {
 
     return (
         <div className="max-w-3xl mx-auto space-y-5">
-            {/* Back button */}
             <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-sm text-[#6b6b6b] dark:text-[#B0B0B0] hover:text-[#7A1C1C] dark:hover:text-[#D4AF37] font-medium transition-colors group mb-1">
                 <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
                 Back to Dashboard
             </Link>
 
-            {/* Profile Card */}
             <div className="bg-white dark:bg-[#1C1C1F] rounded-2xl border border-[#ddd8d0] dark:border-[#2a2a2d] shadow-sm overflow-hidden" style={{ borderTop: "4px solid #C9A227" }}>
-                {/* Cover banner */}
                 <div className="h-24 bg-[#7A1C1C] dark:bg-[#151516] relative">
                     <div className="absolute inset-0 opacity-10">
                         <svg className="w-full h-full" viewBox="0 0 400 96" fill="none" aria-hidden="true">
@@ -81,7 +112,6 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="px-6 pb-6">
-                    {/* Avatar + Edit */}
                     <div className="flex items-end justify-between -mt-10 mb-4">
                         <div className="relative group">
                             <Avatar className="h-20 w-20 border-4 border-white dark:border-[#1C1C1F] shadow-md">
@@ -98,7 +128,6 @@ export default function ProfilePage() {
                             <button
                                 onClick={() => fileInputRef.current?.click()}
                                 className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                                aria-label="Change profile photo"
                                 disabled={uploading}
                             >
                                 {uploading ? (
@@ -107,44 +136,75 @@ export default function ProfilePage() {
                                     <Upload className="h-5 w-5 text-white" />
                                 )}
                             </button>
-                            <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp"
-                                className="hidden" onChange={handlePhotoChange} aria-label="Upload profile photo" />
+                            <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handlePhotoChange} />
                         </div>
-                        <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}
-                            className="border-[#7A1C1C] dark:border-[#D4AF37] text-[#7A1C1C] dark:text-[#D4AF37] hover:bg-[#7A1C1C] dark:hover:bg-[#D4AF37] hover:text-white dark:hover:text-[#0E0E0F] rounded-xl text-xs flex items-center gap-1.5 transition-all">
-                            <Edit className="h-3.5 w-3.5" /> {uploading ? "Uploading..." : "Change Photo"}
-                        </Button>
+                        <div className="flex gap-2">
+                            <Sheet open={isEditing} onOpenChange={setIsEditing}>
+                                <SheetTrigger asChild>
+                                    <Button variant="outline" size="sm" className="border-[#7A1C1C] dark:border-[#D4AF37] text-[#7A1C1C] dark:text-[#D4AF37] hover:bg-[#7A1C1C] dark:hover:bg-[#D4AF37] hover:text-white dark:hover:text-[#0E0E0F] rounded-xl text-xs flex items-center gap-1.5 transition-all">
+                                        <Edit className="h-3.5 w-3.5" /> Edit Profile
+                                    </Button>
+                                </SheetTrigger>
+                                <SheetContent className="w-full sm:w-[400px] overflow-y-auto">
+                                    <SheetHeader>
+                                        <SheetTitle>Edit Profile</SheetTitle>
+                                        <p className="text-sm text-muted-foreground">
+                                            Update your personal information, academic details, and dormitory information.
+                                        </p>
+                                    </SheetHeader>
+                                    <div className="space-y-4 mt-6">
+                                        <div>
+                                            <label className="block text-sm font-medium text-[#6b6b6b] dark:text-[#B0B0B0] mb-2">Phone Number</label>
+                                            <Input value={editForm.phoneNumber} onChange={(e) => setEditForm({ ...editForm, phoneNumber: e.target.value })} placeholder="09XXXXXXXX" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-[#6b6b6b] dark:text-[#B0B0B0] mb-2">Bio</label>
+                                            <Textarea value={editForm.bio} onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })} placeholder="Tell us about yourself..." rows={4} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-[#6b6b6b] dark:text-[#B0B0B0] mb-2">Academic Department</label>
+                                            <Input value={editForm.academicDept} onChange={(e) => setEditForm({ ...editForm, academicDept: e.target.value })} placeholder="Computer Science" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-[#6b6b6b] dark:text-[#B0B0B0] mb-2">Academic Year</label>
+                                            <Input value={editForm.academicYear} onChange={(e) => setEditForm({ ...editForm, academicYear: e.target.value })} placeholder="YEAR_1" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-[#6b6b6b] dark:text-[#B0B0B0] mb-2">Dorm Block</label>
+                                            <Input value={editForm.dormBlock} onChange={(e) => setEditForm({ ...editForm, dormBlock: e.target.value })} placeholder="A" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-[#6b6b6b] dark:text-[#B0B0B0] mb-2">Dorm Room</label>
+                                            <Input value={editForm.dormRoom} onChange={(e) => setEditForm({ ...editForm, dormRoom: e.target.value })} placeholder="101" />
+                                        </div>
+                                        <div className="flex gap-2 pt-4">
+                                            <Button variant="outline" onClick={() => setIsEditing(false)} className="flex-1"><X className="h-4 w-4 mr-2" /> Cancel</Button>
+                                            <Button onClick={handleSaveProfile} disabled={saving} className="flex-1 bg-[#7A1C1C] dark:bg-[#D4AF37] text-white dark:text-[#0E0E0F]">
+                                                <Save className="h-4 w-4 mr-2" /> {saving ? "Saving..." : "Save"}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </SheetContent>
+                            </Sheet>
+                            <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}
+                                className="border-[#7A1C1C] dark:border-[#D4AF37] text-[#7A1C1C] dark:text-[#D4AF37] hover:bg-[#7A1C1C] dark:hover:bg-[#D4AF37] hover:text-white dark:hover:text-[#0E0E0F] rounded-xl text-xs flex items-center gap-1.5 transition-all">
+                                <Upload className="h-3.5 w-3.5" /> {uploading ? "Uploading..." : "Change Photo"}
+                            </Button>
+                        </div>
                     </div>
 
-                    {/* Name & identity */}
                     <div className="mb-4">
                         <h1 className="text-xl font-bold text-[#7A1C1C] dark:text-[#D4AF37]">{user?.fullName || "Guest Member"}</h1>
                         <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0]">@{user?.username || "username"}</p>
                         <div className="flex flex-wrap gap-2 mt-2">
-                            <Badge style={{ backgroundColor: roleBadge.color }} className="text-white text-[10px] hover:opacity-90 border-0">
-                                {roleBadge.label}
-                            </Badge>
-                            {user?.serviceClassName && (
-                                <Badge className="bg-[#C9A227]/15 dark:bg-[#D4AF37]/15 text-[#C9A227] dark:text-[#D4AF37] border border-[#C9A227]/30 dark:border-[#D4AF37]/30 text-[10px] hover:bg-[#C9A227]/20">
-                                    {user.serviceClassName}
-                                </Badge>
-                            )}
-                            {user?.status === "PENDING" && (
-                                <Badge className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border border-yellow-300 dark:border-yellow-700 text-[10px]">
-                                    Pending Approval
-                                </Badge>
-                            )}
+                            <Badge style={{ backgroundColor: roleBadge.color }} className="text-white text-[10px]">{roleBadge.label}</Badge>
+                            {user?.serviceClassName && <Badge className="bg-[#C9A227]/15 text-[#C9A227] text-[10px]">{user.serviceClassName}</Badge>}
+                            {user?.status === "PENDING" && <Badge className="bg-yellow-100 text-yellow-700 text-[10px]">Pending Approval</Badge>}
                         </div>
                     </div>
 
-                    {/* Bio */}
-                    {user?.bio && (
-                        <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0] leading-relaxed mb-5 bg-[#F8F5F0] dark:bg-[#252529] rounded-xl p-3 italic">
-                            &ldquo;{user.bio}&rdquo;
-                        </p>
-                    )}
+                    {user?.bio && <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0] leading-relaxed mb-5 bg-[#F8F5F0] dark:bg-[#252529] rounded-xl p-3 italic">&ldquo;{user.bio}&rdquo;</p>}
 
-                    {/* Info grid */}
                     <div className="grid grid-cols-2 gap-4">
                         {[
                             { icon: GraduationCap, label: "Department", value: user?.department },
@@ -155,48 +215,31 @@ export default function ProfilePage() {
                             { icon: User, label: "Sex", value: user?.sex ? (user.sex === "MALE" ? "Male" : "Female") : undefined },
                             { icon: Mail, label: "Email", value: user?.email },
                             { icon: Phone, label: "Phone", value: user?.phoneNumber },
-                        ]
-                            .filter((item) => item.value)
-                            .map(({ icon: Icon, label, value }) => (
-                                <div key={label} className="flex items-start gap-3">
-                                    <div className="w-8 h-8 rounded-lg bg-[#7A1C1C]/10 dark:bg-[#9B2323]/30 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <Icon className="h-4 w-4 text-[#7A1C1C] dark:text-[#D4AF37]" />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="text-[10px] text-[#6b6b6b] dark:text-[#B0B0B0] font-medium uppercase tracking-wide">{label}</p>
-                                        <p className="text-xs font-semibold text-[#1a1a1a] dark:text-[#F5F5F5] leading-snug">{value}</p>
-                                    </div>
+                        ].filter((item) => item.value).map(({ icon: Icon, label, value }) => (
+                            <div key={label} className="flex items-start gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-[#7A1C1C]/10 dark:bg-[#9B2323]/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <Icon className="h-4 w-4 text-[#7A1C1C] dark:text-[#D4AF37]" />
                                 </div>
-                            ))}
+                                <div className="min-w-0">
+                                    <p className="text-[10px] text-[#6b6b6b] dark:text-[#B0B0B0] font-medium uppercase tracking-wide">{label}</p>
+                                    <p className="text-xs font-semibold text-[#1a1a1a] dark:text-[#F5F5F5] leading-snug">{value}</p>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>
 
-            {/* Account info */}
             <div className="bg-white dark:bg-[#1C1C1F] rounded-xl p-5 border border-[#ddd8d0] dark:border-[#2a2a2d] shadow-sm" style={{ borderLeft: "3px solid #C9A227" }}>
                 <h2 className="text-sm font-semibold text-[#7A1C1C] dark:text-[#D4AF37] mb-3">Account</h2>
                 <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <p className="text-[10px] text-[#6b6b6b] dark:text-[#B0B0B0] uppercase tracking-wide">Status</p>
-                        <p className="text-xs font-semibold text-[#1a1a1a] dark:text-[#F5F5F5] mt-0.5">{user?.status || "—"}</p>
-                    </div>
-                    <div>
-                        <p className="text-[10px] text-[#6b6b6b] dark:text-[#B0B0B0] uppercase tracking-wide">Role</p>
-                        <p className="text-xs font-semibold text-[#1a1a1a] dark:text-[#F5F5F5] mt-0.5">{roleBadge.label}</p>
-                    </div>
+                    <div><p className="text-[10px] text-[#6b6b6b] dark:text-[#B0B0B0] uppercase tracking-wide">Status</p><p className="text-xs font-semibold mt-0.5">{user?.status || "—"}</p></div>
+                    <div><p className="text-[10px] text-[#6b6b6b] dark:text-[#B0B0B0] uppercase tracking-wide">Role</p><p className="text-xs font-semibold mt-0.5">{roleBadge.label}</p></div>
                 </div>
             </div>
 
-            {/* Logout */}
             <div className="flex justify-center pt-4">
-                <Button 
-                    variant="destructive" 
-                    className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white flex items-center gap-2"
-                    onClick={() => {
-                        useAuthStore.getState().logout();
-                        window.location.href = "/login";
-                    }}
-                >
+                <Button variant="destructive" className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white" onClick={() => { useAuthStore.getState().logout(); window.location.href = "/login"; }}>
                     Log Out
                 </Button>
             </div>

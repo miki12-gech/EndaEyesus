@@ -13,17 +13,21 @@ export function AgentControlView() {
     const systemRole = user?.system_role || user?.role || 'USER';
     const isServiceManager = systemRole === 'SERVICE_MANAGER';
     const isMemberAffairs = user?.serviceClassName === 'አባላት ጉዳይ ክፍል';
+    const isChairman = systemRole === 'SECRETARIAT_CHAIRMAN';
+    const isVice = systemRole === 'SECRETARIAT_VICE';
+    const isSecretary = systemRole === 'SECRETARIAT_SECRETARY';
+    const isSecretariat = isChairman || isVice || isSecretary;
 
     // Default tab based on role
     const [activeTab, setActiveTab] = useState<TabType>(isServiceManager ? "users" : "dashboard");
 
     const tabs = [
         { id: "dashboard", label: "Overview", icon: Activity, show: !isServiceManager },
-        { id: "users", label: isServiceManager ? "Department Roster" : "User Management", icon: Users, show: true },
-        { id: "subclasses", label: "Sub-Class Management", icon: Layers, show: true },
+        { id: "users", label: isServiceManager ? "Department Roster" : "User Management", icon: Users, show: isChairman || isMemberAffairs },
+        { id: "subclasses", label: "Sub-Class Management", icon: Layers, show: isMemberAffairs },
         { id: "approvals", label: "Pending Approvals", icon: CheckCircle, show: !isServiceManager || isMemberAffairs },
-        { id: "roles", label: "Access Control", icon: ShieldCheck, show: !isServiceManager },
-        { id: "logs", label: "Activity Logs", icon: Settings, show: !isServiceManager },
+        { id: "roles", label: "Access Control", icon: ShieldCheck, show: isSecretariat },
+        { id: "logs", label: "Activity Logs", icon: Settings, show: isChairman },
     ].filter(t => t.show);
 
     return (
@@ -61,11 +65,11 @@ export function AgentControlView() {
                 <div className="flex-1 bg-white dark:bg-[#1C1C1F] rounded-2xl border border-[#ddd8d0] dark:border-[#2a2a2d] shadow-sm min-h-[600px] overflow-hidden">
                     <div className="h-full">
                         {activeTab === "dashboard" && !isServiceManager && <DashboardTab />}
-                        {activeTab === "users" && <UsersTab />}
-                        {activeTab === "subclasses" && <SubClassesTab />}
+                        {activeTab === "users" && (isChairman || isMemberAffairs) && <UsersTab />}
+                        {activeTab === "subclasses" && isMemberAffairs && <SubClassesTab />}
                         {activeTab === "approvals" && (!isServiceManager || isMemberAffairs) && <ApprovalsTab />}
-                        {activeTab === "roles" && !isServiceManager && <RolesTab />}
-                        {activeTab === "logs" && !isServiceManager && <LogsTab />}
+                        {activeTab === "roles" && isSecretariat && <RolesTab />}
+                        {activeTab === "logs" && isChairman && <LogsTab />}
                     </div>
                 </div>
 

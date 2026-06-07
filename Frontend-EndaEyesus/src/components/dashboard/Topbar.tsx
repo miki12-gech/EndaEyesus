@@ -57,8 +57,16 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
 
     return (
         <header className="h-14 lg:h-16 bg-white dark:bg-[#1C1C1F] border-b border-[#ddd8d0] dark:border-[#2a2a2d] flex items-center justify-between px-4 lg:px-6 fixed top-0 right-0 left-0 z-20 shadow-sm">
-            {/* Left: page title */}
+            {/* Left: hamburger + page title */}
             <div className="flex items-center gap-3 w-1/4">
+                {/* Hamburger button - mobile only */}
+                <button
+                    onClick={onMenuOpen}
+                    className="lg:hidden p-2 rounded-lg hover:bg-[#F8F5F0] dark:hover:bg-[#252529] transition-colors"
+                    aria-label="Open menu"
+                >
+                    <Menu className="h-5 w-5 text-[#7A1C1C] dark:text-[#D4AF37]" />
+                </button>
                 <div>
                     <h2 className="text-base font-semibold text-[#7A1C1C] dark:text-[#D4AF37] tracking-tight leading-tight">{title}</h2>
                     <p className="text-[10px] text-[#6b6b6b] dark:text-[#B0B0B0] hidden sm:block">
