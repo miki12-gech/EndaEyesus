@@ -50,6 +50,8 @@ export default function AnnouncementsPage() {
     // Comment visibility state
     const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
     const [visibleCommentCounts, setVisibleCommentCounts] = useState<Record<string, number>>({});
+    const [replyingTo, setReplyingTo] = useState<string | null>(null);
+    const [replyContent, setReplyContent] = useState("");
 
     const fetchAnnouncements = () => {
         apiClient.announcements.listAnnouncements()
@@ -154,6 +156,21 @@ export default function AnnouncementsPage() {
             ...prev,
             [announcementId]: (prev[announcementId] || 3) + 3
         }));
+    };
+
+    const handleReply = async (announcementId: string, parentCommentId: string) => {
+        if (!replyContent.trim()) return;
+        try {
+            await apiClient.announcements.commentOnAnnouncement(announcementId, { 
+                content: replyContent,
+                parentCommentId 
+            });
+            setReplyContent("");
+            setReplyingTo(null);
+            fetchAnnouncements();
+        } catch (err: any) {
+            alert(err.response?.data?.message || "Failed to post reply");
+        }
     };
 
     if (user?.status === "PENDING") {
@@ -446,6 +463,36 @@ export default function AnnouncementsPage() {
                                                                         </span>
                                                                     </div>
                                                                     <p className="text-[11px] text-[#6b6b6b] dark:text-[#B0B0B0] mt-0.5">{comment.content}</p>
+                                                                    <button
+                                                                        onClick={() => setReplyingTo(comment.id)}
+                                                                        className="text-[9px] text-[#7A1C1C] dark:text-[#D4AF37] hover:underline mt-1"
+                                                                    >
+                                                                        Reply
+                                                                    </button>
+                                                                    {replyingTo === comment.id && (
+                                                                        <div className="mt-2 space-y-2">
+                                                                            <input
+                                                                                value={replyContent}
+                                                                                onChange={(e) => setReplyContent(e.target.value)}
+                                                                                placeholder="Write a reply..."
+                                                                                className="w-full h-8 rounded-lg border border-[#ddd8d0] dark:border-[#2a2a2d] bg-[#F8F5F0] dark:bg-[#252529] text-xs px-2 dark:text-[#F5F5F5]"
+                                                                            />
+                                                                            <div className="flex gap-2">
+                                                                                <button
+                                                                                    onClick={() => handleReply(a.id, comment.id)}
+                                                                                    className="text-[10px] font-semibold text-[#7A1C1C] dark:text-[#D4AF37] hover:underline"
+                                                                                >
+                                                                                    Reply
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => { setReplyingTo(null); setReplyContent(""); }}
+                                                                                    className="text-[10px] text-[#6b6b6b] dark:text-[#B0B0B0] hover:underline"
+                                                                                >
+                                                                                    Cancel
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         ))}
