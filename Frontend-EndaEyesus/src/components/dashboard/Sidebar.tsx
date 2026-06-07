@@ -52,7 +52,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         { href: "/dashboard/agent", label: "Admin", icon: Shield, show: isAdmin },
         { href: "/dashboard/agent/roles", label: "Roles", icon: Shield, show: role === 'SECRETARIAT_CHAIRMAN' },
         { href: "/dashboard/agent/members", label: "Members", icon: Users, show: role === 'SECRETARIAT_CHAIRMAN' || role === 'SECRETARIAT_VICE' || role === 'SECRETARIAT_SECRETARY' },
-        { href: "/dashboard/agent/audit-logs", label: "Audit Logs", icon: Activity, show: role === 'SECRETARIAT_CHAIRMAN' },
     ].filter((item) => item.show);
 
     return (
