@@ -6,7 +6,7 @@ import { User, ShieldCheck, CheckCircle, Ban, Search, Shield, Users, Activity, S
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { useAuthStore } from "@/store/authStore";
 
-type TabType = "dashboard" | "users" | "approvals" | "roles" | "logs" | "subclasses" | "subclass-approvals";
+type TabType = "dashboard" | "users" | "approvals" | "roles" | "subclasses" | "subclass-approvals";
 
 export function AgentControlView() {
     const { user } = useAuthStore();
@@ -26,7 +26,6 @@ export function AgentControlView() {
         { id: "approvals", label: "Pending Approvals", icon: CheckCircle, show: isMemberAffairs },
         { id: "subclass-approvals", label: "Sub-Class Approvals", icon: Layers, show: isChairman },
         { id: "roles", label: "Access Control", icon: ShieldCheck, show: isSecretariat },
-        { id: "logs", label: "Activity Logs", icon: Settings, show: isChairman },
     ].filter(t => t.show);
 
     return (
@@ -34,8 +33,8 @@ export function AgentControlView() {
             <div className="flex flex-col md:flex-row gap-6">
 
                 {/* Vertical Sidebar Navigation for Agent Control */}
-                <div className="w-full md:w-64 flex-shrink-0 space-y-1">
-                    <div className="mb-6 px-3">
+                <div className="w-full md:w-64 flex-shrink-0">
+                    <div className="mb-6 px-4">
                         <h2 className="text-xl font-bold text-[#0F3D2E] dark:text-[#D4AF37] flex items-center gap-2">
                             <Shield className="h-6 w-6 text-[#C9A227] dark:text-[#D4AF37]" />
                             {isServiceManager ? "Class Manager" : "Agent Control"}
@@ -45,19 +44,22 @@ export function AgentControlView() {
                         </p>
                     </div>
 
-                    {tabs.map((tab) => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id as TabType)}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === tab.id
-                                ? "bg-[#0F3D2E] text-[#C9A227] dark:bg-[#1E4D3A] dark:text-[#D4AF37] shadow-md"
-                                : "text-[#6b6b6b] dark:text-[#B0B0B0] hover:bg-[#F8F5F0] dark:hover:bg-[#252529] hover:text-[#0F3D2E] dark:hover:text-[#F5F5F5]"
+                    <div className="space-y-1 px-2">
+                        {tabs.map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id as TabType)}
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                                    activeTab === tab.id
+                                        ? "bg-gradient-to-r from-[#7A1C1C] to-[#C9A227] text-white dark:from-[#D4AF37] dark:to-[#1E4D3A] dark:text-[#0E0E0F] shadow-md"
+                                        : "text-[#6b6b6b] dark:text-[#B0B0B0] hover:bg-[#F8F5F0] dark:hover:bg-[#252529] hover:text-[#7A1C1C] dark:hover:text-[#D4AF37]"
                                 }`}
-                        >
-                            <tab.icon className={`h-5 w-5 ${activeTab === tab.id ? "opacity-100" : "opacity-60"}`} />
-                            {tab.label}
-                        </button>
-                    ))}
+                            >
+                                <tab.icon className={`h-4 w-4 ${activeTab === tab.id ? "opacity-100" : "opacity-60"}`} />
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Main Content Area */}
@@ -67,7 +69,6 @@ export function AgentControlView() {
                         {activeTab === "approvals" && isMemberAffairs && <ApprovalsTab />}
                         {activeTab === "subclass-approvals" && isChairman && <SubClassApprovalsTab />}
                         {activeTab === "roles" && isSecretariat && <RolesTab />}
-                        {activeTab === "logs" && isChairman && <LogsTab />}
                     </div>
                 </div>
 
@@ -319,42 +320,6 @@ function RolesTab() {
                         ))}
                     </tbody>
                 </table>
-            </div>
-        </div>
-    );
-}
-
-function LogsTab() {
-    const { logs, loading } = useAgentData();
-
-    if (loading) return <div className="p-8 text-center text-[#6b6b6b] dark:text-[#B0B0B0] animate-pulse">Loading system logs...</div>;
-
-    return (
-        <div className="p-6 space-y-6 animate-in fade-in duration-500">
-            <h3 className="text-lg font-bold text-[#0F3D2E] dark:text-[#D4AF37]">System Activity Logs</h3>
-            <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0]">Security and administrative actions audit trail.</p>
-
-            <div className="space-y-3">
-                {logs.map(log => (
-                    <div key={log.id} className="bg-[#F8F5F0] dark:bg-[#0E0E0F] rounded-xl p-4 border border-[#ddd8d0] dark:border-[#2a2a2d] flex items-center justify-between">
-                        <div className="flex items-start gap-4">
-                            <div className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0 ${log.status === 'success' ? 'bg-[#0F3D2E] dark:bg-[#1E4D3A]' : 'bg-[#7A1C1C] dark:bg-[#8B2C2C]'}`} />
-                            <div>
-                                <p className="text-sm font-semibold text-[#1a1a1a] dark:text-[#F5F5F5]">{log.action}</p>
-                                <p className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0] mt-1">
-                                    By <span className="font-bold">{log.performedBy}</span>
-                                    {log.targetUser && ` on target `}
-                                    {log.targetUser && <span className="font-bold underline decoration-dotted">{log.targetUser}</span>}
-                                </p>
-                            </div>
-                        </div>
-                        <div className="text-right">
-                            <span className="text-[10px] text-[#6b6b6b] dark:text-[#B0B0B0] bg-white dark:bg-[#1C1C1F] px-2 py-1 rounded-md border border-[#ddd8d0] dark:border-[#2a2a2d]">
-                                {log.timestamp}
-                            </span>
-                        </div>
-                    </div>
-                ))}
             </div>
         </div>
     );
