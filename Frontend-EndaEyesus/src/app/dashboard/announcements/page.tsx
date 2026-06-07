@@ -35,6 +35,9 @@ export default function AnnouncementsPage() {
     const [formTarget, setFormTarget] = useState<"ALL" | "CLASS" | "LEADERS">("ALL");
     const [submitting, setSubmitting] = useState(false);
     const [formError, setFormError] = useState("");
+    const [formImageUrl, setFormImageUrl] = useState("");
+    const [formVideoUrl, setFormVideoUrl] = useState("");
+    const [formPdfUrl, setFormPdfUrl] = useState("");
 
     // Edit announcement form
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -43,6 +46,10 @@ export default function AnnouncementsPage() {
     const [editTarget, setEditTarget] = useState<"ALL" | "CLASS" | "LEADERS">("ALL");
     const [editSubmitting, setEditSubmitting] = useState(false);
     const [editError, setEditError] = useState("");
+
+    // Comment visibility state
+    const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
+    const [visibleCommentCounts, setVisibleCommentCounts] = useState<Record<string, number>>({});
 
     const fetchAnnouncements = () => {
         apiClient.announcements.listAnnouncements()
@@ -71,11 +78,15 @@ export default function AnnouncementsPage() {
                 targetType: formTarget,
                 targetClassID: formTarget === "CLASS" ? (user?.classLeaderOf || user?.serviceClassID) : null,
                 isPinned: false,
+                imageUrl: formImageUrl || null,
+                videoUrl: formVideoUrl || null,
+                pdfUrl: formPdfUrl || null,
             };
             await apiClient.announcements.createAnnouncement(payload);
             fetchAnnouncements();
             setShowForm(false);
             setFormTitle(""); setFormContent(""); setFormTarget("ALL");
+            setFormImageUrl(""); setFormVideoUrl(""); setFormPdfUrl("");
         } catch (err: any) {
             setFormError(err.response?.data?.message || "Failed to create announcement.");
         } finally {
@@ -122,6 +133,27 @@ export default function AnnouncementsPage() {
         setEditContent(announcement.content);
         setEditTarget(announcement.is_public ? "ALL" : "CLASS");
         setEditError("");
+    };
+
+    const toggleComments = (announcementId: string) => {
+        setExpandedComments(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(announcementId)) {
+                newSet.delete(announcementId);
+            } else {
+                newSet.add(announcementId);
+                // Initialize visible count to 3 when opening
+                setVisibleCommentCounts(prev => ({ ...prev, [announcementId]: 3 }));
+            }
+            return newSet;
+        });
+    };
+
+    const showMoreComments = (announcementId: string) => {
+        setVisibleCommentCounts(prev => ({
+            ...prev,
+            [announcementId]: (prev[announcementId] || 3) + 3
+        }));
     };
 
     if (user?.status === "PENDING") {
@@ -190,6 +222,26 @@ export default function AnnouncementsPage() {
                     <input value={formTitle} onChange={(e) => setFormTitle(e.target.value)} placeholder="Title"
                         className="w-full h-10 rounded-xl border border-[#ddd8d0] dark:border-[#2a2a2d] bg-[#F8F5F0] dark:bg-[#252529] text-sm px-3 dark:text-[#F5F5F5]" />
                     <RichTextEditor content={formContent} onChange={setFormContent} placeholder="Content..." />
+                    
+                    {/* Media File Uploads */}
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                            <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">Image URL:</label>
+                            <input value={formImageUrl} onChange={(e) => setFormImageUrl(e.target.value)} placeholder="https://..."
+                                className="flex-1 h-8 rounded-lg border border-[#ddd8d0] dark:border-[#2a2a2d] bg-[#F8F5F0] dark:bg-[#252529] text-xs px-2 dark:text-[#F5F5F5]" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">Video URL:</label>
+                            <input value={formVideoUrl} onChange={(e) => setFormVideoUrl(e.target.value)} placeholder="https://..."
+                                className="flex-1 h-8 rounded-lg border border-[#ddd8d0] dark:border-[#2a2a2d] bg-[#F8F5F0] dark:bg-[#252529] text-xs px-2 dark:text-[#F5F5F5]" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">PDF URL:</label>
+                            <input value={formPdfUrl} onChange={(e) => setFormPdfUrl(e.target.value)} placeholder="https://..."
+                                className="flex-1 h-8 rounded-lg border border-[#ddd8d0] dark:border-[#2a2a2d] bg-[#F8F5F0] dark:bg-[#252529] text-xs px-2 dark:text-[#F5F5F5]" />
+                        </div>
+                    </div>
+                    
                     {formError && <p className="text-xs text-red-500">⚠ {formError}</p>}
                     <div className="flex gap-2">
                         <button type="button" onClick={() => setShowForm(false)}
@@ -301,6 +353,27 @@ export default function AnnouncementsPage() {
                                                 )}
                                             </div>
                                             <h2 className="text-sm font-bold text-[#7A1C1C] dark:text-[#F5F5F5] leading-snug mb-2">{a.title}</h2>
+                                            
+                                            {/* Media Files Display */}
+                                            <div className="mb-3 space-y-2">
+                                                {a.image_url && (
+                                                    <img src={a.image_url} alt="Announcement image" className="w-full rounded-lg max-h-64 object-cover" />
+                                                )}
+                                                {a.video_url && (
+                                                    <video controls className="w-full rounded-lg max-h-64">
+                                                        <source src={a.video_url} type="video/mp4" />
+                                                        Your browser does not support the video tag.
+                                                    </video>
+                                                )}
+                                                {a.pdf_url && (
+                                                    <a href={a.pdf_url} target="_blank" rel="noopener noreferrer" 
+                                                        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#7A1C1C]/10 dark:bg-[#D4AF37]/10 hover:bg-[#7A1C1C]/20 dark:hover:bg-[#D4AF37]/20 transition-all">
+                                                        <span className="text-lg">📄</span>
+                                                        <span className="text-xs font-semibold text-[#7A1C1C] dark:text-[#D4AF37]">View PDF</span>
+                                                    </a>
+                                                )}
+                                            </div>
+                                            
                                             <div 
                                                 className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0] leading-relaxed prose prose-sm max-w-none"
                                                 dangerouslySetInnerHTML={{ __html: a.content }}
@@ -336,19 +409,27 @@ export default function AnnouncementsPage() {
                                                                 .then(() => fetchAnnouncements());
                                                         }
                                                     }}
-                                                    className="group ml-auto flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#7A1C1C]/10 dark:bg-[#D4AF37]/10 hover:bg-[#7A1C1C] dark:hover:bg-[#D4AF37] transition-all"
+                                                    className="group flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#7A1C1C]/10 dark:bg-[#D4AF37]/10 hover:bg-[#7A1C1C] dark:hover:bg-[#D4AF37] transition-all"
                                                 >
                                                     <span className="text-lg group-hover:scale-110 transition-transform">💬</span>
-                                                    <span className="text-xs font-bold text-[#7A1C1C] dark:text-[#D4AF37]">Comment</span>
+                                                    <span className="text-xs font-bold text-[#7A1C1C] dark:text-[#D4AF37]">{a.comments?.length || 0}</span>
+                                                </button>
+                                                <button
+                                                    onClick={() => toggleComments(a.id)}
+                                                    className="group ml-auto flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F8F5F0] dark:bg-[#252529] hover:bg-[#7A1C1C]/10 dark:hover:bg-[#D4AF37]/10 transition-all"
+                                                >
+                                                    <span className="text-xs font-bold text-[#6b6b6b] dark:text-[#B0B0B0]">
+                                                        {expandedComments.has(a.id) ? 'Hide' : 'View'} Comments
+                                                    </span>
                                                 </button>
                                             </div>
 
                                             {/* Comments Section */}
-                                            {a.comments && a.comments.length > 0 && (
+                                            {expandedComments.has(a.id) && a.comments && a.comments.length > 0 && (
                                                 <div className="mt-4 pt-4 border-t border-[#ddd8d0] dark:border-[#2a2a2d]">
                                                     <h4 className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0] mb-3">Comments ({a.comments.length})</h4>
                                                     <div className="space-y-3">
-                                                        {a.comments.map((comment: any) => (
+                                                        {a.comments.slice(0, visibleCommentCounts[a.id] || 3).map((comment: any) => (
                                                             <div key={comment.id} className="flex gap-2">
                                                                 <div className="w-6 h-6 rounded-full bg-[#7A1C1C]/10 flex items-center justify-center flex-shrink-0">
                                                                     <span className="text-[10px] font-bold text-[#7A1C1C] dark:text-[#D4AF37]">
@@ -368,6 +449,14 @@ export default function AnnouncementsPage() {
                                                                 </div>
                                                             </div>
                                                         ))}
+                                                        {a.comments.length > (visibleCommentCounts[a.id] || 3) && (
+                                                            <button
+                                                                onClick={() => showMoreComments(a.id)}
+                                                                className="text-[10px] font-semibold text-[#7A1C1C] dark:text-[#D4AF37] hover:underline"
+                                                            >
+                                                                See more comments...
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </div>
                                             )}
