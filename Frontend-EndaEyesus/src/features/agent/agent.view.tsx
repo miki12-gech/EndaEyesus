@@ -23,7 +23,7 @@ export function AgentControlView() {
 
     const tabs = [
         { id: "dashboard", label: "Overview", icon: Activity, show: !isServiceManager },
-        { id: "approvals", label: "Pending Approvals", icon: CheckCircle, show: !isServiceManager || isMemberAffairs },
+        { id: "approvals", label: "Pending Approvals", icon: CheckCircle, show: isMemberAffairs },
         { id: "subclass-approvals", label: "Sub-Class Approvals", icon: Layers, show: isChairman },
         { id: "roles", label: "Access Control", icon: ShieldCheck, show: isSecretariat },
         { id: "logs", label: "Activity Logs", icon: Settings, show: isChairman },
@@ -64,7 +64,7 @@ export function AgentControlView() {
                 <div className="flex-1 bg-white dark:bg-[#1C1C1F] rounded-2xl border border-[#ddd8d0] dark:border-[#2a2a2d] shadow-sm min-h-[600px] overflow-hidden">
                     <div className="h-full">
                         {activeTab === "dashboard" && !isServiceManager && <DashboardTab />}
-                        {activeTab === "approvals" && (!isServiceManager || isMemberAffairs) && <ApprovalsTab />}
+                        {activeTab === "approvals" && isMemberAffairs && <ApprovalsTab />}
                         {activeTab === "subclass-approvals" && isChairman && <SubClassApprovalsTab />}
                         {activeTab === "roles" && isSecretariat && <RolesTab />}
                         {activeTab === "logs" && isChairman && <LogsTab />}
