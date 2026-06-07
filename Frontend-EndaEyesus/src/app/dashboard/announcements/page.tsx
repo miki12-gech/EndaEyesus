@@ -39,18 +39,18 @@ export default function AnnouncementsPage() {
     const [formTarget, setFormTarget] = useState<"ALL" | "CLASS" | "LEADERS">("ALL");
     const [submitting, setSubmitting] = useState(false);
     const [formError, setFormError] = useState("");
-    const [formImageUrl, setFormImageUrl] = useState("");
-    const [formVideoUrl, setFormVideoUrl] = useState("");
-    const [formPdfUrl, setFormPdfUrl] = useState("");
+    const [formImageUrls, setFormImageUrls] = useState<string[]>([]);
+    const [formVideoUrls, setFormVideoUrls] = useState<string[]>([]);
+    const [formPdfUrls, setFormPdfUrls] = useState<string[]>([]);
 
     // Edit announcement form
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editTitle, setEditTitle] = useState("");
     const [editContent, setEditContent] = useState("");
     const [editTarget, setEditTarget] = useState<"ALL" | "CLASS" | "LEADERS">("ALL");
-    const [editImageUrl, setEditImageUrl] = useState("");
-    const [editVideoUrl, setEditVideoUrl] = useState("");
-    const [editPdfUrl, setEditPdfUrl] = useState("");
+    const [editImageUrls, setEditImageUrls] = useState<string[]>([]);
+    const [editVideoUrls, setEditVideoUrls] = useState<string[]>([]);
+    const [editPdfUrls, setEditPdfUrls] = useState<string[]>([]);
     const [editSubmitting, setEditSubmitting] = useState(false);
     const [editError, setEditError] = useState("");
 
@@ -88,15 +88,15 @@ export default function AnnouncementsPage() {
                 targetType: formTarget,
                 targetClassID: formTarget === "CLASS" ? (user?.classLeaderOf || user?.serviceClassID) : null,
                 isPinned: false,
-                imageUrl: formImageUrl || null,
-                videoUrl: formVideoUrl || null,
-                pdfUrl: formPdfUrl || null,
+                imageUrl: formImageUrls.length > 0 ? formImageUrls : null,
+                videoUrl: formVideoUrls.length > 0 ? formVideoUrls : null,
+                pdfUrl: formPdfUrls.length > 0 ? formPdfUrls : null,
             };
             await apiClient.announcements.createAnnouncement(payload);
             fetchAnnouncements();
             setShowForm(false);
             setFormTitle(""); setFormContent(""); setFormTarget("ALL");
-            setFormImageUrl(""); setFormVideoUrl(""); setFormPdfUrl("");
+            setFormImageUrls([]); setFormVideoUrls([]); setFormPdfUrls([]);
         } catch (err: any) {
             setFormError(err.response?.data?.message || "Failed to create announcement.");
         } finally {
@@ -115,15 +115,15 @@ export default function AnnouncementsPage() {
                 content: editContent,
                 targetType: editTarget,
                 targetClassID: editTarget === "CLASS" ? (user?.classLeaderOf || user?.serviceClassID) : null,
-                image_url: editImageUrl,
-                video_url: editVideoUrl,
-                pdf_url: editPdfUrl,
+                image_url: editImageUrls.length > 0 ? editImageUrls : null,
+                video_url: editVideoUrls.length > 0 ? editVideoUrls : null,
+                pdf_url: editPdfUrls.length > 0 ? editPdfUrls : null,
             };
             await chairmanApiService.updateAnnouncement(editingId!, payload);
             fetchAnnouncements();
             setEditingId(null);
             setEditTitle(""); setEditContent(""); setEditTarget("ALL");
-            setEditImageUrl(""); setEditVideoUrl(""); setEditPdfUrl("");
+            setEditImageUrls([]); setEditVideoUrls([]); setEditPdfUrls([]);
         } catch (err: any) {
             setEditError(err.response?.data?.message || "Failed to update announcement.");
         } finally {
@@ -146,9 +146,10 @@ export default function AnnouncementsPage() {
         setEditTitle(announcement.title);
         setEditContent(announcement.content);
         setEditTarget(announcement.is_public ? "ALL" : "CLASS");
-        setEditImageUrl(announcement.image_url || "");
-        setEditVideoUrl(announcement.video_url || "");
-        setEditPdfUrl(announcement.pdf_url || "");
+        // Parse JSON arrays if they exist, otherwise use empty arrays
+        setEditImageUrls(announcement.image_url ? (Array.isArray(announcement.image_url) ? announcement.image_url : JSON.parse(announcement.image_url || "[]")) : []);
+        setEditVideoUrls(announcement.video_url ? (Array.isArray(announcement.video_url) ? announcement.video_url : JSON.parse(announcement.video_url || "[]")) : []);
+        setEditPdfUrls(announcement.pdf_url ? (Array.isArray(announcement.pdf_url) ? announcement.pdf_url : JSON.parse(announcement.pdf_url || "[]")) : []);
         setEditError("");
     };
 
@@ -254,23 +255,116 @@ export default function AnnouncementsPage() {
                     <input value={formTitle} onChange={(e) => setFormTitle(e.target.value)} placeholder="Title"
                         className="w-full h-10 rounded-xl border border-[#ddd8d0] dark:border-[#2a2a2d] bg-[#F8F5F0] dark:bg-[#252529] text-sm px-3 dark:text-[#F5F5F5]" />
                     <RichTextEditor content={formContent} onChange={setFormContent} placeholder="Content..." />
-                    
+
                     {/* Media File Uploads */}
-                    <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                            <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">Image URL:</label>
-                            <input value={formImageUrl} onChange={(e) => setFormImageUrl(e.target.value)} placeholder="https://..."
-                                className="flex-1 h-8 rounded-lg border border-[#ddd8d0] dark:border-[#2a2a2d] bg-[#F8F5F0] dark:bg-[#252529] text-xs px-2 dark:text-[#F5F5F5]" />
+                    <div className="space-y-3">
+                        <div>
+                            <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">Images:</label>
+                            <div className="flex gap-2 mt-1">
+                                <input type="file" accept="image/*" multiple onChange={async (e) => {
+                                    const files = Array.from(e.target.files || []);
+                                    if (files.length > 0) {
+                                        const uploadPromises = files.map(async (file) => {
+                                            const fd = new FormData();
+                                            fd.append("image", file);
+                                            try {
+                                                const res = await api.post("/upload/image", fd, {
+                                                    headers: { "Content-Type": "multipart/form-data" },
+                                                });
+                                                return res.data.data?.imageURL || res.data.url;
+                                            } catch (err) {
+                                                console.error("Image upload failed", err);
+                                                return null;
+                                            }
+                                        });
+                                        const urls = await Promise.all(uploadPromises);
+                                        setFormImageUrls(prev => [...prev, ...urls.filter(Boolean)]);
+                                    }
+                                }} className="flex-1 text-xs" />
+                                <button type="button" onClick={() => setFormImageUrls([])} className="text-xs text-red-500 hover:text-red-700">Clear</button>
+                            </div>
+                            {formImageUrls.length > 0 && (
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                    {formImageUrls.map((url, idx) => (
+                                        <div key={idx} className="relative group">
+                                            <img src={url.startsWith("http") ? url : `${API_BASE}${url}`} alt="" className="w-16 h-16 object-cover rounded" />
+                                            <button type="button" onClick={() => setFormImageUrls(prev => prev.filter((_, i) => i !== idx))} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs opacity-0 group-hover:opacity-100">×</button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                        <div className="flex items-center gap-2">
-                            <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">Video URL:</label>
-                            <input value={formVideoUrl} onChange={(e) => setFormVideoUrl(e.target.value)} placeholder="https://..."
-                                className="flex-1 h-8 rounded-lg border border-[#ddd8d0] dark:border-[#2a2a2d] bg-[#F8F5F0] dark:bg-[#252529] text-xs px-2 dark:text-[#F5F5F5]" />
+                        <div>
+                            <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">Videos:</label>
+                            <div className="flex gap-2 mt-1">
+                                <input type="file" accept="video/*" multiple onChange={async (e) => {
+                                    const files = Array.from(e.target.files || []);
+                                    if (files.length > 0) {
+                                        const uploadPromises = files.map(async (file) => {
+                                            const fd = new FormData();
+                                            fd.append("video", file);
+                                            try {
+                                                const res = await api.post("/upload/video", fd, {
+                                                    headers: { "Content-Type": "multipart/form-data" },
+                                                });
+                                                return res.data.data?.videoURL || res.data.url;
+                                            } catch (err) {
+                                                console.error("Video upload failed", err);
+                                                return null;
+                                            }
+                                        });
+                                        const urls = await Promise.all(uploadPromises);
+                                        setFormVideoUrls(prev => [...prev, ...urls.filter(Boolean)]);
+                                    }
+                                }} className="flex-1 text-xs" />
+                                <button type="button" onClick={() => setFormVideoUrls([])} className="text-xs text-red-500 hover:text-red-700">Clear</button>
+                            </div>
+                            {formVideoUrls.length > 0 && (
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                    {formVideoUrls.map((url, idx) => (
+                                        <div key={idx} className="relative group">
+                                            <video src={url.startsWith("http") ? url : `${API_BASE}${url}`} className="w-16 h-16 object-cover rounded" />
+                                            <button type="button" onClick={() => setFormVideoUrls(prev => prev.filter((_, i) => i !== idx))} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs opacity-0 group-hover:opacity-100">×</button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                        <div className="flex items-center gap-2">
-                            <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">PDF URL:</label>
-                            <input value={formPdfUrl} onChange={(e) => setFormPdfUrl(e.target.value)} placeholder="https://..."
-                                className="flex-1 h-8 rounded-lg border border-[#ddd8d0] dark:border-[#2a2a2d] bg-[#F8F5F0] dark:bg-[#252529] text-xs px-2 dark:text-[#F5F5F5]" />
+                        <div>
+                            <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">PDFs:</label>
+                            <div className="flex gap-2 mt-1">
+                                <input type="file" accept="application/pdf" multiple onChange={async (e) => {
+                                    const files = Array.from(e.target.files || []);
+                                    if (files.length > 0) {
+                                        const uploadPromises = files.map(async (file) => {
+                                            const fd = new FormData();
+                                            fd.append("pdf", file);
+                                            try {
+                                                const res = await api.post("/upload/pdf", fd, {
+                                                    headers: { "Content-Type": "multipart/form-data" },
+                                                });
+                                                return res.data.data?.pdfURL || res.data.url;
+                                            } catch (err) {
+                                                console.error("PDF upload failed", err);
+                                                return null;
+                                            }
+                                        });
+                                        const urls = await Promise.all(uploadPromises);
+                                        setFormPdfUrls(prev => [...prev, ...urls.filter(Boolean)]);
+                                    }
+                                }} className="flex-1 text-xs" />
+                                <button type="button" onClick={() => setFormPdfUrls([])} className="text-xs text-red-500 hover:text-red-700">Clear</button>
+                            </div>
+                            {formPdfUrls.length > 0 && (
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                    {formPdfUrls.map((url, idx) => (
+                                        <div key={idx} className="relative group bg-[#7A1C1C]/10 dark:bg-[#D4AF37]/10 px-2 py-1 rounded">
+                                            <span className="text-xs text-[#7A1C1C] dark:text-[#D4AF37]">PDF {idx + 1}</span>
+                                            <button type="button" onClick={() => setFormPdfUrls(prev => prev.filter((_, i) => i !== idx))} className="ml-2 text-red-500 hover:text-red-700">×</button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                     
@@ -391,82 +485,114 @@ export default function AnnouncementsPage() {
                                             <RichTextEditor content={editContent} onChange={setEditContent} placeholder="Content..." />
 
                                             {/* Media URL Inputs */}
-                                            <div className="space-y-2">
-                                                <div className="flex items-center gap-2">
-                                                    <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">Image URL:</label>
-                                                    <input value={editImageUrl} onChange={(e) => setEditImageUrl(e.target.value)} placeholder="https://..."
-                                                        className="flex-1 h-8 rounded-lg border border-[#ddd8d0] dark:border-[#2a2a2d] bg-[#F8F5F0] dark:bg-[#252529] text-xs px-2 dark:text-[#F5F5F5]" />
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">Video URL:</label>
-                                                    <input value={editVideoUrl} onChange={(e) => setEditVideoUrl(e.target.value)} placeholder="https://..."
-                                                        className="flex-1 h-8 rounded-lg border border-[#ddd8d0] dark:border-[#2a2a2d] bg-[#F8F5F0] dark:bg-[#252529] text-xs px-2 dark:text-[#F5F5F5]" />
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">PDF URL:</label>
-                                                    <input value={editPdfUrl} onChange={(e) => setEditPdfUrl(e.target.value)} placeholder="https://..."
-                                                        className="flex-1 h-8 rounded-lg border border-[#ddd8d0] dark:border-[#2a2a2d] bg-[#F8F5F0] dark:bg-[#252529] text-xs px-2 dark:text-[#F5F5F5]" />
-                                                </div>
-                                            </div>
-
-                                            {/* Media File Uploads */}
-                                            <div className="space-y-2">
-                                                <div className="flex items-center gap-2">
-                                                    <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">Upload Image:</label>
-                                                    <input type="file" accept="image/*" onChange={async (e) => {
-                                                        const file = e.target.files?.[0];
-                                                        if (file) {
-                                                            const fd = new FormData();
-                                                            fd.append("image", file);
-                                                            try {
-                                                                const res = await api.post("/upload/image", fd, {
-                                                                    headers: { "Content-Type": "multipart/form-data" },
+                                            <div className="space-y-3">
+                                                <div>
+                                                    <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">Images:</label>
+                                                    <div className="flex gap-2 mt-1">
+                                                        <input type="file" accept="image/*" multiple onChange={async (e) => {
+                                                            const files = Array.from(e.target.files || []);
+                                                            if (files.length > 0) {
+                                                                const uploadPromises = files.map(async (file) => {
+                                                                    const fd = new FormData();
+                                                                    fd.append("image", file);
+                                                                    try {
+                                                                        const res = await api.post("/upload/image", fd, {
+                                                                            headers: { "Content-Type": "multipart/form-data" },
+                                                                        });
+                                                                        return res.data.data?.imageURL || res.data.url;
+                                                                    } catch (err) {
+                                                                        console.error("Image upload failed", err);
+                                                                        return null;
+                                                                    }
                                                                 });
-                                                                const imageUrl = res.data.data?.imageURL || res.data.url;
-                                                                setEditImageUrl(imageUrl);
-                                                            } catch (err) {
-                                                                console.error("Image upload failed", err);
+                                                                const urls = await Promise.all(uploadPromises);
+                                                                setEditImageUrls(prev => [...prev, ...urls.filter(Boolean)]);
                                                             }
-                                                        }
-                                                    }} className="flex-1 text-xs" />
+                                                        }} className="flex-1 text-xs" />
+                                                        <button type="button" onClick={() => setEditImageUrls([])} className="text-xs text-red-500 hover:text-red-700">Clear</button>
+                                                    </div>
+                                                    {editImageUrls.length > 0 && (
+                                                        <div className="flex flex-wrap gap-2 mt-2">
+                                                            {editImageUrls.map((url, idx) => (
+                                                                <div key={idx} className="relative group">
+                                                                    <img src={url.startsWith("http") ? url : `${API_BASE}${url}`} alt="" className="w-16 h-16 object-cover rounded" />
+                                                                    <button type="button" onClick={() => setEditImageUrls(prev => prev.filter((_, i) => i !== idx))} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs opacity-0 group-hover:opacity-100">×</button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                <div className="flex items-center gap-2">
-                                                    <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">Upload Video:</label>
-                                                    <input type="file" accept="video/*" onChange={async (e) => {
-                                                        const file = e.target.files?.[0];
-                                                        if (file) {
-                                                            const fd = new FormData();
-                                                            fd.append("video", file);
-                                                            try {
-                                                                const res = await api.post("/upload/video", fd, {
-                                                                    headers: { "Content-Type": "multipart/form-data" },
+                                                <div>
+                                                    <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">Videos:</label>
+                                                    <div className="flex gap-2 mt-1">
+                                                        <input type="file" accept="video/*" multiple onChange={async (e) => {
+                                                            const files = Array.from(e.target.files || []);
+                                                            if (files.length > 0) {
+                                                                const uploadPromises = files.map(async (file) => {
+                                                                    const fd = new FormData();
+                                                                    fd.append("video", file);
+                                                                    try {
+                                                                        const res = await api.post("/upload/video", fd, {
+                                                                            headers: { "Content-Type": "multipart/form-data" },
+                                                                        });
+                                                                        return res.data.data?.videoURL || res.data.url;
+                                                                    } catch (err) {
+                                                                        console.error("Video upload failed", err);
+                                                                        return null;
+                                                                    }
                                                                 });
-                                                                const videoUrl = res.data.data?.videoURL || res.data.url;
-                                                                setEditVideoUrl(videoUrl);
-                                                            } catch (err) {
-                                                                console.error("Video upload failed", err);
+                                                                const urls = await Promise.all(uploadPromises);
+                                                                setEditVideoUrls(prev => [...prev, ...urls.filter(Boolean)]);
                                                             }
-                                                        }
-                                                    }} className="flex-1 text-xs" />
+                                                        }} className="flex-1 text-xs" />
+                                                        <button type="button" onClick={() => setEditVideoUrls([])} className="text-xs text-red-500 hover:text-red-700">Clear</button>
+                                                    </div>
+                                                    {editVideoUrls.length > 0 && (
+                                                        <div className="flex flex-wrap gap-2 mt-2">
+                                                            {editVideoUrls.map((url, idx) => (
+                                                                <div key={idx} className="relative group">
+                                                                    <video src={url.startsWith("http") ? url : `${API_BASE}${url}`} className="w-16 h-16 object-cover rounded" />
+                                                                    <button type="button" onClick={() => setEditVideoUrls(prev => prev.filter((_, i) => i !== idx))} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs opacity-0 group-hover:opacity-100">×</button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                <div className="flex items-center gap-2">
-                                                    <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">Upload PDF:</label>
-                                                    <input type="file" accept="application/pdf" onChange={async (e) => {
-                                                        const file = e.target.files?.[0];
-                                                        if (file) {
-                                                            const fd = new FormData();
-                                                            fd.append("pdf", file);
-                                                            try {
-                                                                const res = await api.post("/upload/pdf", fd, {
-                                                                    headers: { "Content-Type": "multipart/form-data" },
+                                                <div>
+                                                    <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">PDFs:</label>
+                                                    <div className="flex gap-2 mt-1">
+                                                        <input type="file" accept="application/pdf" multiple onChange={async (e) => {
+                                                            const files = Array.from(e.target.files || []);
+                                                            if (files.length > 0) {
+                                                                const uploadPromises = files.map(async (file) => {
+                                                                    const fd = new FormData();
+                                                                    fd.append("pdf", file);
+                                                                    try {
+                                                                        const res = await api.post("/upload/pdf", fd, {
+                                                                            headers: { "Content-Type": "multipart/form-data" },
+                                                                        });
+                                                                        return res.data.data?.pdfURL || res.data.url;
+                                                                    } catch (err) {
+                                                                        console.error("PDF upload failed", err);
+                                                                        return null;
+                                                                    }
                                                                 });
-                                                                const pdfUrl = res.data.data?.pdfURL || res.data.url;
-                                                                setEditPdfUrl(pdfUrl);
-                                                            } catch (err) {
-                                                                console.error("PDF upload failed", err);
+                                                                const urls = await Promise.all(uploadPromises);
+                                                                setEditPdfUrls(prev => [...prev, ...urls.filter(Boolean)]);
                                                             }
-                                                        }
-                                                    }} className="flex-1 text-xs" />
+                                                        }} className="flex-1 text-xs" />
+                                                        <button type="button" onClick={() => setEditPdfUrls([])} className="text-xs text-red-500 hover:text-red-700">Clear</button>
+                                                    </div>
+                                                    {editPdfUrls.length > 0 && (
+                                                        <div className="flex flex-wrap gap-2 mt-2">
+                                                            {editPdfUrls.map((url, idx) => (
+                                                                <div key={idx} className="relative group bg-[#7A1C1C]/10 dark:bg-[#D4AF37]/10 px-2 py-1 rounded">
+                                                                    <span className="text-xs text-[#7A1C1C] dark:text-[#D4AF37]">PDF {idx + 1}</span>
+                                                                    <button type="button" onClick={() => setEditPdfUrls(prev => prev.filter((_, i) => i !== idx))} className="ml-2 text-red-500 hover:text-red-700">×</button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
 
@@ -492,23 +618,72 @@ export default function AnnouncementsPage() {
                                             <h2 className="text-sm font-bold text-[#7A1C1C] dark:text-[#F5F5F5] leading-snug mb-2">{a.title}</h2>
                                             
                                             {/* Media Files Display */}
-                                            <div className="mb-3 space-y-2">
-                                                {a.image_url && (
-                                                    <img src={a.image_url.startsWith("http") ? a.image_url : `${API_BASE}${a.image_url}`} alt="Announcement image" className="w-full rounded-lg max-h-64 object-cover" />
-                                                )}
-                                                {a.video_url && (
-                                                    <video controls className="w-full rounded-lg max-h-64">
-                                                        <source src={a.video_url.startsWith("http") ? a.video_url : `${API_BASE}${a.video_url}`} type="video/mp4" />
-                                                        Your browser does not support the video tag.
-                                                    </video>
-                                                )}
-                                                {a.pdf_url && (
-                                                    <a href={a.pdf_url.startsWith("http") ? a.pdf_url : `${API_BASE}${a.pdf_url}`} target="_blank" rel="noopener noreferrer"
-                                                        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#7A1C1C]/10 dark:bg-[#D4AF37]/10 hover:bg-[#7A1C1C]/20 dark:hover:bg-[#D4AF37]/20 transition-all">
-                                                        <span className="text-lg">📄</span>
-                                                        <span className="text-xs font-semibold text-[#7A1C1C] dark:text-[#D4AF37]">View PDF</span>
-                                                    </a>
-                                                )}
+                                            <div className="mb-3 space-y-3">
+                                                {/* Images */}
+                                                {(() => {
+                                                    const imageUrls = a.image_url ? (Array.isArray(a.image_url) ? a.image_url : JSON.parse(a.image_url || "[]")) : [];
+                                                    if (imageUrls.length > 0) {
+                                                        return (
+                                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                                {imageUrls.map((url: string, idx: number) => (
+                                                                    <div key={idx} className="relative group overflow-hidden rounded-lg">
+                                                                        <img 
+                                                                            src={url.startsWith("http") ? url : `${API_BASE}${url}`} 
+                                                                            alt={`Announcement image ${idx + 1}`} 
+                                                                            className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105" 
+                                                                        />
+                                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        );
+                                                    }
+                                                    return null;
+                                                })()}
+                                                
+                                                {/* Videos */}
+                                                {(() => {
+                                                    const videoUrls = a.video_url ? (Array.isArray(a.video_url) ? a.video_url : JSON.parse(a.video_url || "[]")) : [];
+                                                    if (videoUrls.length > 0) {
+                                                        return (
+                                                            <div className="grid grid-cols-1 gap-2">
+                                                                {videoUrls.map((url: string, idx: number) => (
+                                                                    <div key={idx} className="relative group overflow-hidden rounded-lg">
+                                                                        <video controls className="w-full h-48 object-cover">
+                                                                            <source src={url.startsWith("http") ? url : `${API_BASE}${url}`} type="video/mp4" />
+                                                                            Your browser does not support the video tag.
+                                                                        </video>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        );
+                                                    }
+                                                    return null;
+                                                })()}
+                                                
+                                                {/* PDFs */}
+                                                {(() => {
+                                                    const pdfUrls = a.pdf_url ? (Array.isArray(a.pdf_url) ? a.pdf_url : JSON.parse(a.pdf_url || "[]")) : [];
+                                                    if (pdfUrls.length > 0) {
+                                                        return (
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {pdfUrls.map((url: string, idx: number) => (
+                                                                    <a 
+                                                                        key={idx}
+                                                                        href={url.startsWith("http") ? url : `${API_BASE}${url}`} 
+                                                                        target="_blank" 
+                                                                        rel="noopener noreferrer"
+                                                                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-[#7A1C1C] to-[#C9A227] text-white hover:from-[#C9A227] hover:to-[#7A1C1C] transition-all shadow-md hover:shadow-lg"
+                                                                    >
+                                                                        <span className="text-lg">📄</span>
+                                                                        <span className="text-xs font-semibold">PDF {idx + 1}</span>
+                                                                    </a>
+                                                                ))}
+                                                            </div>
+                                                        );
+                                                    }
+                                                    return null;
+                                                })()}
                                             </div>
                                             
                                             <div 
