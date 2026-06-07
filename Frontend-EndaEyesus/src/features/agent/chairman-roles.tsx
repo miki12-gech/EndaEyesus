@@ -208,10 +208,10 @@ export function ChairmanRolesView() {
             <div className="flex gap-2 border-b border-[#ddd8d0] dark:border-[#2a2a2d] pb-4">
                 <button
                     onClick={() => setActiveSection('assign')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                         activeSection === 'assign'
-                            ? 'bg-[#7A1C1C] text-white dark:bg-[#D4AF37] dark:text-[#0E0E0F]'
-                            : 'text-[#6b6b6b] dark:text-[#B0B0B0] hover:bg-[#F8F5F0] dark:hover:bg-[#252529]'
+                            ? 'bg-gradient-to-r from-[#7A1C1C] to-[#C9A227] text-white dark:from-[#D4AF37] dark:to-[#1E4D3A] dark:text-[#0E0E0F] shadow-md'
+                            : 'text-[#6b6b6b] dark:text-[#B0B0B0] hover:bg-[#F8F5F0] dark:hover:bg-[#252529] hover:text-[#7A1C1C] dark:hover:text-[#D4AF37]'
                     }`}
                 >
                     <UserPlus className="h-4 w-4" />
@@ -219,10 +219,10 @@ export function ChairmanRolesView() {
                 </button>
                 <button
                     onClick={() => setActiveSection('transfer')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                         activeSection === 'transfer'
-                            ? 'bg-[#7A1C1C] text-white dark:bg-[#D4AF37] dark:text-[#0E0E0F]'
-                            : 'text-[#6b6b6b] dark:text-[#B0B0B0] hover:bg-[#F8F5F0] dark:hover:bg-[#252529]'
+                            ? 'bg-gradient-to-r from-[#7A1C1C] to-[#C9A227] text-white dark:from-[#D4AF37] dark:to-[#1E4D3A] dark:text-[#0E0E0F] shadow-md'
+                            : 'text-[#6b6b6b] dark:text-[#B0B0B0] hover:bg-[#F8F5F0] dark:hover:bg-[#252529] hover:text-[#7A1C1C] dark:hover:text-[#D4AF37]'
                     }`}
                 >
                     <ArrowRight className="h-4 w-4" />
