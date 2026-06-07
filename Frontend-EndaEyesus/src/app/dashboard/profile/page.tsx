@@ -322,6 +322,12 @@ export default function ProfilePage() {
                     </div>
                 </div>
             </div>
+
+            <div className="flex justify-center pt-4">
+                <Button variant="destructive" className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white" onClick={() => { useAuthStore.getState().logout(); window.location.href = "/login"; }}>
+                    Log Out
+                </Button>
+            </div>
         </div>
     );
 }

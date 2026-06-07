@@ -402,16 +402,16 @@ export default function AnnouncementsPage() {
                                             {/* Media Files Display */}
                                             <div className="mb-3 space-y-2">
                                                 {a.image_url && (
-                                                    <img src={a.image_url} alt="Announcement image" className="w-full rounded-lg max-h-64 object-cover" />
+                                                    <img src={a.image_url.startsWith("http") ? a.image_url : `${API_BASE}${a.image_url}`} alt="Announcement image" className="w-full rounded-lg max-h-64 object-cover" />
                                                 )}
                                                 {a.video_url && (
                                                     <video controls className="w-full rounded-lg max-h-64">
-                                                        <source src={a.video_url} type="video/mp4" />
+                                                        <source src={a.video_url.startsWith("http") ? a.video_url : `${API_BASE}${a.video_url}`} type="video/mp4" />
                                                         Your browser does not support the video tag.
                                                     </video>
                                                 )}
                                                 {a.pdf_url && (
-                                                    <a href={a.pdf_url} target="_blank" rel="noopener noreferrer" 
+                                                    <a href={a.pdf_url.startsWith("http") ? a.pdf_url : `${API_BASE}${a.pdf_url}`} target="_blank" rel="noopener noreferrer"
                                                         className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#7A1C1C]/10 dark:bg-[#D4AF37]/10 hover:bg-[#7A1C1C]/20 dark:hover:bg-[#D4AF37]/20 transition-all">
                                                         <span className="text-lg">📄</span>
                                                         <span className="text-xs font-semibold text-[#7A1C1C] dark:text-[#D4AF37]">View PDF</span>
