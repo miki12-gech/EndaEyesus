@@ -259,7 +259,7 @@ export default function AnnouncementsPage() {
                     {/* Media File Uploads */}
                     <div className="space-y-3">
                         <div>
-                            <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">Images:</label>
+                            <label className="text-sm font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">Images:</label>
                             <div className="flex gap-2 mt-1">
                                 <input type="file" accept="image/*" multiple onChange={async (e) => {
                                     const files = Array.from(e.target.files || []);
@@ -280,8 +280,8 @@ export default function AnnouncementsPage() {
                                         const urls = await Promise.all(uploadPromises);
                                         setFormImageUrls(prev => [...prev, ...urls.filter(Boolean)]);
                                     }
-                                }} className="flex-1 text-xs" />
-                                <button type="button" onClick={() => setFormImageUrls([])} className="text-xs text-red-500 hover:text-red-700">Clear</button>
+                                }} className="flex-1 text-sm" />
+                                <button type="button" onClick={() => setFormImageUrls([])} className="text-sm text-red-500 hover:text-red-700">Clear</button>
                             </div>
                             {formImageUrls.length > 0 && (
                                 <div className="flex flex-wrap gap-3 mt-3">
@@ -290,7 +290,7 @@ export default function AnnouncementsPage() {
                                             <img 
                                                 src={url.startsWith("http") ? url : `${API_BASE}${url}`} 
                                                 alt="" 
-                                                className="w-32 h-32 object-cover rounded-lg shadow-md transition-transform duration-300 group-hover:scale-105" 
+                                                className="w-48 h-48 object-cover rounded-lg shadow-md transition-transform duration-300 group-hover:scale-105" 
                                             />
                                             <button 
                                                 type="button" 
@@ -305,7 +305,7 @@ export default function AnnouncementsPage() {
                             )}
                         </div>
                         <div>
-                            <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">Videos:</label>
+                            <label className="text-sm font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">Videos:</label>
                             <div className="flex gap-2 mt-1">
                                 <input type="file" accept="video/*" multiple onChange={async (e) => {
                                     const files = Array.from(e.target.files || []);
@@ -326,8 +326,8 @@ export default function AnnouncementsPage() {
                                         const urls = await Promise.all(uploadPromises);
                                         setFormVideoUrls(prev => [...prev, ...urls.filter(Boolean)]);
                                     }
-                                }} className="flex-1 text-xs" />
-                                <button type="button" onClick={() => setFormVideoUrls([])} className="text-xs text-red-500 hover:text-red-700">Clear</button>
+                                }} className="flex-1 text-sm" />
+                                <button type="button" onClick={() => setFormVideoUrls([])} className="text-sm text-red-500 hover:text-red-700">Clear</button>
                             </div>
                             {formVideoUrls.length > 0 && (
                                 <div className="flex flex-wrap gap-3 mt-3">
@@ -335,7 +335,7 @@ export default function AnnouncementsPage() {
                                         <div key={idx} className="relative group flex-shrink-0">
                                             <video 
                                                 src={url.startsWith("http") ? url : `${API_BASE}${url}`} 
-                                                className="w-32 h-32 object-cover rounded-lg shadow-md"
+                                                className="w-48 h-48 object-cover rounded-lg shadow-md"
                                                 controls
                                             />
                                             <button 
@@ -351,7 +351,7 @@ export default function AnnouncementsPage() {
                             )}
                         </div>
                         <div>
-                            <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">PDFs:</label>
+                            <label className="text-sm font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">PDFs:</label>
                             <div className="flex gap-2 mt-1">
                                 <input type="file" accept="application/pdf" multiple onChange={async (e) => {
                                     const files = Array.from(e.target.files || []);
@@ -372,8 +372,8 @@ export default function AnnouncementsPage() {
                                         const urls = await Promise.all(uploadPromises);
                                         setFormPdfUrls(prev => [...prev, ...urls.filter(Boolean)]);
                                     }
-                                }} className="flex-1 text-xs" />
-                                <button type="button" onClick={() => setFormPdfUrls([])} className="text-xs text-red-500 hover:text-red-700">Clear</button>
+                                }} className="flex-1 text-sm" />
+                                <button type="button" onClick={() => setFormPdfUrls([])} className="text-sm text-red-500 hover:text-red-700">Clear</button>
                             </div>
                             {formPdfUrls.length > 0 && (
                                 <div className="flex flex-wrap gap-3 mt-3">
@@ -381,7 +381,7 @@ export default function AnnouncementsPage() {
                                         <div key={idx} className="relative group flex-shrink-0 bg-[#7A1C1C]/10 dark:bg-[#D4AF37]/10 px-4 py-3 rounded-lg border border-[#7A1C1C]/20 dark:border-[#D4AF37]/20">
                                             <div className="flex items-center gap-2">
                                                 <span className="text-2xl">📄</span>
-                                                <span className="text-xs font-semibold text-[#7A1C1C] dark:text-[#D4AF37]">PDF {idx + 1}</span>
+                                                <span className="text-sm font-semibold text-[#7A1C1C] dark:text-[#D4AF37]">PDF {idx + 1}</span>
                                             </div>
                                             <button 
                                                 type="button" 
@@ -516,7 +516,7 @@ export default function AnnouncementsPage() {
                                             {/* Media URL Inputs */}
                                             <div className="space-y-3">
                                                 <div>
-                                                    <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">Images:</label>
+                                                    <label className="text-sm font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">Images:</label>
                                                     <div className="flex gap-2 mt-1">
                                                         <input type="file" accept="image/*" multiple onChange={async (e) => {
                                                             const files = Array.from(e.target.files || []);
@@ -537,8 +537,8 @@ export default function AnnouncementsPage() {
                                                                 const urls = await Promise.all(uploadPromises);
                                                                 setEditImageUrls(prev => [...prev, ...urls.filter(Boolean)]);
                                                             }
-                                                        }} className="flex-1 text-xs" />
-                                                        <button type="button" onClick={() => setEditImageUrls([])} className="text-xs text-red-500 hover:text-red-700">Clear</button>
+                                                        }} className="flex-1 text-sm" />
+                                                        <button type="button" onClick={() => setEditImageUrls([])} className="text-sm text-red-500 hover:text-red-700">Clear</button>
                                                     </div>
                                                     {editImageUrls.length > 0 && (
                                                         <div className="flex flex-wrap gap-3 mt-3">
@@ -547,7 +547,7 @@ export default function AnnouncementsPage() {
                                                                     <img 
                                                                         src={url.startsWith("http") ? url : `${API_BASE}${url}`} 
                                                                         alt="" 
-                                                                        className="w-32 h-32 object-cover rounded-lg shadow-md transition-transform duration-300 group-hover:scale-105" 
+                                                                        className="w-48 h-48 object-cover rounded-lg shadow-md transition-transform duration-300 group-hover:scale-105" 
                                                                     />
                                                                     <button 
                                                                         type="button" 
@@ -562,7 +562,7 @@ export default function AnnouncementsPage() {
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">Videos:</label>
+                                                    <label className="text-sm font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">Videos:</label>
                                                     <div className="flex gap-2 mt-1">
                                                         <input type="file" accept="video/*" multiple onChange={async (e) => {
                                                             const files = Array.from(e.target.files || []);
@@ -583,8 +583,8 @@ export default function AnnouncementsPage() {
                                                                 const urls = await Promise.all(uploadPromises);
                                                                 setEditVideoUrls(prev => [...prev, ...urls.filter(Boolean)]);
                                                             }
-                                                        }} className="flex-1 text-xs" />
-                                                        <button type="button" onClick={() => setEditVideoUrls([])} className="text-xs text-red-500 hover:text-red-700">Clear</button>
+                                                        }} className="flex-1 text-sm" />
+                                                        <button type="button" onClick={() => setEditVideoUrls([])} className="text-sm text-red-500 hover:text-red-700">Clear</button>
                                                     </div>
                                                     {editVideoUrls.length > 0 && (
                                                         <div className="flex flex-wrap gap-3 mt-3">
@@ -592,7 +592,7 @@ export default function AnnouncementsPage() {
                                                                 <div key={idx} className="relative group flex-shrink-0">
                                                                     <video 
                                                                         src={url.startsWith("http") ? url : `${API_BASE}${url}`} 
-                                                                        className="w-32 h-32 object-cover rounded-lg shadow-md"
+                                                                        className="w-48 h-48 object-cover rounded-lg shadow-md"
                                                                         controls
                                                                     />
                                                                     <button 
@@ -608,7 +608,7 @@ export default function AnnouncementsPage() {
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">PDFs:</label>
+                                                    <label className="text-sm font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">PDFs:</label>
                                                     <div className="flex gap-2 mt-1">
                                                         <input type="file" accept="application/pdf" multiple onChange={async (e) => {
                                                             const files = Array.from(e.target.files || []);
@@ -629,8 +629,8 @@ export default function AnnouncementsPage() {
                                                                 const urls = await Promise.all(uploadPromises);
                                                                 setEditPdfUrls(prev => [...prev, ...urls.filter(Boolean)]);
                                                             }
-                                                        }} className="flex-1 text-xs" />
-                                                        <button type="button" onClick={() => setEditPdfUrls([])} className="text-xs text-red-500 hover:text-red-700">Clear</button>
+                                                        }} className="flex-1 text-sm" />
+                                                        <button type="button" onClick={() => setEditPdfUrls([])} className="text-sm text-red-500 hover:text-red-700">Clear</button>
                                                     </div>
                                                     {editPdfUrls.length > 0 && (
                                                         <div className="flex flex-wrap gap-3 mt-3">
@@ -638,7 +638,7 @@ export default function AnnouncementsPage() {
                                                                 <div key={idx} className="relative group flex-shrink-0 bg-[#7A1C1C]/10 dark:bg-[#D4AF37]/10 px-4 py-3 rounded-lg border border-[#7A1C1C]/20 dark:border-[#D4AF37]/20">
                                                                     <div className="flex items-center gap-2">
                                                                         <span className="text-2xl">📄</span>
-                                                                        <span className="text-xs font-semibold text-[#7A1C1C] dark:text-[#D4AF37]">PDF {idx + 1}</span>
+                                                                        <span className="text-sm font-semibold text-[#7A1C1C] dark:text-[#D4AF37]">PDF {idx + 1}</span>
                                                                     </div>
                                                                     <button 
                                                                         type="button" 
@@ -673,7 +673,7 @@ export default function AnnouncementsPage() {
                                                     {a.is_public ? "PUBLIC" : "CLASS"}
                                                 </span>
                                             </div>
-                                            <h2 className="text-sm font-bold text-[#7A1C1C] dark:text-[#F5F5F5] leading-snug mb-2">{a.title}</h2>
+                                            <h2 className="text-lg font-bold text-[#7A1C1C] dark:text-[#F5F5F5] leading-snug mb-2">{a.title}</h2>
                                             
                                             {/* Media Files Display */}
                                             <div className="mb-3 space-y-3">
@@ -682,13 +682,13 @@ export default function AnnouncementsPage() {
                                                     const imageUrls = a.image_url ? (Array.isArray(a.image_url) ? a.image_url : JSON.parse(a.image_url || "[]")) : [];
                                                     if (imageUrls.length > 0) {
                                                         return (
-                                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                                 {imageUrls.map((url: string, idx: number) => (
                                                                     <div key={idx} className="relative group overflow-hidden rounded-lg">
                                                                         <img 
                                                                             src={url.startsWith("http") ? url : `${API_BASE}${url}`} 
                                                                             alt={`Announcement image ${idx + 1}`} 
-                                                                            className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105" 
+                                                                            className="w-full h-80 object-cover transition-transform duration-300 group-hover:scale-105" 
                                                                         />
                                                                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                                                     </div>
@@ -704,10 +704,10 @@ export default function AnnouncementsPage() {
                                                     const videoUrls = a.video_url ? (Array.isArray(a.video_url) ? a.video_url : JSON.parse(a.video_url || "[]")) : [];
                                                     if (videoUrls.length > 0) {
                                                         return (
-                                                            <div className="grid grid-cols-1 gap-2">
+                                                            <div className="grid grid-cols-1 gap-3">
                                                                 {videoUrls.map((url: string, idx: number) => (
                                                                     <div key={idx} className="relative group overflow-hidden rounded-lg">
-                                                                        <video controls className="w-full h-48 object-cover">
+                                                                        <video controls className="w-full h-80 object-cover">
                                                                             <source src={url.startsWith("http") ? url : `${API_BASE}${url}`} type="video/mp4" />
                                                                             Your browser does not support the video tag.
                                                                         </video>
@@ -745,7 +745,7 @@ export default function AnnouncementsPage() {
                                             </div>
                                             
                                             <div 
-                                                className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0] leading-relaxed prose prose-sm max-w-none"
+                                                className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0] leading-relaxed prose prose-sm max-w-none"
                                                 dangerouslySetInnerHTML={{ __html: a.content }}
                                             />
                                             
