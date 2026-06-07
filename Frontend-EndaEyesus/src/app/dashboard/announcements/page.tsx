@@ -301,27 +301,32 @@ export default function AnnouncementsPage() {
                                                 )}
                                             </div>
                                             <h2 className="text-sm font-bold text-[#7A1C1C] dark:text-[#F5F5F5] leading-snug mb-2">{a.title}</h2>
-                                            <p className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0] leading-relaxed whitespace-pre-wrap">{a.content}</p>
+                                            <div 
+                                                className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0] leading-relaxed prose prose-sm max-w-none"
+                                                dangerouslySetInnerHTML={{ __html: a.content }}
+                                            />
                                             
                                             {/* Interactions */}
-                                            <div className="mt-4 flex items-center gap-4 border-t border-[#ddd8d0] dark:border-[#2a2a2d] pt-3">
+                                            <div className="mt-4 flex items-center gap-3 border-t border-[#ddd8d0] dark:border-[#2a2a2d] pt-3">
                                                 <button
                                                     onClick={async () => {
                                                         await apiClient.announcements.reactToAnnouncement(a.id, { type: "LIKE" });
                                                         fetchAnnouncements();
                                                     }}
-                                                    className="flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] dark:text-[#B0B0B0] hover:text-[#7A1C1C] dark:hover:text-[#D4AF37] transition-colors">
-                                                    <span className="text-sm">👍</span>
-                                                    <span>{a.reaction_counts?.likes || 0}</span>
+                                                    className="group flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F8F5F0] dark:bg-[#252529] hover:bg-[#7A1C1C]/10 dark:hover:bg-[#D4AF37]/10 transition-all"
+                                                >
+                                                    <span className="text-lg group-hover:scale-110 transition-transform">👍</span>
+                                                    <span className="text-xs font-bold text-[#7A1C1C] dark:text-[#D4AF37]">{a.reaction_counts?.likes || 0}</span>
                                                 </button>
                                                 <button
                                                     onClick={async () => {
                                                         await apiClient.announcements.reactToAnnouncement(a.id, { type: "STAR" });
                                                         fetchAnnouncements();
                                                     }}
-                                                    className="flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] dark:text-[#B0B0B0] hover:text-[#C9A227] dark:hover:text-[#D4AF37] transition-colors">
-                                                    <span className="text-sm">⭐</span>
-                                                    <span>{a.reaction_counts?.stars || 0}</span>
+                                                    className="group flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F8F5F0] dark:bg-[#252529] hover:bg-[#C9A227]/10 dark:hover:bg-[#D4AF37]/10 transition-all"
+                                                >
+                                                    <span className="text-lg group-hover:scale-110 transition-transform">⭐</span>
+                                                    <span className="text-xs font-bold text-[#C9A227] dark:text-[#D4AF37]">{a.reaction_counts?.stars || 0}</span>
                                                 </button>
                                                 <button
                                                     onClick={() => {
@@ -331,8 +336,10 @@ export default function AnnouncementsPage() {
                                                                 .then(() => fetchAnnouncements());
                                                         }
                                                     }}
-                                                    className="flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] dark:text-[#B0B0B0] hover:text-[#7A1C1C] dark:hover:text-[#D4AF37] transition-colors ml-auto">
-                                                    <span>💬 Comment</span>
+                                                    className="group ml-auto flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#7A1C1C]/10 dark:bg-[#D4AF37]/10 hover:bg-[#7A1C1C] dark:hover:bg-[#D4AF37] transition-all"
+                                                >
+                                                    <span className="text-lg group-hover:scale-110 transition-transform">💬</span>
+                                                    <span className="text-xs font-bold text-[#7A1C1C] dark:text-[#D4AF37]">Comment</span>
                                                 </button>
                                             </div>
 
