@@ -5,6 +5,7 @@ import { Bell, Calendar, Plus, ArrowLeft, Edit, Trash2, MoreVertical } from "luc
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import apiClient from "@/api";
+import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import chairmanApiService from "@/lib/chairmanApi";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
@@ -418,7 +419,7 @@ export default function AnnouncementsPage() {
                                                             const fd = new FormData();
                                                             fd.append("image", file);
                                                             try {
-                                                                const res = await apiClient.post("/upload/image", fd, {
+                                                                const res = await api.post("/upload/image", fd, {
                                                                     headers: { "Content-Type": "multipart/form-data" },
                                                                 });
                                                                 const imageUrl = res.data.data?.imageURL || res.data.url;
@@ -437,7 +438,7 @@ export default function AnnouncementsPage() {
                                                             const fd = new FormData();
                                                             fd.append("video", file);
                                                             try {
-                                                                const res = await apiClient.post("/upload/video", fd, {
+                                                                const res = await api.post("/upload/video", fd, {
                                                                     headers: { "Content-Type": "multipart/form-data" },
                                                                 });
                                                                 const videoUrl = res.data.data?.videoURL || res.data.url;
@@ -456,7 +457,7 @@ export default function AnnouncementsPage() {
                                                             const fd = new FormData();
                                                             fd.append("pdf", file);
                                                             try {
-                                                                const res = await apiClient.post("/upload/pdf", fd, {
+                                                                const res = await api.post("/upload/pdf", fd, {
                                                                     headers: { "Content-Type": "multipart/form-data" },
                                                                 });
                                                                 const pdfUrl = res.data.data?.pdfURL || res.data.url;
