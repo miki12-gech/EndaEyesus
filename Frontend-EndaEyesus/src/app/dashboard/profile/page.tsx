@@ -1,247 +1,324 @@
 "use client";
 
-import { MapPin, BookOpen, GraduationCap, Phone, Mail, Music, Edit, User, Calendar, ArrowLeft, Upload, X, Save } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { useState, useEffect } from "react";
+import { useAuthStore } from "@/store/authStore";
+import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import Link from "next/link";
-import { useAuthStore } from "@/store/authStore";
-import { useRef, useState } from "react";
-import api from "@/lib/api";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") || "http://localhost:8080";
-
-const ACADEMIC_YEAR_LABELS: Record<string, string> = {
-    YEAR_1: "1st Year", YEAR_2: "2nd Year", YEAR_3: "3rd Year",
-    YEAR_4: "4th Year", YEAR_5: "5th Year", YEAR_6: "6th Year",
-    YEAR_7: "7th Year", YEAR_8: "8th Year", POST_GRADUATE: "Postgraduate", GRADUATED: "Graduated",
-};
+import { Save, Edit2, X, Upload, User, Mail, Phone, MapPin, GraduationCap, BookOpen, Home, Info } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 export default function ProfilePage() {
-    const { user, updateUser } = useAuthStore();
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const [uploading, setUploading] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
+    const { user: authUser, updateUser } = useAuthStore();
+    const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [editForm, setEditForm] = useState({
-        phoneNumber: user?.phoneNumber || "",
-        bio: user?.bio || "",
-        academicDept: user?.department || "",
-        academicYear: user?.academicYear || "",
-        dormBlock: user?.dormBlock || "",
-        dormRoom: user?.dormRoom || "",
-    });
+    const [isEditing, setIsEditing] = useState(false);
+    const [formData, setFormData] = useState<any>({});
+    const [originalData, setOriginalData] = useState<any>({});
+    const [uploading, setUploading] = useState(false);
 
-    const initials = user?.fullName
-        ? user.fullName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
-        : "?";
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const res = await api.get("/auth/me");
+                setFormData(res.data);
+                setOriginalData(res.data);
+                // Update global store if needed
+                updateUser({
+                    fullName: res.data.full_name_three_parts,
+                    email: res.data.email,
+                    phoneNumber: res.data.phone_number,
+                    department: res.data.academic_dept,
+                    academicYear: res.data.academic_year,
+                    dormBlock: res.data.dorm_block,
+                    dormRoom: res.data.dorm_room,
+                    sex: res.data.sex,
+                    bio: res.data.bio,
+                    profileImage: res.data.profile_image_url,
+                });
+            } catch (err) {
+                console.error("Failed to load profile", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchProfile();
+    }, [updateUser]);
 
-    const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        setUploading(true);
+    const handleChange = (field: string, value: any) => {
+        setFormData((prev: any) => ({ ...prev, [field]: value }));
+    };
+
+    const handleImageUpload = async (file: File) => {
+        const fd = new FormData();
+        fd.append("image", file);
         try {
-            const fd = new FormData();
-            fd.append("image", file);
             const res = await api.post("/upload/image", fd, {
                 headers: { "Content-Type": "multipart/form-data" },
             });
             const imageUrl = res.data.data?.imageURL || res.data.url;
-            updateUser({ profileImage: imageUrl });
-        } catch {
-            updateUser({ profileImage: URL.createObjectURL(file) });
-        } finally {
-            setUploading(false);
+            handleChange("profile_image_url", imageUrl);
+            return imageUrl;
+        } catch (err) {
+            console.error("Image upload failed", err);
+            return null;
         }
     };
 
-    const handleSaveProfile = async () => {
+    const handleSave = async () => {
         setSaving(true);
         try {
-            await api.patch("/users/profile", editForm);
-            updateUser({
-                phoneNumber: editForm.phoneNumber,
-                bio: editForm.bio,
-                department: editForm.academicDept,
-                academicYear: editForm.academicYear as any,
-                dormBlock: editForm.dormBlock,
-                dormRoom: editForm.dormRoom,
+            const res = await api.patch("/auth/profile", {
+                phone_number: formData.phone_number,
+                academic_dept: formData.academic_dept,
+                academic_year: formData.academic_year,
+                dorm_block: formData.dorm_block,
+                dorm_room: formData.dorm_room,
+                sex: formData.sex,
+                clerical_rank: formData.clerical_rank,
+                bio: formData.bio,
+                profile_image_url: formData.profile_image_url,
             });
+            setFormData(res.data.data);
+            setOriginalData(res.data.data);
             setIsEditing(false);
+            updateUser({
+                phoneNumber: res.data.data.phone_number,
+                department: res.data.data.academic_dept,
+                academicYear: res.data.data.academic_year,
+                dormBlock: res.data.data.dorm_block,
+                dormRoom: res.data.data.dorm_room,
+                sex: res.data.data.sex,
+                bio: res.data.data.bio,
+                profileImage: res.data.data.profile_image_url,
+            });
         } catch (err: any) {
-            console.error("Failed to update profile:", err);
-            alert(err.response?.data?.message || "Failed to update profile");
+            alert(err.response?.data?.message || "Update failed");
         } finally {
             setSaving(false);
         }
     };
 
-    const getRoleBadge = (role: string) => {
+    const cancelEdit = () => {
+        setFormData({ ...originalData });
+        setIsEditing(false);
+    };
+
+    if (loading) return <div className="p-8 text-center text-[#6b6b6b]">Loading profile...</div>;
+
+    const roleBadge = (role: string) => {
         switch (role) {
-            case "SECRETARIAT_CHAIRMAN": return { label: "Chairman", color: "#C9A227" };
-            case "SECRETARIAT_VICE":     return { label: "Vice Chairman", color: "#C9A227" };
-            case "SECRETARIAT_SECRETARY": return { label: "Secretary", color: "#C9A227" };
-            case "SERVICE_MANAGER":     return { label: "Service Manager", color: "#C9A227" };
-            case "SUPER_ADMIN":         return { label: "Super Admin", color: "#C9A227" };
-            case "TEACHER":             return { label: "Teacher", color: "#7A1C1C" };
-            case "CLASS_LEADER":        return { label: "Class Leader", color: "#7A1C1C" };
-            case "MEMBER":              return { label: "Member", color: "#7A1C1C" };
-            default:                    return { label: "Registered User", color: "#6b6b6b" };
+            case "SECRETARIAT_CHAIRMAN": return "Chairman";
+            case "SECRETARIAT_VICE": return "Vice Chairman";
+            case "SECRETARIAT_SECRETARY": return "Secretary";
+            case "SERVICE_MANAGER": return "Service Manager";
+            case "SUPER_ADMIN": return "Super Admin";
+            case "TEACHER": return "Teacher";
+            case "CLASS_LEADER": return "Class Leader";
+            case "MEMBER": return "Member";
+            default: return "Registered User";
         }
     };
-    const roleBadge = getRoleBadge(user?.system_role || user?.role || "USER");
 
     return (
-        <div className="max-w-3xl mx-auto space-y-5">
-            <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-sm text-[#6b6b6b] dark:text-[#B0B0B0] hover:text-[#7A1C1C] dark:hover:text-[#D4AF37] font-medium transition-colors group mb-1">
-                <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
-                Back to Dashboard
-            </Link>
-
-            <div className="bg-white dark:bg-[#1C1C1F] rounded-2xl border border-[#ddd8d0] dark:border-[#2a2a2d] shadow-sm overflow-hidden" style={{ borderTop: "4px solid #C9A227" }}>
-                <div className="h-24 bg-[#7A1C1C] dark:bg-[#151516] relative">
-                    <div className="absolute inset-0 opacity-10">
-                        <svg className="w-full h-full" viewBox="0 0 400 96" fill="none" aria-hidden="true">
-                            <rect x="190" y="4" width="20" height="88" rx="4" fill="#C9A227" />
-                            <rect x="140" y="36" width="120" height="20" rx="4" fill="#C9A227" />
-                        </svg>
-                    </div>
+        <div className="max-w-4xl mx-auto space-y-6 p-4 sm:p-6">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold text-[#7A1C1C] dark:text-[#D4AF37]">My Profile</h1>
+                    <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0]">View and manage your personal information</p>
                 </div>
+                {!isEditing ? (
+                    <Button onClick={() => setIsEditing(true)} variant="outline" className="border-[#7A1C1C] text-[#7A1C1C] hover:bg-[#7A1C1C] hover:text-white">
+                        <Edit2 className="h-4 w-4 mr-2" /> Edit Profile
+                    </Button>
+                ) : (
+                    <div className="flex gap-2">
+                        <Button onClick={cancelEdit} variant="outline" className="border-gray-300">
+                            <X className="h-4 w-4 mr-2" /> Cancel
+                        </Button>
+                        <Button onClick={handleSave} disabled={saving} className="bg-[#7A1C1C] hover:bg-[#C9A227] text-white">
+                            <Save className="h-4 w-4 mr-2" /> {saving ? "Saving..." : "Save Changes"}
+                        </Button>
+                    </div>
+                )}
+            </div>
 
-                <div className="px-6 pb-6">
-                    <div className="flex items-end justify-between -mt-10 mb-4">
-                        <div className="relative group">
-                            <Avatar className="h-20 w-20 border-4 border-white dark:border-[#1C1C1F] shadow-md">
-                                {user?.profileImage && (
-                                    <AvatarImage
-                                        src={user.profileImage.startsWith("http") ? user.profileImage : `${API_BASE}${user.profileImage}`}
-                                        alt={user.fullName}
-                                    />
-                                )}
-                                <AvatarFallback className="text-2xl font-bold bg-[#7A1C1C] dark:bg-[#9B2323] text-[#C9A227] dark:text-[#D4AF37]">
-                                    {initials}
+            {/* Profile Card */}
+            <div className="bg-white dark:bg-[#1C1C1F] rounded-2xl border border-[#ddd8d0] dark:border-[#2a2a2d] overflow-hidden shadow-sm">
+                {/* Cover / Avatar Section */}
+                <div className="relative bg-gradient-to-r from-[#7A1C1C] to-[#9B2323] h-28">
+                    <div className="absolute -bottom-10 left-6 flex items-end gap-4">
+                        <div className="relative">
+                            <Avatar className="h-24 w-24 border-4 border-white dark:border-[#1C1C1F] shadow-lg">
+                                <AvatarImage src={formData.profile_image_url || "/assets/avatar.png"} alt={formData.full_name_three_parts} />
+                                <AvatarFallback className="bg-[#7A1C1C] text-[#C9A227] text-2xl">
+                                    {formData.full_name_three_parts?.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase() || "?"}
                                 </AvatarFallback>
                             </Avatar>
-                            <button
-                                onClick={() => fileInputRef.current?.click()}
-                                className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                                disabled={uploading}
-                            >
-                                {uploading ? (
-                                    <span className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                ) : (
-                                    <Upload className="h-5 w-5 text-white" />
-                                )}
-                            </button>
-                            <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handlePhotoChange} />
+                            {isEditing && (
+                                <label className="absolute bottom-0 right-0 bg-[#7A1C1C] rounded-full p-1 cursor-pointer border-2 border-white">
+                                    <Upload className="h-3 w-3 text-white" />
+                                    <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                            setUploading(true);
+                                            await handleImageUpload(file);
+                                            setUploading(false);
+                                        }
+                                    }} />
+                                </label>
+                            )}
                         </div>
-                        <div className="flex gap-2">
-                            <Sheet open={isEditing} onOpenChange={setIsEditing}>
-                                <SheetTrigger asChild>
-                                    <Button variant="outline" size="sm" className="border-[#7A1C1C] dark:border-[#D4AF37] text-[#7A1C1C] dark:text-[#D4AF37] hover:bg-[#7A1C1C] dark:hover:bg-[#D4AF37] hover:text-white dark:hover:text-[#0E0E0F] rounded-xl text-xs flex items-center gap-1.5 transition-all">
-                                        <Edit className="h-3.5 w-3.5" /> Edit Profile
-                                    </Button>
-                                </SheetTrigger>
-                                <SheetContent className="w-full sm:w-[400px] overflow-y-auto">
-                                    <SheetHeader>
-                                        <SheetTitle>Edit Profile</SheetTitle>
-                                        <p className="text-sm text-muted-foreground">
-                                            Update your personal information, academic details, and dormitory information.
-                                        </p>
-                                    </SheetHeader>
-                                    <div className="space-y-4 mt-6">
-                                        <div>
-                                            <label className="block text-sm font-medium text-[#6b6b6b] dark:text-[#B0B0B0] mb-2">Phone Number</label>
-                                            <Input value={editForm.phoneNumber} onChange={(e) => setEditForm({ ...editForm, phoneNumber: e.target.value })} placeholder="09XXXXXXXX" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-[#6b6b6b] dark:text-[#B0B0B0] mb-2">Bio</label>
-                                            <Textarea value={editForm.bio} onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })} placeholder="Tell us about yourself..." rows={4} />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-[#6b6b6b] dark:text-[#B0B0B0] mb-2">Academic Department</label>
-                                            <Input value={editForm.academicDept} onChange={(e) => setEditForm({ ...editForm, academicDept: e.target.value })} placeholder="Computer Science" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-[#6b6b6b] dark:text-[#B0B0B0] mb-2">Academic Year</label>
-                                            <Input value={editForm.academicYear} onChange={(e) => setEditForm({ ...editForm, academicYear: e.target.value })} placeholder="YEAR_1" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-[#6b6b6b] dark:text-[#B0B0B0] mb-2">Dorm Block</label>
-                                            <Input value={editForm.dormBlock} onChange={(e) => setEditForm({ ...editForm, dormBlock: e.target.value })} placeholder="A" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-[#6b6b6b] dark:text-[#B0B0B0] mb-2">Dorm Room</label>
-                                            <Input value={editForm.dormRoom} onChange={(e) => setEditForm({ ...editForm, dormRoom: e.target.value })} placeholder="101" />
-                                        </div>
-                                        <div className="flex gap-2 pt-4">
-                                            <Button variant="outline" onClick={() => setIsEditing(false)} className="flex-1"><X className="h-4 w-4 mr-2" /> Cancel</Button>
-                                            <Button onClick={handleSaveProfile} disabled={saving} className="flex-1 bg-[#7A1C1C] dark:bg-[#D4AF37] text-white dark:text-[#0E0E0F]">
-                                                <Save className="h-4 w-4 mr-2" /> {saving ? "Saving..." : "Save"}
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </SheetContent>
-                            </Sheet>
-                            <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}
-                                className="border-[#7A1C1C] dark:border-[#D4AF37] text-[#7A1C1C] dark:text-[#D4AF37] hover:bg-[#7A1C1C] dark:hover:bg-[#D4AF37] hover:text-white dark:hover:text-[#0E0E0F] rounded-xl text-xs flex items-center gap-1.5 transition-all">
-                                <Upload className="h-3.5 w-3.5" /> {uploading ? "Uploading..." : "Change Photo"}
-                            </Button>
+                        <div className="mb-2">
+                            <h2 className="text-xl font-bold text-white">{formData.full_name_three_parts || "Guest"}</h2>
+                            <Badge className="bg-[#C9A227] text-[#0E0E0F] text-xs">{roleBadge(formData.system_role)}</Badge>
                         </div>
                     </div>
+                </div>
 
-                    <div className="mb-4">
-                        <h1 className="text-xl font-bold text-[#7A1C1C] dark:text-[#D4AF37]">{user?.fullName || "Guest Member"}</h1>
-                        <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0]">@{user?.username || "username"}</p>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                            <Badge style={{ backgroundColor: roleBadge.color }} className="text-white text-[10px]">{roleBadge.label}</Badge>
-                            {user?.serviceClassName && <Badge className="bg-[#C9A227]/15 text-[#C9A227] text-[10px]">{user.serviceClassName}</Badge>}
-                            {user?.status === "PENDING" && <Badge className="bg-yellow-100 text-yellow-700 text-[10px]">Pending Approval</Badge>}
-                        </div>
-                    </div>
-
-                    {user?.bio && <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0] leading-relaxed mb-5 bg-[#F8F5F0] dark:bg-[#252529] rounded-xl p-3 italic">&ldquo;{user.bio}&rdquo;</p>}
-
-                    <div className="grid grid-cols-2 gap-4">
-                        {[
-                            { icon: GraduationCap, label: "Department", value: user?.department },
-                            { icon: BookOpen, label: "Academic Year", value: user?.academicYear ? ACADEMIC_YEAR_LABELS[user.academicYear] || user.academicYear : undefined },
-                            { icon: Music, label: "Service Class", value: user?.serviceClassName },
-                            { icon: MapPin, label: "Birth Place", value: user?.birthPlace },
-                            { icon: Calendar, label: "Birth Date", value: user?.birthDate ? new Date(user.birthDate).toLocaleDateString() : undefined },
-                            { icon: User, label: "Sex", value: user?.sex ? (user.sex === "MALE" ? "Male" : "Female") : undefined },
-                            { icon: Mail, label: "Email", value: user?.email },
-                            { icon: Phone, label: "Phone", value: user?.phoneNumber },
-                        ].filter((item) => item.value).map(({ icon: Icon, label, value }) => (
-                            <div key={label} className="flex items-start gap-3">
-                                <div className="w-8 h-8 rounded-lg bg-[#7A1C1C]/10 dark:bg-[#9B2323]/30 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                    <Icon className="h-4 w-4 text-[#7A1C1C] dark:text-[#D4AF37]" />
-                                </div>
-                                <div className="min-w-0">
-                                    <p className="text-[10px] text-[#6b6b6b] dark:text-[#B0B0B0] font-medium uppercase tracking-wide">{label}</p>
-                                    <p className="text-xs font-semibold text-[#1a1a1a] dark:text-[#F5F5F5] leading-snug">{value}</p>
+                <div className="pt-14 px-6 pb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Personal Information */}
+                        <div className="space-y-4">
+                            <h3 className="text-sm font-semibold text-[#7A1C1C] dark:text-[#D4AF37] border-b border-[#ddd8d0] pb-2">Personal Information</h3>
+                            
+                            <div>
+                                <Label className="text-xs text-[#6b6b6b]">Full Name</Label>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <User className="h-4 w-4 text-[#6b6b6b]" />
+                                    <span className="text-sm font-medium">{formData.full_name_three_parts || "—"}</span>
                                 </div>
                             </div>
-                        ))}
+
+                            <div>
+                                <Label className="text-xs text-[#6b6b6b]">Email</Label>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <Mail className="h-4 w-4 text-[#6b6b6b]" />
+                                    <span className="text-sm font-medium">{formData.email || "—"}</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <Label className="text-xs text-[#6b6b6b]">Phone Number</Label>
+                                {isEditing ? (
+                                    <Input value={formData.phone_number || ""} onChange={(e) => handleChange("phone_number", e.target.value)} placeholder="09XXXXXXXX" className="mt-1" />
+                                ) : (
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <Phone className="h-4 w-4 text-[#6b6b6b]" />
+                                        <span className="text-sm font-medium">{formData.phone_number || "—"}</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div>
+                                <Label className="text-xs text-[#6b6b6b]">Sex</Label>
+                                {isEditing ? (
+                                    <Select value={formData.sex || ""} onValueChange={(val) => handleChange("sex", val)}>
+                                        <SelectTrigger className="mt-1"><SelectValue placeholder="Select" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="MALE">Male</SelectItem>
+                                            <SelectItem value="FEMALE">Female</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                ) : (
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <User className="h-4 w-4 text-[#6b6b6b]" />
+                                        <span className="text-sm font-medium">{formData.sex === "MALE" ? "Male" : formData.sex === "FEMALE" ? "Female" : "—"}</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div>
+                                <Label className="text-xs text-[#6b6b6b]">Clerical Rank</Label>
+                                {isEditing ? (
+                                    <Select value={formData.clerical_rank || "NONE"} onValueChange={(val) => handleChange("clerical_rank", val)}>
+                                        <SelectTrigger className="mt-1"><SelectValue placeholder="Select" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="NONE">None</SelectItem>
+                                            <SelectItem value="DEACON">Deacon</SelectItem>
+                                            <SelectItem value="PRIEST">Priest</SelectItem>
+                                            <SelectItem value="LECTOR">Lector</SelectItem>
+                                            <SelectItem value="OTHER">Other</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                ) : (
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <Info className="h-4 w-4 text-[#6b6b6b]" />
+                                        <span className="text-sm font-medium">{formData.clerical_rank || "None"}</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div>
+                                <Label className="text-xs text-[#6b6b6b]">Bio</Label>
+                                {isEditing ? (
+                                    <Textarea value={formData.bio || ""} onChange={(e) => handleChange("bio", e.target.value)} placeholder="Tell about yourself..." rows={3} className="mt-1" />
+                                ) : (
+                                    <p className="text-sm mt-1 italic text-[#6b6b6b]">{formData.bio || "No bio provided"}</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Academic & Dorm Information */}
+                        <div className="space-y-4">
+                            <h3 className="text-sm font-semibold text-[#7A1C1C] dark:text-[#D4AF37] border-b border-[#ddd8d0] pb-2">Academic & Residence</h3>
+
+                            <div>
+                                <Label className="text-xs text-[#6b6b6b]">Academic Department</Label>
+                                {isEditing ? (
+                                    <Input value={formData.academic_dept || ""} onChange={(e) => handleChange("academic_dept", e.target.value)} placeholder="e.g., Computer Science" className="mt-1" />
+                                ) : (
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <GraduationCap className="h-4 w-4 text-[#6b6b6b]" />
+                                        <span className="text-sm font-medium">{formData.academic_dept || "—"}</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div>
+                                <Label className="text-xs text-[#6b6b6b]">Academic Year</Label>
+                                {isEditing ? (
+                                    <Input value={formData.academic_year || ""} onChange={(e) => handleChange("academic_year", parseInt(e.target.value) || undefined)} type="number" min="1" max="5" className="mt-1" />
+                                ) : (
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <BookOpen className="h-4 w-4 text-[#6b6b6b]" />
+                                        <span className="text-sm font-medium">{formData.academic_year ? `Year ${formData.academic_year}` : "—"}</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <Label className="text-xs text-[#6b6b6b]">Dorm Block</Label>
+                                    {isEditing ? (
+                                        <Input value={formData.dorm_block || ""} onChange={(e) => handleChange("dorm_block", e.target.value)} placeholder="A" className="mt-1" />
+                                    ) : (
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <MapPin className="h-4 w-4 text-[#6b6b6b]" />
+                                            <span className="text-sm font-medium">{formData.dorm_block || "—"}</span>
+                                        </div>
+                                    )}
+                                </div>
+                                <div>
+                                    <Label className="text-xs text-[#6b6b6b]">Dorm Room</Label>
+                                    {isEditing ? (
+                                        <Input value={formData.dorm_room || ""} onChange={(e) => handleChange("dorm_room", e.target.value)} placeholder="101" className="mt-1" />
+                                    ) : (
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <Home className="h-4 w-4 text-[#6b6b6b]" />
+                                            <span className="text-sm font-medium">{formData.dorm_room || "—"}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            <div className="bg-white dark:bg-[#1C1C1F] rounded-xl p-5 border border-[#ddd8d0] dark:border-[#2a2a2d] shadow-sm" style={{ borderLeft: "3px solid #C9A227" }}>
-                <h2 className="text-sm font-semibold text-[#7A1C1C] dark:text-[#D4AF37] mb-3">Account</h2>
-                <div className="grid grid-cols-2 gap-4">
-                    <div><p className="text-[10px] text-[#6b6b6b] dark:text-[#B0B0B0] uppercase tracking-wide">Status</p><p className="text-xs font-semibold mt-0.5">{user?.status || "—"}</p></div>
-                    <div><p className="text-[10px] text-[#6b6b6b] dark:text-[#B0B0B0] uppercase tracking-wide">Role</p><p className="text-xs font-semibold mt-0.5">{roleBadge.label}</p></div>
-                </div>
-            </div>
-
-            <div className="flex justify-center pt-4">
-                <Button variant="destructive" className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white" onClick={() => { useAuthStore.getState().logout(); window.location.href = "/login"; }}>
-                    Log Out
-                </Button>
             </div>
         </div>
     );
