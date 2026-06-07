@@ -1,3 +1,4 @@
+//EndaEyesus/Frontend-Endaeyesus/src/app/dashboard/announcements/page/tsx
 "use client";
 
 import { Bell, Calendar, Plus, ArrowLeft, Edit, Trash2, MoreVertical } from "lucide-react";
@@ -311,8 +312,10 @@ export default function AnnouncementsPage() {
                             style={{ borderLeft: `4px solid ${color}` }}>
                             <div className="flex items-start gap-3">
                                 {/* Creator Profile Image */}
-                                <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-[#7A1C1C] to-[#C9A227] dark:from-[#D4AF37] dark:to-[#1E4D3A]">
-                                    {a.author?.fullName ? (
+                                <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden bg-gradient-to-br from-[#7A1C1C] to-[#C9A227] dark:from-[#D4AF37] dark:to-[#1E4D3A]">
+                                    {a.author?.profileImageUrl ? (
+                                        <img src={a.author.profileImageUrl} alt={a.author.fullName} className="w-full h-full object-cover" />
+                                    ) : a.author?.fullName ? (
                                         <span className="text-lg font-bold text-white">
                                             {a.author.fullName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()}
                                         </span>
@@ -471,10 +474,14 @@ export default function AnnouncementsPage() {
                                                     <div className="space-y-3">
                                                         {a.comments.slice(0, visibleCommentCounts[a.id] || 3).map((comment: any) => (
                                                             <div key={comment.id} className="flex gap-2">
-                                                                <div className="w-6 h-6 rounded-full bg-[#7A1C1C]/10 flex items-center justify-center flex-shrink-0">
-                                                                    <span className="text-[10px] font-bold text-[#7A1C1C] dark:text-[#D4AF37]">
-                                                                        {comment.author?.fullName?.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase() || "??"}
-                                                                    </span>
+                                                                <div className="w-6 h-6 rounded-full bg-[#7A1C1C]/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                                                    {comment.author?.profileImageUrl ? (
+                                                                        <img src={comment.author.profileImageUrl} alt={comment.author.fullName} className="w-full h-full object-cover" />
+                                                                    ) : (
+                                                                        <span className="text-[10px] font-bold text-[#7A1C1C] dark:text-[#D4AF37]">
+                                                                            {comment.author?.fullName?.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase() || "??"}
+                                                                        </span>
+                                                                    )}
                                                                 </div>
                                                                 <div className="flex-1 min-w-0">
                                                                     <div className="flex items-center gap-2">

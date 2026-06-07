@@ -339,6 +339,9 @@ export class Api<
         email: string;
         /** @minLength 8 */
         password: string;
+        sex?: string;
+        clerical_rank?: string;
+        profile_image_url?: string;
       },
       params: RequestParams = {},
     ) =>
@@ -565,6 +568,7 @@ export class Api<
       id: string,
       data: {
         content: string;
+        parentCommentId?: string;
       },
       params: RequestParams = {},
     ) =>
