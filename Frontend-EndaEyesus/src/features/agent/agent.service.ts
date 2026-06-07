@@ -117,5 +117,21 @@ export const agentService = {
     updateSubClassRoles: async (subClassId: string, roles: any): Promise<any> => {
         const res = await apiClient.instance.patch(`/admin/subclasses/${subClassId}/roles`, roles);
         return res.data.data;
+    },
+
+    // ── Sub-Class Approvals ─────────────────────────────────────────
+    getPendingSubClassApprovals: async (): Promise<any[]> => {
+        const res = await apiClient.instance.get<{ data: any[] }>("/admin/subclasses/pending-approvals");
+        return res.data.data;
+    },
+
+    approveSubClass: async (subClassId: string): Promise<boolean> => {
+        await apiClient.instance.patch(`/admin/subclasses/${subClassId}/approve`);
+        return true;
+    },
+
+    rejectSubClass: async (subClassId: string): Promise<boolean> => {
+        await apiClient.instance.patch(`/admin/subclasses/${subClassId}/reject`);
+        return true;
     }
 };

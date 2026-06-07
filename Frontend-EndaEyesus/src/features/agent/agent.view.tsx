@@ -450,9 +450,8 @@ function SubClassApprovalsTab() {
 
     const fetchPendingApprovals = async () => {
         try {
-            const token = localStorage.getItem('token');
             const response = await fetch('http://localhost:8080/api/v1/admin/subclasses/pending-approvals', {
-                headers: { Authorization: `Bearer ${token}` }
+                credentials: 'include'
             });
             const data = await response.json();
             setApprovals(data.data || []);
@@ -465,10 +464,9 @@ function SubClassApprovalsTab() {
 
     const handleApprove = async (id: string) => {
         try {
-            const token = localStorage.getItem('token');
             await fetch(`http://localhost:8080/api/v1/admin/subclasses/${id}/approve`, {
                 method: 'PATCH',
-                headers: { Authorization: `Bearer ${token}` }
+                credentials: 'include'
             });
             fetchPendingApprovals();
         } catch (error) {
@@ -478,10 +476,9 @@ function SubClassApprovalsTab() {
 
     const handleReject = async (id: string) => {
         try {
-            const token = localStorage.getItem('token');
             await fetch(`http://localhost:8080/api/v1/admin/subclasses/${id}/reject`, {
                 method: 'PATCH',
-                headers: { Authorization: `Bearer ${token}` }
+                credentials: 'include'
             });
             fetchPendingApprovals();
         } catch (error) {
