@@ -47,6 +47,9 @@ export default function AnnouncementsPage() {
     const [editTitle, setEditTitle] = useState("");
     const [editContent, setEditContent] = useState("");
     const [editTarget, setEditTarget] = useState<"ALL" | "CLASS" | "LEADERS">("ALL");
+    const [editImageUrl, setEditImageUrl] = useState("");
+    const [editVideoUrl, setEditVideoUrl] = useState("");
+    const [editPdfUrl, setEditPdfUrl] = useState("");
     const [editSubmitting, setEditSubmitting] = useState(false);
     const [editError, setEditError] = useState("");
 
@@ -111,11 +114,15 @@ export default function AnnouncementsPage() {
                 content: editContent,
                 targetType: editTarget,
                 targetClassID: editTarget === "CLASS" ? (user?.classLeaderOf || user?.serviceClassID) : null,
+                image_url: editImageUrl,
+                video_url: editVideoUrl,
+                pdf_url: editPdfUrl,
             };
             await chairmanApiService.updateAnnouncement(editingId!, payload);
             fetchAnnouncements();
             setEditingId(null);
             setEditTitle(""); setEditContent(""); setEditTarget("ALL");
+            setEditImageUrl(""); setEditVideoUrl(""); setEditPdfUrl("");
         } catch (err: any) {
             setEditError(err.response?.data?.message || "Failed to update announcement.");
         } finally {
@@ -138,6 +145,9 @@ export default function AnnouncementsPage() {
         setEditTitle(announcement.title);
         setEditContent(announcement.content);
         setEditTarget(announcement.is_public ? "ALL" : "CLASS");
+        setEditImageUrl(announcement.image_url || "");
+        setEditVideoUrl(announcement.video_url || "");
+        setEditPdfUrl(announcement.pdf_url || "");
         setEditError("");
     };
 
@@ -378,6 +388,87 @@ export default function AnnouncementsPage() {
                                             <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} placeholder="Title"
                                                 className="w-full h-10 rounded-xl border border-[#ddd8d0] dark:border-[#2a2a2d] bg-[#F8F5F0] dark:bg-[#252529] text-sm px-3 dark:text-[#F5F5F5]" />
                                             <RichTextEditor content={editContent} onChange={setEditContent} placeholder="Content..." />
+
+                                            {/* Media URL Inputs */}
+                                            <div className="space-y-2">
+                                                <div className="flex items-center gap-2">
+                                                    <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">Image URL:</label>
+                                                    <input value={editImageUrl} onChange={(e) => setEditImageUrl(e.target.value)} placeholder="https://..."
+                                                        className="flex-1 h-8 rounded-lg border border-[#ddd8d0] dark:border-[#2a2a2d] bg-[#F8F5F0] dark:bg-[#252529] text-xs px-2 dark:text-[#F5F5F5]" />
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">Video URL:</label>
+                                                    <input value={editVideoUrl} onChange={(e) => setEditVideoUrl(e.target.value)} placeholder="https://..."
+                                                        className="flex-1 h-8 rounded-lg border border-[#ddd8d0] dark:border-[#2a2a2d] bg-[#F8F5F0] dark:bg-[#252529] text-xs px-2 dark:text-[#F5F5F5]" />
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">PDF URL:</label>
+                                                    <input value={editPdfUrl} onChange={(e) => setEditPdfUrl(e.target.value)} placeholder="https://..."
+                                                        className="flex-1 h-8 rounded-lg border border-[#ddd8d0] dark:border-[#2a2a2d] bg-[#F8F5F0] dark:bg-[#252529] text-xs px-2 dark:text-[#F5F5F5]" />
+                                                </div>
+                                            </div>
+
+                                            {/* Media File Uploads */}
+                                            <div className="space-y-2">
+                                                <div className="flex items-center gap-2">
+                                                    <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">Upload Image:</label>
+                                                    <input type="file" accept="image/*" onChange={async (e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) {
+                                                            const fd = new FormData();
+                                                            fd.append("image", file);
+                                                            try {
+                                                                const res = await apiClient.post("/upload/image", fd, {
+                                                                    headers: { "Content-Type": "multipart/form-data" },
+                                                                });
+                                                                const imageUrl = res.data.data?.imageURL || res.data.url;
+                                                                setEditImageUrl(imageUrl);
+                                                            } catch (err) {
+                                                                console.error("Image upload failed", err);
+                                                            }
+                                                        }
+                                                    }} className="flex-1 text-xs" />
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">Upload Video:</label>
+                                                    <input type="file" accept="video/*" onChange={async (e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) {
+                                                            const fd = new FormData();
+                                                            fd.append("video", file);
+                                                            try {
+                                                                const res = await apiClient.post("/upload/video", fd, {
+                                                                    headers: { "Content-Type": "multipart/form-data" },
+                                                                });
+                                                                const videoUrl = res.data.data?.videoURL || res.data.url;
+                                                                setEditVideoUrl(videoUrl);
+                                                            } catch (err) {
+                                                                console.error("Video upload failed", err);
+                                                            }
+                                                        }
+                                                    }} className="flex-1 text-xs" />
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <label className="text-xs font-semibold text-[#6b6b6b] dark:text-[#B0B0B0]">Upload PDF:</label>
+                                                    <input type="file" accept="application/pdf" onChange={async (e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) {
+                                                            const fd = new FormData();
+                                                            fd.append("pdf", file);
+                                                            try {
+                                                                const res = await apiClient.post("/upload/pdf", fd, {
+                                                                    headers: { "Content-Type": "multipart/form-data" },
+                                                                });
+                                                                const pdfUrl = res.data.data?.pdfURL || res.data.url;
+                                                                setEditPdfUrl(pdfUrl);
+                                                            } catch (err) {
+                                                                console.error("PDF upload failed", err);
+                                                            }
+                                                        }
+                                                    }} className="flex-1 text-xs" />
+                                                </div>
+                                            </div>
+
                                             {editError && <p className="text-xs text-red-500">⚠ {editError}</p>}
                                             <div className="flex gap-2">
                                                 <button type="button" onClick={() => setEditingId(null)}
