@@ -1,3 +1,4 @@
+//src/app/(auth)/register/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -80,14 +81,13 @@ export default function RegisterPage() {
                 }
             }
 
-            // Register using the generated apiClient with new fields
+            // Register using the generated apiClient
             const regRes = await apiClient.auth.register({
                 full_name_three_parts: fullName,
                 email,
                 password,
                 sex: sex as "MALE" | "FEMALE",
                 clerical_rank: clericalRank as "NONE" | "DEACON" | "PRIEST" | "LECTOR" | "OTHER",
-                phone_number: phoneNumber || undefined,
                 profile_image_url: profileImageUrl || undefined,
             });
             const regToken = (regRes.data as any).token || 'authenticated';

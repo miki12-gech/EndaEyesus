@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { GraduationCap, Lock, CheckCircle, Clock } from "lucide-react";
+import { GraduationCap, Lock, CheckCircle, Clock, Users, BookOpen, Award } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 
 export default function LMSPhaseHubPage() {
@@ -12,10 +12,35 @@ export default function LMSPhaseHubPage() {
     return (
         <div className="space-y-6">
             <div className="mb-8">
-                <h1 className="text-2xl font-bold text-[#7A1C1C] dark:text-[#D4AF37]">LMS Phase Hub</h1>
+                <h1 className="text-2xl font-bold text-[#7A1C1C] dark:text-[#D4AF37]">Educational Phases</h1>
                 <p className="text-[#6b6b6b] dark:text-[#B0B0B0] mt-1">
-                    Progress through the Enda Eyesus fellowship courses.
+                    Progress through the Enda Eyesus fellowship educational phases to serve in various roles.
                 </p>
+            </div>
+
+            <div className="bg-white dark:bg-[#1C1C1F] rounded-2xl p-6 border border-[#ddd8d0] dark:border-[#2a2a2d] mb-6">
+                <h2 className="text-lg font-bold text-[#7A1C1C] dark:text-[#D4AF37] mb-3">About Service Class Requirements</h2>
+                <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0] mb-4">
+                    According to the bylaws, different service roles require completion of specific educational phases:
+                </p>
+                <div className="grid md:grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-start gap-2">
+                        <CheckCircle className="h-4 w-4 text-[#7A1C1C] dark:text-[#D4AF37] mt-0.5 flex-shrink-0" />
+                        <span className="text-[#6b6b6b] dark:text-[#B0B0B0]"><strong>General Service:</strong> Complete Gubae Abew</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                        <Users className="h-4 w-4 text-[#7A1C1C] dark:text-[#D4AF37] mt-0.5 flex-shrink-0" />
+                        <span className="text-[#6b6b6b] dark:text-[#B0B0B0]"><strong>Sub-department Leaders:</strong> Complete Gubae Hawaryat</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                        <BookOpen className="h-4 w-4 text-[#7A1C1C] dark:text-[#D4AF37] mt-0.5 flex-shrink-0" />
+                        <span className="text-[#6b6b6b] dark:text-[#B0B0B0]"><strong>Stage Leadership:</strong> Complete Gubae Hawaryat & start Gubae Ecclesiae</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                        <Award className="h-4 w-4 text-[#7A1C1C] dark:text-[#D4AF37] mt-0.5 flex-shrink-0" />
+                        <span className="text-[#6b6b6b] dark:text-[#B0B0B0]"><strong>Academic Writings:</strong> Follow Gubae Ecclesiae teachings</span>
+                    </div>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -27,8 +52,9 @@ export default function LMSPhaseHubPage() {
                             <GraduationCap className="h-6 w-6" />
                         </div>
                         <h2 className="text-lg font-bold text-[#1a1a1a] dark:text-[#F5F5F5] mb-2">Phase 1: Gubae Abew</h2>
+                        <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0] mb-2 font-semibold">ጉባኤ ዓቤው</p>
                         <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0] mb-4">
-                            Introduction to the fellowship and foundational Orthodox teachings. Open to all registered users.
+                            Introduction to the fellowship and foundational Orthodox teachings. Required for all general service roles.
                         </p>
                         <div className="flex items-center gap-2 text-xs font-semibold text-[#7A1C1C] dark:text-[#D4AF37]">
                             <span>Accessible</span> <CheckCircle className="h-4 w-4" />
@@ -42,8 +68,9 @@ export default function LMSPhaseHubPage() {
                         <GraduationCap className="h-6 w-6" />
                     </div>
                     <h2 className="text-lg font-bold text-[#1a1a1a] dark:text-[#F5F5F5] mb-2">Phase 2: Gubae Hawaryat</h2>
+                    <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0] mb-2 font-semibold">ጉባኤ ሐዋርያት</p>
                     <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0] mb-4">
-                        Intermediate teachings and class assignments.
+                        Intermediate teachings for sub-department leaders. Required for leadership roles within service departments.
                     </p>
                     {isMember ? (
                         <div className="flex items-center gap-2 text-xs font-semibold text-gray-500">
@@ -62,8 +89,9 @@ export default function LMSPhaseHubPage() {
                         <GraduationCap className="h-6 w-6" />
                     </div>
                     <h2 className="text-lg font-bold text-[#1a1a1a] dark:text-[#F5F5F5] mb-2">Phase 3: Gubae Ecclesiae</h2>
+                    <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0] mb-2 font-semibold">ጉባኤ ኤቅሌስያ</p>
                     <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0] mb-4">
-                        Advanced theological study and leadership training.
+                        Advanced theological study and leadership training. Required for stage leadership and academic writings.
                     </p>
                     <div className="flex items-center gap-2 text-xs font-semibold text-red-500/80">
                         <Lock className="h-4 w-4" /> <span>Prerequisites not met</span>

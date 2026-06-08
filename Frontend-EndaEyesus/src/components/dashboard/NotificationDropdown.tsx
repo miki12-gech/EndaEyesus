@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Bell, Check } from "lucide-react";
+import { Bell, Check, Trash2 } from "lucide-react";
 import apiClient from "@/api";
+import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useRouter } from "next/navigation";
 import {
@@ -11,6 +12,7 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import Link from "next/link";
 
 type NotificationItem = {
     id: string;
@@ -21,6 +23,21 @@ type NotificationItem = {
     created_at: string;
 };
 
+function formatRelativeTime(dateString: string): string {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+}
+
 export function NotificationDropdown() {
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -29,17 +46,31 @@ export function NotificationDropdown() {
     const router = useRouter();
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+    const fetchUnreadCount = async () => {
+        if (!user) return;
+        try {
+            const res = await api.get("/notifications/unread-count");
+            const data = res.data as any;
+            setUnreadCount(typeof data?.unreadCount === "number" ? data.unreadCount : 0);
+        } catch (e: any) {
+            // Ignore 403 forbidden if user is pending
+            if (e.response?.status !== 403) {
+                console.error("Failed to fetch unread count", e);
+            }
+        }
+    };
+
     const fetchNotifications = async () => {
         if (!user) return;
         try {
             const res = await apiClient.notifications.listNotifications({
                 unread_only: false,
-                limit: 20,
+                limit: 5,
                 offset: 0,
             });
             const data = res.data as any;
             setNotifications(data?.items || data || []);
-            setUnreadCount(typeof data?.unread_count === "number" ? data.unread_count : 0);
+            setUnreadCount(typeof data?.unreadCount === "number" ? data.unread_count : 0);
         } catch (e: any) {
             // Ignore 403 forbidden if user is pending
             if (e.response?.status !== 403) {
@@ -50,18 +81,47 @@ export function NotificationDropdown() {
 
     useEffect(() => {
         fetchNotifications();
-        intervalRef.current = setInterval(fetchNotifications, 30000);
+        intervalRef.current = setInterval(fetchUnreadCount, 30000);
         return () => {
             if (intervalRef.current) clearInterval(intervalRef.current);
         };
     }, [user]);
 
     const markAsRead = async (id: string, linkTarget?: string | null) => {
+        try {
+            await api.patch(`/notifications/${id}/read`);
+        } catch (e) {
+            console.error(e);
+        }
         // Optimistically update UI
         setNotifications((p) => p.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
         setUnreadCount((p) => Math.max(0, p - 1));
         setIsOpen(false);
         if (linkTarget) router.push(linkTarget);
+    };
+
+    const markAsReadOnly = async (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        try {
+            await api.patch(`/notifications/${id}/read`);
+            setNotifications((p) => p.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
+            setUnreadCount((p) => Math.max(0, p - 1));
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const deleteNotification = async (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        try {
+            await api.delete(`/notifications/${id}`);
+            setNotifications((p) => p.filter((n) => n.id !== id));
+            if (!notifications.find((n) => n.id === id)?.is_read) {
+                setUnreadCount((p) => Math.max(0, p - 1));
+            }
+        } catch (err) {
+            console.error(err);
+        }
     };
 
     const markAllAsRead = async () => {
@@ -73,6 +133,13 @@ export function NotificationDropdown() {
             console.error(e);
         }
     };
+
+    // Refresh notifications when dropdown opens
+    useEffect(() => {
+        if (isOpen) {
+            fetchNotifications();
+        }
+    }, [isOpen]);
 
     return (
         <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -91,7 +158,7 @@ export function NotificationDropdown() {
             </PopoverTrigger>
             <PopoverContent
                 align="end"
-                className="w-[350px] p-0 shadow-lg border-[#ddd8d0] dark:border-[#2a2a2d] bg-white dark:bg-[#1C1C1F]"
+                className="w-[360px] p-0 shadow-lg border-[#ddd8d0] dark:border-[#2a2a2d] bg-white dark:bg-[#1C1C1F]"
             >
                 <div className="flex items-center justify-between p-4 border-b border-[#ddd8d0] dark:border-[#2a2a2d]">
                     <h3 className="font-semibold text-[#7A1C1C] dark:text-[#D4AF37]">Notifications</h3>
@@ -124,18 +191,36 @@ export function NotificationDropdown() {
                                             {(notification.title || "N").slice(0, 2).toUpperCase()}
                                         </AvatarFallback>
                                     </Avatar>
-                                    <div className="flex-1 space-y-1">
+                                    <div className="flex-1 space-y-1 min-w-0">
                                         {notification.title && (
-                                            <p className="text-sm font-medium text-[#7A1C1C] dark:text-[#D4AF37]">
+                                            <p className="text-sm font-medium text-[#7A1C1C] dark:text-[#D4AF37] truncate">
                                                 {notification.title}
                                             </p>
                                         )}
-                                        <p className="text-sm text-[#1a1a1a] dark:text-[#e0e0e0]">
+                                        <p className="text-sm text-[#1a1a1a] dark:text-[#e0e0e0] line-clamp-2">
                                             {notification.message}
                                         </p>
                                         <p className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0]">
-                                            {new Date(notification.created_at).toLocaleDateString()}
+                                            {formatRelativeTime(notification.created_at)}
                                         </p>
+                                    </div>
+                                    <div className="flex items-center gap-1 shrink-0">
+                                        {!notification.is_read && (
+                                            <button
+                                                onClick={(e: React.MouseEvent) => markAsReadOnly(notification.id, e)}
+                                                className="p-1 hover:bg-[#F8F5F0] dark:hover:bg-[#252529] rounded transition-colors"
+                                                title="Mark as read"
+                                            >
+                                                <Check className="h-4 w-4 text-[#6b6b6b] dark:text-[#B0B0B0]" />
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={(e: React.MouseEvent) => deleteNotification(notification.id, e)}
+                                            className="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                                            title="Delete"
+                                        >
+                                            <Trash2 className="h-4 w-4 text-red-600" />
+                                        </button>
                                     </div>
                                     {!notification.is_read && (
                                         <div className="w-2 h-2 rounded-full bg-[#7A1C1C] dark:bg-[#8B2C2C] shrink-0 mt-2" />
@@ -144,6 +229,15 @@ export function NotificationDropdown() {
                             ))}
                         </div>
                     )}
+                </div>
+                <div className="p-3 border-t border-[#ddd8d0] dark:border-[#2a2a2d]">
+                    <Link
+                        href="/dashboard/notifications"
+                        className="block text-center text-sm text-[#7A1C1C] dark:text-[#D4AF37] hover:underline"
+                        onClick={() => setIsOpen(false)}
+                    >
+                        View all notifications
+                    </Link>
                 </div>
             </PopoverContent>
         </Popover>
