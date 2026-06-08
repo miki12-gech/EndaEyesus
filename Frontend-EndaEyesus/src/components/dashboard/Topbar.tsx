@@ -8,7 +8,8 @@ import { useAuthStore } from "@/store/authStore";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { NotificationDropdown } from "./NotificationDropdown";
 import { MessagesSlideover } from "./MessagesSlideover";
-import { GraduationCap, BookOpen, User, Shield, Users, FileText, Activity } from "lucide-react";
+import { GraduationCap, BookOpen, User, Shield, Users, FileText, Activity, ChevronDown } from "lucide-react";
+import { NavigationDropdown } from "./NavigationDropdown";
 
 const ADMIN_ROLES = ["SECRETARIAT_CHAIRMAN", "SECRETARIAT_VICE", "SECRETARIAT_SECRETARY", "SUPER_ADMIN", "SERVICE_MANAGER"];
 const MEMBER_ROLES = ["MEMBER", "TEACHER", "SERVICE_MANAGER", "SECRETARIAT_SECRETARY", "SECRETARIAT_VICE", "SECRETARIAT_CHAIRMAN", "SUPER_ADMIN", "CLASS_LEADER"];
@@ -43,16 +44,24 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
     const role = user?.system_role || user?.role || "USER";
     const isAdmin = ADMIN_ROLES.includes(role);
     const isMember = MEMBER_ROLES.includes(role);
+    const isChairman = role === 'SECRETARIAT_CHAIRMAN';
 
-    const navItems = [
+    // Regular navigation items
+    const regularNavItems = [
         { href: "/dashboard/announcements", label: "Announcements", icon: Bell, show: true },
         { href: "/dashboard/courses", label: "Courses", icon: GraduationCap, show: true },
         { href: "/dashboard/library", label: "Library", icon: BookOpen, show: true },
         { href: "/dashboard/about", label: "About", icon: User, show: true },
-        { href: "/dashboard/agent", label: "Admin", icon: Shield, show: isAdmin },
-        { href: "/dashboard/agent/roles", label: "Roles", icon: Shield, show: role === 'SECRETARIAT_CHAIRMAN' },
-        { href: "/dashboard/agent/members", label: "Members", icon: Users, show: role === 'SECRETARIAT_CHAIRMAN' },
     ].filter((item) => item.show);
+
+    // Admin dropdown items based on role
+    const adminDropdownItems = [
+        { href: "/dashboard/agent", label: "Admin Panel", icon: Shield },
+        ...(isChairman ? [
+            { href: "/dashboard/agent/roles", label: "Role Management", icon: Shield },
+            { href: "/dashboard/agent/members", label: "Member Census", icon: Users },
+        ] : []),
+    ];
 
     return (
         <header className="h-14 lg:h-16 bg-white dark:bg-[#1C1C1F] border-b border-[#ddd8d0] dark:border-[#2a2a2d] flex items-center justify-between px-4 lg:px-6 fixed top-0 right-0 left-0 z-20 shadow-sm">
@@ -69,14 +78,14 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
                 <div>
                     <h2 className="text-base font-semibold text-[#7A1C1C] dark:text-[#D4AF37] tracking-tight leading-tight">{title}</h2>
                     <p className="text-[10px] text-[#6b6b6b] dark:text-[#B0B0B0] hidden sm:block">
-                        Enda Eyesus Student Fellowship
+                        እንዳ ኢየሱስ ግቢ ጉባኤ
                     </p>
                 </div>
             </div>
 
             {/* Middle: Navigation */}
             <nav className="hidden lg:flex items-center space-x-1 flex-1 justify-start px-4">
-                {navItems.map(({ href, label, icon: Icon }) => (
+                {regularNavItems.map(({ href, label, icon: Icon }) => (
                     <Link
                         key={href}
                         href={href}
@@ -90,6 +99,15 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
                         {label}
                     </Link>
                 ))}
+                
+                {/* Admin Dropdown */}
+                {isAdmin && (
+                    <NavigationDropdown
+                        label="Admin"
+                        icon={Shield}
+                        items={adminDropdownItems}
+                    />
+                )}
             </nav>
 
             {/* Right side */}

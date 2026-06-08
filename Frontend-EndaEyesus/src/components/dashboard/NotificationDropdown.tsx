@@ -70,7 +70,7 @@ export function NotificationDropdown() {
             });
             const data = res.data as any;
             setNotifications(data?.items || data || []);
-            setUnreadCount(typeof data?.unreadCount === "number" ? data.unread_count : 0);
+            setUnreadCount(typeof data?.unreadCount === "number" ? data.unreadCount : 0);
         } catch (e: any) {
             // Ignore 403 forbidden if user is pending
             if (e.response?.status !== 403) {
