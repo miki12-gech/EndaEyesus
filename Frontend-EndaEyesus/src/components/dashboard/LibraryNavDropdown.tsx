@@ -41,7 +41,7 @@ export function LibraryNavDropdown() {
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-[#1C1C1F] rounded-xl shadow-lg border border-[#ddd8d0] dark:border-[#2a2a2d] overflow-hidden z-50">
+        <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-[#1C1C1F] rounded-xl shadow-lg border border-[#ddd8d0] dark:border-[#2a2a2d] overflow-hidden z-[200]">
           {categories.map((cat) => (
             <Link
               key={cat.slug}

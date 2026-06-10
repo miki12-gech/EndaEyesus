@@ -57,7 +57,7 @@ export function NavigationDropdown({ label, icon: Icon, items, isActive }: Navig
             </button>
 
             {isOpen && (
-                <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-[#1C1C1F] border border-[#ddd8d0] dark:border-[#2a2a2d] rounded-lg shadow-lg py-1 z-50">
+                <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-[#1C1C1F] border border-[#ddd8d0] dark:border-[#2a2a2d] rounded-lg shadow-lg py-1 z-[100]">
                     {items.map((item) => {
                         const ItemIcon = item.icon;
                         return (
