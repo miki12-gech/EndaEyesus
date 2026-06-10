@@ -219,19 +219,9 @@ export default function AnnouncementsPage() {
     }
 
     return (
-        <div className="w-full space-y-5">
+        <div className="w-full space-y-2">
             <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[#7A1C1C] dark:bg-[#9B2323] flex items-center justify-center">
-                        <Bell className="h-5 w-5 text-[#C9A227] dark:text-[#D4AF37]" />
-                    </div>
-                    <div>
-                        <h1 className="text-lg font-bold text-[#7A1C1C] dark:text-[#D4AF37]">Announcements</h1>
-                        <p className="text-xs text-[#6b6b6b] dark:text-[#B0B0B0]">
-                            {loading ? "Loading..." : `${announcements.length} announcements`}
-                        </p>
-                    </div>
-                </div>
+            
                 {canCreateAnn && (
                     <button onClick={() => setShowForm(!showForm)}
                         className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-[#7A1C1C] dark:bg-[#D4AF37] text-white dark:text-[#0E0E0F] hover:bg-[#C9A227] dark:hover:bg-[#e0c040] hover:text-[#7A1C1C] transition-all">

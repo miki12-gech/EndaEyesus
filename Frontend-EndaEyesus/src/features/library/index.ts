@@ -1,3 +1,4 @@
+//src/features/library/index.ts
 // Export all library feature components
 export { default as LibraryListing } from './LibraryListing';
 export { default as AdminLibraryUpload } from './AdminLibraryUpload';

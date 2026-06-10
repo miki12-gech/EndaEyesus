@@ -1,3 +1,4 @@
+// src/components/dashboard/Topbar.tsx
 "use client";
 
 import Link from "next/link";
@@ -10,6 +11,7 @@ import { NotificationDropdown } from "./NotificationDropdown";
 import { MessagesSlideover } from "./MessagesSlideover";
 import { GraduationCap, BookOpen, User, Shield, Users, FileText, Activity, ChevronDown } from "lucide-react";
 import { NavigationDropdown } from "./NavigationDropdown";
+import { LibraryNavDropdown } from "./LibraryNavDropdown";
 
 const ADMIN_ROLES = ["SECRETARIAT_CHAIRMAN", "SECRETARIAT_VICE", "SECRETARIAT_SECRETARY", "SUPER_ADMIN", "SERVICE_MANAGER"];
 const MEMBER_ROLES = ["MEMBER", "TEACHER", "SERVICE_MANAGER", "SECRETARIAT_SECRETARY", "SECRETARIAT_VICE", "SECRETARIAT_CHAIRMAN", "SUPER_ADMIN", "CLASS_LEADER"];
@@ -46,11 +48,10 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
     const isMember = MEMBER_ROLES.includes(role);
     const isChairman = role === 'SECRETARIAT_CHAIRMAN';
 
-    // Regular navigation items
+    // Regular navigation items (excluding Library, because we'll render it separately)
     const regularNavItems = [
         { href: "/dashboard/announcements", label: "Announcements", icon: Bell, show: true },
         { href: "/dashboard/courses", label: "Courses", icon: GraduationCap, show: true },
-        { href: "/dashboard/library", label: "Library", icon: BookOpen, show: true },
         { href: "/dashboard/about", label: "About", icon: User, show: true },
     ].filter((item) => item.show);
 
@@ -67,7 +68,6 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
         <header className="h-14 lg:h-16 bg-white dark:bg-[#1C1C1F] border-b border-[#ddd8d0] dark:border-[#2a2a2d] flex items-center justify-between px-4 lg:px-6 fixed top-0 right-0 left-0 z-20 shadow-sm">
             {/* Left: hamburger + page title */}
             <div className="flex items-center gap-3 w-1/4">
-                {/* Hamburger button - mobile only */}
                 <button
                     onClick={onMenuOpen}
                     className="lg:hidden p-2 rounded-lg hover:bg-[#F8F5F0] dark:hover:bg-[#252529] transition-colors"
@@ -100,6 +100,9 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
                     </Link>
                 ))}
                 
+                {/* Library Dropdown */}
+                <LibraryNavDropdown />
+
                 {/* Admin Dropdown */}
                 {isAdmin && (
                     <NavigationDropdown

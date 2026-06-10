@@ -1,3 +1,4 @@
+// src/features/library/DocumentViewer.tsx
 "use client";
 
 import { useState } from "react";
@@ -27,12 +28,9 @@ export default function DocumentViewer({
 
   // Convert Google Drive URL to embedded format
   const getEmbeddedUrl = (googleUrl: string) => {
-    // support: /file/d/FILE_ID/(view|preview), open?id=FILE_ID, uc?id=FILE_ID
-    const fileIdMatch = googleUrl.match(
-      /(?:\/d\/([a-zA-Z0-9_-]+)\/)|(?:[&?]id=([a-zA-Z0-9_-]+))/,
-    );
+    const fileIdMatch = googleUrl.match(/\/d\/([a-zA-Z0-9_-]+)\//);
     if (fileIdMatch) {
-      const fileId = fileIdMatch[1] || fileIdMatch[2];
+      const fileId = fileIdMatch[1];
       return `https://drive.google.com/file/d/${fileId}/preview`;
     }
     return googleUrl;
