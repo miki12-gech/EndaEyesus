@@ -27,11 +27,11 @@ export default function AdminLibraryUpload({
     title: "",
     description: "",
     drive_url: "",
-    category: "ACADEMIC",
+    category: "",
     academic_department: "",
-    academic_year: new Date().getFullYear(),
+    academic_year: undefined,
     course_id: "",
-    document_type: "TEXTBOOK",
+    document_type: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -46,11 +46,11 @@ export default function AdminLibraryUpload({
         title: "",
         description: "",
         drive_url: "",
-        category: "ACADEMIC",
-        academic_department: "",
-        academic_year: new Date().getFullYear(),
+          category: "",
+          academic_department: "",
+          academic_year: undefined,
         course_id: "",
-        document_type: "TEXTBOOK",
+          document_type: "",
       });
       setErrors({});
       setShowForm(false);
@@ -70,6 +70,8 @@ export default function AdminLibraryUpload({
     if (!formData.drive_url.trim())
       newErrors.drive_url = "Google Drive URL is required";
 
+    if (!formData.category) newErrors.category = "Category is required";
+
     // Validate Google Drive URL format
     if (formData.drive_url && !isValidGoogleDriveUrl(formData.drive_url)) {
       newErrors.drive_url =
@@ -81,7 +83,8 @@ export default function AdminLibraryUpload({
   };
 
   const isValidGoogleDriveUrl = (url: string): boolean => {
-    return /^https:\/\/drive\.google\.com\/file\/d\/[a-zA-Z0-9_-]+\/view/.test(
+    // Accept /view, /preview and open?id=FILE_ID forms
+    return /^(?:https:\/\/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)\/(?:view|preview)(?:.*)?|https:\/\/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+))(?:.*)?$/.test(
       url,
     );
   };

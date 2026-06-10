@@ -27,9 +27,10 @@ export default function DocumentViewer({
 
   // Convert Google Drive URL to embedded format
   const getEmbeddedUrl = (googleUrl: string) => {
-    const fileIdMatch = googleUrl.match(/\/d\/([a-zA-Z0-9_-]+)\//);
+    // support: /file/d/FILE_ID/(view|preview), open?id=FILE_ID, uc?id=FILE_ID
+    const fileIdMatch = googleUrl.match(/(?:\/d\/([a-zA-Z0-9_-]+)\/)|(?:[&?]id=([a-zA-Z0-9_-]+))/);
     if (fileIdMatch) {
-      const fileId = fileIdMatch[1];
+      const fileId = fileIdMatch[1] || fileIdMatch[2];
       return `https://drive.google.com/file/d/${fileId}/preview`;
     }
     return googleUrl;

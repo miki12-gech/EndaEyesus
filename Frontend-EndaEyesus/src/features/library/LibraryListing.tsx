@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Search, Download, Heart, Filter, Eye, BookOpen, Zap, Folder, ChevronDown, ChevronUp } from "lucide-react";
 import apiClient from "@/api";
 import DocumentViewer from "./DocumentViewer";
@@ -60,6 +60,8 @@ export default function LibraryListing() {
     },
   });
 
+  const queryClient = useQueryClient();
+
   // Like mutation
   const likeMutation = useMutation({
     mutationFn: (itemId: string) =>
@@ -67,7 +69,7 @@ export default function LibraryListing() {
         `/library/${itemId}/like`,
         {},
       ),
-    onSuccess: () => refetch(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["library"] }),
   });
 
   // Download mutation
@@ -77,7 +79,7 @@ export default function LibraryListing() {
         `/library/${itemId}/download`,
         {},
       ),
-    onSuccess: () => refetch(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["library"] }),
   });
 
   const handleSearch = useCallback((query: string) => {
