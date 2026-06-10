@@ -2,7 +2,18 @@
 
 import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Download, Heart, Filter, Eye, BookOpen, Zap, Folder, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Search,
+  Download,
+  Heart,
+  Filter,
+  Eye,
+  BookOpen,
+  Zap,
+  Folder,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import apiClient from "@/api";
 import DocumentViewer from "./DocumentViewer";
 
@@ -34,7 +45,12 @@ interface FilterOptions {
 export default function LibraryListing() {
   const [filters, setFilters] = useState<FilterOptions>({});
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedPreview, setSelectedPreview] = useState<LibraryItem | null>(null);
+  const [departments, setDepartments] = useState<string[]>([]);
+  const [academicYears, setAcademicYears] = useState<number[]>([]);
+  const [courseIds, setCourseIds] = useState<string[]>([]);
+  const [selectedPreview, setSelectedPreview] = useState<LibraryItem | null>(
+    null,
+  );
   const [expandedCategories, setExpandedCategories] = useState({
     SPIRITUAL: true,
     ACADEMIC: true,
@@ -55,8 +71,27 @@ export default function LibraryListing() {
         params.append("document_type", filters.document_type);
       if (filters.search) params.append("search", filters.search);
 
-      const response = await apiClient.instance.get(`/library?${params.toString()}`);
-      return response.data.items;
+      const response = await apiClient.instance.get(
+        `/library?${params.toString()}`,
+      );
+      const items = response.data.items;
+
+      // derive filter option lists from returned items (for cascading filters)
+      const depts = Array.from(
+        new Set(items.map((i: any) => i.academic_department).filter(Boolean)),
+      );
+      const years = Array.from(
+        new Set(items.map((i: any) => i.academic_year).filter(Boolean)),
+      ).sort((a: number, b: number) => a - b);
+      const courses = Array.from(
+        new Set(items.map((i: any) => i.course_id).filter(Boolean)),
+      );
+
+      setDepartments(depts);
+      setAcademicYears(years as number[]);
+      setCourseIds(courses);
+
+      return items;
     },
   });
 
@@ -65,21 +100,47 @@ export default function LibraryListing() {
   // Like mutation
   const likeMutation = useMutation({
     mutationFn: (itemId: string) =>
-      apiClient.instance.post(
-        `/library/${itemId}/like`,
-        {},
-      ),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["library"] }),
+      apiClient.instance.post(`/library/${itemId}/like`, {}),
+    onMutate: async (itemId: string) => {
+      await queryClient.cancelQueries({ queryKey: ["library"] });
+      const previous = queryClient.getQueryData<any>(["library", filters]);
+      queryClient.setQueryData(["library", filters], (old: any) => {
+        if (!old) return old;
+        return old.map((it: any) =>
+          it.id === itemId ? { ...it, likes_count: (it.likes_count || 0) + 1 } : it,
+        );
+      });
+      return { previous };
+    },
+    onError: (err, itemId, context: any) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["library", filters], context.previous);
+      }
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["library"] }),
   });
 
   // Download mutation
   const downloadMutation = useMutation({
     mutationFn: (itemId: string) =>
-      apiClient.instance.post(
-        `/library/${itemId}/download`,
-        {},
-      ),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["library"] }),
+      apiClient.instance.post(`/library/${itemId}/download`, {}),
+    onMutate: async (itemId: string) => {
+      await queryClient.cancelQueries({ queryKey: ["library"] });
+      const previous = queryClient.getQueryData<any>(["library", filters]);
+      queryClient.setQueryData(["library", filters], (old: any) => {
+        if (!old) return old;
+        return old.map((it: any) =>
+          it.id === itemId ? { ...it, downloads_count: (it.downloads_count || 0) + 1 } : it,
+        );
+      });
+      return { previous };
+    },
+    onError: (err, itemId, context: any) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["library", filters], context.previous);
+      }
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["library"] }),
   });
 
   const handleSearch = useCallback((query: string) => {
@@ -106,8 +167,10 @@ export default function LibraryListing() {
 
   // Group items by category
   const groupedItems = {
-    SPIRITUAL: data?.filter((item: LibraryItem) => item.category === "SPIRITUAL") || [],
-    ACADEMIC: data?.filter((item: LibraryItem) => item.category === "ACADEMIC") || [],
+    SPIRITUAL:
+      data?.filter((item: LibraryItem) => item.category === "SPIRITUAL") || [],
+    ACADEMIC:
+      data?.filter((item: LibraryItem) => item.category === "ACADEMIC") || [],
     OTHER: data?.filter((item: LibraryItem) => item.category === "OTHER") || [],
   };
 
@@ -160,29 +223,45 @@ export default function LibraryListing() {
               <option value="OTHER">Others</option>
             </select>
 
-            <input
-              type="text"
-              placeholder="Department"
-              value={filters.department || ""}
-              onChange={(e) =>
-                handleFilterChange({ department: e.target.value || undefined })
-              }
-              className="px-3 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500"
-            />
+            {(filters.category === undefined || filters.category === "ACADEMIC") ? (
+              <select
+                value={filters.department || ""}
+                onChange={(e) =>
+                  handleFilterChange({ department: e.target.value || undefined })
+                }
+                className="px-3 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+              >
+                <option value="">All Departments</option>
+                {departments.map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                placeholder="Department"
+                value={filters.department || ""}
+                onChange={(e) =>
+                  handleFilterChange({ department: e.target.value || undefined })
+                }
+                className="px-3 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+              />
+            )}
 
-            <input
-              type="number"
-              placeholder="Academic Year"
+            <select
               value={filters.academic_year || ""}
               onChange={(e) =>
                 handleFilterChange({
-                  academic_year: e.target.value
-                    ? parseInt(e.target.value)
-                    : undefined,
+                  academic_year: e.target.value ? parseInt(e.target.value) : undefined,
                 })
               }
               className="px-3 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500"
-            />
+            >
+              <option value="">All Years</option>
+              {academicYears.map((y) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
 
             <select
               value={filters.document_type || ""}
@@ -218,7 +297,9 @@ export default function LibraryListing() {
         {data && data.length > 0 ? (
           <div className="space-y-8">
             {/* Spiritual Resources Section */}
-            {(groupedItems.SPIRITUAL.length > 0 || !filters.category || filters.category === "SPIRITUAL") && (
+            {(groupedItems.SPIRITUAL.length > 0 ||
+              !filters.category ||
+              filters.category === "SPIRITUAL") && (
               <CategorySection
                 category="SPIRITUAL"
                 title="📿 Spiritual Resources"
@@ -238,7 +319,9 @@ export default function LibraryListing() {
             )}
 
             {/* Academic Resources Section */}
-            {(groupedItems.ACADEMIC.length > 0 || !filters.category || filters.category === "ACADEMIC") && (
+            {(groupedItems.ACADEMIC.length > 0 ||
+              !filters.category ||
+              filters.category === "ACADEMIC") && (
               <CategorySection
                 category="ACADEMIC"
                 title="📚 Academic Resources"
@@ -258,7 +341,9 @@ export default function LibraryListing() {
             )}
 
             {/* Other Resources Section */}
-            {(groupedItems.OTHER.length > 0 || !filters.category || filters.category === "OTHER") && (
+            {(groupedItems.OTHER.length > 0 ||
+              !filters.category ||
+              filters.category === "OTHER") && (
               <CategorySection
                 category="OTHER"
                 title="📁 Other Resources"
@@ -338,11 +423,15 @@ function CategorySection({
   isDownloading,
 }: CategorySectionProps) {
   return (
-    <div className={`bg-gradient-to-br ${bgColor} rounded-xl overflow-hidden border-2 ${
-      accentColor === "purple" ? "border-purple-300" :
-      accentColor === "blue" ? "border-blue-300" :
-      "border-amber-300"
-    } shadow-lg`}>
+    <div
+      className={`bg-gradient-to-br ${bgColor} rounded-xl overflow-hidden border-2 ${
+        accentColor === "purple"
+          ? "border-purple-300"
+          : accentColor === "blue"
+            ? "border-blue-300"
+            : "border-amber-300"
+      } shadow-lg`}
+    >
       {/* Category Header */}
       <button
         onClick={onToggle}
@@ -351,16 +440,22 @@ function CategorySection({
         <div className="flex items-center gap-3">
           <span className="text-2xl">{title.split(" ")[0]}</span>
           <div>
-            <h2 className="text-xl font-bold text-left">{title.split(" ").slice(1).join(" ")}</h2>
+            <h2 className="text-xl font-bold text-left">
+              {title.split(" ").slice(1).join(" ")}
+            </h2>
             <p className="text-xs opacity-90">{description}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-            accentColor === "purple" ? "bg-purple-200 text-purple-900" :
-            accentColor === "blue" ? "bg-blue-200 text-blue-900" :
-            "bg-amber-200 text-amber-900"
-          }`}>
+          <span
+            className={`px-3 py-1 rounded-full text-sm font-semibold ${
+              accentColor === "purple"
+                ? "bg-purple-200 text-purple-900"
+                : accentColor === "blue"
+                  ? "bg-blue-200 text-blue-900"
+                  : "bg-amber-200 text-amber-900"
+            }`}
+          >
             {items.length}
           </span>
           {isExpanded ? (
@@ -390,18 +485,26 @@ function CategorySection({
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className={`text-lg font-semibold ${
-                accentColor === "purple" ? "text-purple-600" :
-                accentColor === "blue" ? "text-blue-600" :
-                "text-amber-600"
-              }`}>
+              <p
+                className={`text-lg font-semibold ${
+                  accentColor === "purple"
+                    ? "text-purple-600"
+                    : accentColor === "blue"
+                      ? "text-blue-600"
+                      : "text-amber-600"
+                }`}
+              >
                 No {category.toLowerCase()} resources found
               </p>
-              <p className={`text-sm ${
-                accentColor === "purple" ? "text-purple-500" :
-                accentColor === "blue" ? "text-blue-500" :
-                "text-amber-500"
-              }`}>
+              <p
+                className={`text-sm ${
+                  accentColor === "purple"
+                    ? "text-purple-500"
+                    : accentColor === "blue"
+                      ? "text-blue-500"
+                      : "text-amber-500"
+                }`}
+              >
                 Try adjusting your search or filters
               </p>
             </div>

@@ -46,11 +46,11 @@ export default function AdminLibraryUpload({
         title: "",
         description: "",
         drive_url: "",
-          category: "",
-          academic_department: "",
-          academic_year: undefined,
+        category: "",
+        academic_department: "",
+        academic_year: undefined,
         course_id: "",
-          document_type: "",
+        document_type: "",
       });
       setErrors({});
       setShowForm(false);
