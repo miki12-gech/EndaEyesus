@@ -2,7 +2,11 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, GraduationCap, BookOpen, User, LogOut, Shield, Users, Activity, X, Cross as CrossIcon, ChevronDown, ChevronRight, FileText, Sparkles } from "lucide-react";
+import { 
+  Bell, GraduationCap, BookOpen, User, LogOut, Shield, Users, Activity, X, 
+  Cross as CrossIcon, ChevronDown, ChevronRight, FileText, Sparkles, 
+  UserCheck, Layers, UserPlus 
+} from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useState } from "react";
 
@@ -38,6 +42,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
     const [libraryOpen, setLibraryOpen] = useState(false);
     const [adminOpen, setAdminOpen] = useState(false);
+    const [memberAffairsOpen, setMemberAffairsOpen] = useState(false);
 
     const handleLogout = () => {
         logout();
@@ -47,6 +52,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     const initials = user?.fullName
         ? user.fullName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
         : "?";
+
+    const canAccessMemberAffairs = 
+        (role === "SERVICE_MANAGER" && user?.serviceClassName === "የአባልነት ጉዳይ ክፍል") ||
+        ["SECRETARIAT_CHAIRMAN", "SECRETARIAT_VICE", "SECRETARIAT_SECRETARY", "SUPER_ADMIN"].includes(role);
 
     const mainNavItems = [
         { href: "/dashboard/announcements", label: "Announcements", icon: Bell, show: true },
@@ -67,6 +76,15 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             { href: "/dashboard/agent/roles", label: "Role Management", icon: Shield },
             { href: "/dashboard/agent/members", label: "Member Census", icon: Users },
         ] : []),
+    ];
+
+    const memberAffairsItems = [
+        { href: "/dashboard/member-affairs?tab=pending", label: "Pending Approvals", icon: UserCheck },
+        { href: "/dashboard/member-affairs?tab=census", label: "Member Census", icon: Users },
+        { href: "/dashboard/member-affairs?tab=spiritual", label: "Spiritual Care", icon: Shield },
+        { href: "/dashboard/member-affairs?tab=subclasses", label: "Sub‑Classes", icon: Layers },
+        { href: "/dashboard/member-affairs?tab=documents", label: "Plans & Reports", icon: FileText },
+        { href: "/dashboard/member-affairs?tab=batch", label: "Batch Assign", icon: UserPlus },
     ];
 
     return (
@@ -143,6 +161,40 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                         </div>
                     )}
                 </div>
+
+                {/* Member Affairs Dropdown */}
+                {canAccessMemberAffairs && (
+                    <div>
+                        <button
+                            onClick={() => setMemberAffairsOpen(!memberAffairsOpen)}
+                            className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:bg-[#F8F5F0] dark:hover:bg-[#252529] transition-all duration-200 group"
+                        >
+                            <div className="flex items-center gap-3">
+                                <Users className="h-5 w-5" />
+                                Member Affairs
+                            </div>
+                            {memberAffairsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                        </button>
+                        {memberAffairsOpen && (
+                            <div className="ml-8 mt-1 space-y-1 border-l border-[#ddd8d0] dark:border-[#2a2a2d] pl-3">
+                                {memberAffairsItems.map(({ href, label, icon: Icon }) => {
+                                    const isActive = pathname === "/dashboard/member-affairs" && new URLSearchParams(window.location.search).get("tab") === href.split("=")[1];
+                                    return (
+                                        <Link
+                                            key={href}
+                                            href={href}
+                                            onClick={onClose}
+                                            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${isActive ? "text-[#C9A227] dark:text-[#D4AF37] bg-[#F8F5F0] dark:bg-[#252529]" : "text-muted-foreground hover:text-foreground hover:bg-[#F8F5F0] dark:hover:bg-[#252529]"}`}
+                                        >
+                                            <Icon className="h-4 w-4" />
+                                            {label}
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Admin Dropdown (only for admins) */}
                 {isAdmin && (

@@ -1,3 +1,4 @@
+//src/lib/chairmanApi.ts
 import axios from 'axios';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:8080';

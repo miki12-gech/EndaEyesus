@@ -1,14 +1,15 @@
+// src/components/dashboard/Topbar.tsx
 "use client";
 
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Bell, Search, Menu, Cross as CrossIcon, X } from "lucide-react";
+import { Bell, Search, Menu, Cross as CrossIcon, X, Users, UserCheck, Shield, FileText, Layers, UserPlus } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuthStore } from "@/store/authStore";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { NotificationDropdown } from "./NotificationDropdown";
 import { MessagesSlideover } from "./MessagesSlideover";
-import { GraduationCap, BookOpen, User, Shield, Users } from "lucide-react";
+import { GraduationCap, BookOpen, User } from "lucide-react";
 import { NavigationDropdown } from "./NavigationDropdown";
 import { LibraryNavDropdown } from "./LibraryNavDropdown";
 import { useState, useRef, useEffect } from "react";
@@ -50,6 +51,8 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
     const role = user?.system_role || user?.role || "USER";
     const isAdmin = ADMIN_ROLES.includes(role);
     const isChairman = role === 'SECRETARIAT_CHAIRMAN';
+    const isMemberAffairsManager = role === "SERVICE_MANAGER" && user?.serviceClassName === "የአባልነት ጉዳይ ክፍል";
+    const isSecretariat = ["SECRETARIAT_CHAIRMAN", "SECRETARIAT_VICE", "SECRETARIAT_SECRETARY", "SUPER_ADMIN"].includes(role);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -83,10 +86,18 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
         ] : []),
     ];
 
+    // Member Affairs dropdown items (tabs of the dashboard)
+    const memberAffairsItems = [
+        { href: "/dashboard/member-affairs?tab=pending", label: "Pending Approvals", icon: UserCheck },
+        { href: "/dashboard/member-affairs?tab=census", label: "Member Census", icon: Users },
+        { href: "/dashboard/member-affairs?tab=spiritual", label: "Spiritual Care", icon: Shield },
+        { href: "/dashboard/member-affairs?tab=subclasses", label: "Sub‑Classes", icon: Layers },
+        { href: "/dashboard/member-affairs?tab=documents", label: "Plans & Reports", icon: FileText },
+        { href: "/dashboard/member-affairs?tab=batch", label: "Batch Assign", icon: UserPlus },
+    ];
+
     return (
-        // 🔥 Changed z-30 → z-50
         <header className="h-16 lg:h-20 bg-white dark:bg-[#1C1C1F] border-b border-[#ddd8d0] dark:border-[#2a2a2d] flex items-center justify-between px-4 lg:px-8 fixed top-0 right-0 left-0 z-50 shadow-md transition-all duration-300">
-            {/* Subtle gold top line */}
             <div className="absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-transparent via-[#C9A227] to-transparent dark:via-[#D4AF37]" />
 
             {/* Left section – responsive title */}
@@ -135,6 +146,12 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
                     );
                 })}
                 <LibraryNavDropdown />
+                
+                {/* Member Affairs Dropdown – for Member Affairs manager or Secretariat */}
+                {(isMemberAffairsManager || isSecretariat) && (
+                    <NavigationDropdown label="Member Affairs" icon={Users} items={memberAffairsItems} />
+                )}
+                
                 {isAdmin && <NavigationDropdown label="Admin" icon={Shield} items={adminDropdownItems} />}
             </nav>
 

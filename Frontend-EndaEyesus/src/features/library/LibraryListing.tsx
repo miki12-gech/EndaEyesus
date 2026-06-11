@@ -1,5 +1,5 @@
+//src/features/library/LibraryListing.tsx
 "use client";
-/// <reference types="react" />
 import React from "react";
 import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";

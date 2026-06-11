@@ -1,3 +1,4 @@
+//src/store/authStore.ts
 import { create } from 'zustand';
 import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import { Role, Status, AcademicYear, Sex, ClericalRank } from '@/lib/types';

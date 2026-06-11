@@ -1,3 +1,4 @@
+// src/lib/types.ts
 // Shared TypeScript types matching the backend exactly
 
 export type Role = 'SUPER_ADMIN' | 'CLASS_LEADER' | 'MEMBER' | 'USER' | 'TEACHER' | 'SERVICE_MANAGER' | 'SECRETARIAT_SECRETARY' | 'SECRETARIAT_VICE' | 'SECRETARIAT_CHAIRMAN';

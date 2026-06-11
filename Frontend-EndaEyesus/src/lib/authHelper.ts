@@ -1,3 +1,4 @@
+//src/lib/authHelper.ts
 import { User as GeneratedUser } from '@/api/generated/api';
 import { AuthUser } from '@/store/authStore';
 

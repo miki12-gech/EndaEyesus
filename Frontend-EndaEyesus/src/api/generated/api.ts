@@ -9,6 +9,7 @@
  * ## SOURCE: https://github.com/acacode/swagger-typescript-api ##
  * ---------------------------------------------------------------
  */
+//src/api/generated/api.ts
 
 export interface ProblemDetail {
   type?: string;
