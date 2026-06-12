@@ -1,70 +1,90 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { educationApi } from "./educationApi";
+import { getCourseContent } from "./courses";
 import { Button } from "@/components/ui/button";
 import { Loader2, HelpCircle } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
+import { toast } from "sonner";
 
-export default function CourseViewer({ phase, batchId }: { phase: string; batchId: string }) {
-  const queryClient = useQueryClient();
+export default function CourseViewer({ phase }: { phase: string }) {
   const [examAnswers, setExamAnswers] = useState<Record<string, string>>({});
-  const [examResult, setExamResult] = useState<{ score: number; passed: boolean } | null>(null);
+  const [examResults, setExamResults] = useState<Record<string, { score: number; passed: boolean }>>({});
 
-  const { data: subjectsResp, isLoading } = useQuery({
-    queryKey: ["education", "subjects", batchId],
-    queryFn: () => educationApi.getSubjectsWithLessons(batchId),
-  });
-  const subjects = subjectsResp?.data || [];
+  const content = getCourseContent(phase);
+  if (!content) {
+    return <div className="text-center p-8">Course content not available for this phase.</div>;
+  }
 
-  const submitExamMutation = useMutation({
-    mutationFn: (examId: string) => educationApi.submitExam(examId, examAnswers),
-    onSuccess: (response) => {
-      // Extract data from Axios response
-      const result = response.data;
-      setExamResult(result);
-      queryClient.invalidateQueries({ queryKey: ["education", "subjects", batchId] });
-    },
-  });
+  const subjects = content.subjects;
 
-  if (isLoading) return <Loader2 className="animate-spin" />;
+  const handleExamSubmit = (subjectId: string, questions: any[]) => {
+    let totalPoints = 0;
+    let earnedPoints = 0;
+    for (const q of questions) {
+      totalPoints += q.points;
+      if (examAnswers[q.id] === q.correctAnswer) earnedPoints += q.points;
+    }
+    const score = (earnedPoints / totalPoints) * 100;
+    const passed = score >= 70; // all exams have passingScore 70
+    setExamResults(prev => ({ ...prev, [subjectId]: { score, passed } }));
+    if (passed) {
+      toast.success(`Exam passed! Score: ${score.toFixed(1)}%`);
+    } else {
+      toast.error(`Exam failed. Score: ${score.toFixed(1)}%`);
+    }
+  };
 
   return (
     <div className="space-y-8">
-      {subjects.map((subject: any) => (
-        <div key={subject.id} className="border rounded-lg p-6">
-          <h2 className="text-2xl font-bold text-[#7A1C1C]">{subject.title}</h2>
+      {subjects.map((subject) => (
+        <div key={subject.id} className="border rounded-lg p-6 bg-white dark:bg-[#1C1C1F] shadow-sm">
+          <h2 className="text-2xl font-bold text-[#7A1C1C] dark:text-[#D4AF37]">{subject.title}</h2>
           <p className="text-muted-foreground mb-4">{subject.description}</p>
-          {subject.lessons.map((lesson: any) => (
+
+          {subject.lessons.map((lesson) => (
             <div key={lesson.id} className="mt-6">
               <h3 className="text-xl font-semibold">{lesson.title}</h3>
-              <div className="prose dark:prose-invert" dangerouslySetInnerHTML={{ __html: lesson.content }} />
-              {lesson.inlineExplanations?.map((exp: any) => (
+              <div
+                className="prose dark:prose-invert max-w-none mt-2"
+                dangerouslySetInnerHTML={{ __html: lesson.content }}
+              />
+              {lesson.inlineExplanations?.map((exp) => (
                 <Accordion type="single" collapsible key={exp.id}>
                   <AccordionItem value={exp.id}>
                     <AccordionTrigger className="text-sm text-muted-foreground">
                       <HelpCircle className="h-4 w-4 inline mr-2" /> Explain: {exp.quotedText.substring(0, 60)}...
                     </AccordionTrigger>
                     <AccordionContent>
-                      <div className="p-3 bg-muted rounded-md" dangerouslySetInnerHTML={{ __html: exp.explanation }} />
+                      <div
+                        className="p-3 bg-muted rounded-md"
+                        dangerouslySetInnerHTML={{ __html: exp.explanation }}
+                      />
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
               ))}
             </div>
           ))}
-          {subject.exam && !subject.userProgress?.passed && (
+
+          {subject.exam && !examResults[subject.id]?.passed && (
             <div className="mt-6 border-t pt-6">
               <h3 className="text-lg font-semibold">Subject Exam</h3>
-              <form onSubmit={(e) => { e.preventDefault(); submitExamMutation.mutate(subject.exam.id); }}>
-                {subject.exam.questions.map((q: any, idx: number) => (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleExamSubmit(subject.id, subject.exam.questions);
+                }}
+              >
+                {subject.exam.questions.map((q, idx) => (
                   <div key={q.id} className="mt-4">
-                    <p className="font-medium">{idx+1}. {q.text}</p>
-                    <RadioGroup onValueChange={(val) => setExamAnswers({ ...examAnswers, [q.id]: val })}>
-                      {q.options.map((opt: string) => (
+                    <p className="font-medium">{idx + 1}. {q.text}</p>
+                    <RadioGroup
+                      onValueChange={(val) => setExamAnswers({ ...examAnswers, [q.id]: val })}
+                    >
+                      {q.options.map((opt) => (
                         <div key={opt} className="flex items-center space-x-2">
                           <RadioGroupItem value={opt} id={`${q.id}-${opt}`} />
                           <Label htmlFor={`${q.id}-${opt}`}>{opt}</Label>
@@ -77,18 +97,20 @@ export default function CourseViewer({ phase, batchId }: { phase: string; batchI
               </form>
             </div>
           )}
-          {subject.userProgress?.passed && (
-            <div className="mt-4 text-green-600">✓ Exam passed</div>
+
+          {examResults[subject.id]?.passed && (
+            <div className="mt-4 text-green-600 flex items-center gap-2">
+              <span>✓</span> Exam passed (Score: {examResults[subject.id].score.toFixed(1)}%)
+            </div>
           )}
         </div>
       ))}
-      {subjects.length > 0 && subjects.every((s: any) => s.userProgress?.passed) && (
-        <div className="text-center p-6 bg-green-100 rounded-lg">
-          <p className="text-lg">🎉 You have completed all subjects! Exit exam is available.</p>
-          {/* Add exit exam button/component here */}
+
+      {subjects.length > 0 && subjects.every((s) => examResults[s.id]?.passed) && (
+        <div className="text-center p-6 bg-green-100 dark:bg-green-900/20 rounded-lg">
+          <p className="text-lg">🎉 You have completed all subjects! The exit exam will be available soon.</p>
         </div>
       )}
-      {examResult && <div className={`p-4 rounded ${examResult.passed ? "bg-green-100" : "bg-red-100"}`}>Score: {examResult.score}% – {examResult.passed ? "Passed!" : "Failed. Try again."}</div>}
     </div>
   );
 }

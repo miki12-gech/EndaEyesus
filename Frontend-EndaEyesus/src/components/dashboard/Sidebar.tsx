@@ -228,6 +228,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     },
   ];
 
+  // ✅ Added "Graduation" item to education dropdown
   const educationItems = [
     {
       href: "/dashboard/education?tab=batches",
@@ -266,8 +267,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     },
     {
       href: "/dashboard/education?tab=members",
-      label: "Members List",
+      label: "Class Members",
       icon: Users,
+    },
+    {
+      href: "/dashboard/education?tab=graduation",
+      label: "Graduation",
+      icon: GraduationCap,
     },
   ];
 
@@ -312,8 +318,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
       )}
 
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      {/* Navigation – scrollable */}
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto max-h-[calc(100vh-180px)]">
         {mainNavItems.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href;
           return (
@@ -435,7 +441,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               )}
             </button>
             {educationOpen && (
-              <div className="ml-8 mt-1 space-y-1 border-l border-[#ddd8d0] dark:border-[#2a2a2d] pl-3">
+              <div className="ml-8 mt-1 space-y-1 border-l border-[#ddd8d0] dark:border-[#2a2a2d] pl-3 max-h-96 overflow-y-auto">
                 {educationItems.map(({ href, label, icon: Icon }) => {
                   const isActive = pathname === href;
                   return (

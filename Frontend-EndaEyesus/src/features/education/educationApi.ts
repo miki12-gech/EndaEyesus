@@ -39,9 +39,18 @@ export const educationApi = {
     apiClient.instance.post(`/education/results/${enrollmentId}/exit/override`, { passed, score }),
   graduateMember: (enrollmentId: string) =>
     apiClient.instance.post(`/education/enrollments/${enrollmentId}/graduate`),
+
+  // Graduation management (enrolled members)
+  getEnrolledMembers: () => apiClient.instance.get('/education/enrolled-members'),
+  markMemberGraduated: (data: { memberId: string; phase: string }) =>
+    apiClient.instance.post('/education/members/graduate', data),
+
+  // Class roster (full education class)
+  getEducationClassMembers: () => apiClient.instance.get('/education/class-members'),
 };
 
 export const useEducationManager = () => {
   const { user } = useAuthStore();
-  return user?.role === 'SERVICE_MANAGER' && user?.serviceClassName === 'የትምህርት ክፍል';
+  const role = user?.system_role || user?.role || "USER";
+  return role === 'SERVICE_MANAGER' && user?.serviceClassName === 'የትምህርት ክፍል';
 };

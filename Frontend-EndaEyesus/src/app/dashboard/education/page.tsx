@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 
-// Import all feature components
+// Import components
 import BatchList from "@/features/education/BatchList";
 import SubjectManager from "@/features/education/SubjectManager";
 import PendingRegistrations from "@/features/education/PendingRegistrations";
@@ -12,9 +12,9 @@ import StudentResults from "@/features/education/StudentResults";
 import SubClassManager from "@/features/member-affairs/SubClassManager";
 import DepartmentAnnouncements from "@/features/member-affairs/DepartmentAnnouncements";
 import PlanReportMatrix from "@/features/member-affairs/PlanReportMatrix";
-import MemberList from "@/features/education/MemberList";
+import GraduationList from "@/features/education/GraduationList";
+import ClassMemberList from "@/features/education/ClassMemberList";
 
-// Map tab names to components
 const components: Record<string, React.ReactNode> = {
   batches: <BatchList />,
   subjects: <SubjectManager />,
@@ -23,7 +23,8 @@ const components: Record<string, React.ReactNode> = {
   subclasses: <SubClassManager />,
   announcements: <DepartmentAnnouncements />,
   plans: <PlanReportMatrix />,
-  members: <MemberList />,
+  graduation: <GraduationList />,
+  members: <ClassMemberList />,
 };
 
 const pageTitles: Record<string, { title: string; description: string }> = {
@@ -34,7 +35,8 @@ const pageTitles: Record<string, { title: string; description: string }> = {
   subclasses: { title: "Sub‑Classes", description: "Manage internal sub‑classes within the Education department" },
   announcements: { title: "Department Announcements", description: "Post announcements visible only to Education department members" },
   plans: { title: "Plans & Reports", description: "Upload annual plans and quarterly progress reports" },
-  members: { title: "Members List", description: "View all members of the Education department" },
+  graduation: { title: "Graduation Management", description: "Graduate members who have completed at least one phase" },
+  members: { title: "Class Members", description: "All members of the Education class (for sub‑class assignment)" },
 };
 
 function EducationContent() {

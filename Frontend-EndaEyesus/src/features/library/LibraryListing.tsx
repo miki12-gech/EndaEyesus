@@ -403,7 +403,7 @@ export default function LibraryListing({
 
                   {/* Category Ribbon */}
                   <div
-                    className={`px-4 py-2 flex items-center justify-between border-b border-border bg-gradient-to-r ${
+                    className={`px-4 py-2 flex items-center justify-between border-b border-border bg-linear-to-r ${
                       item.category === "SPIRITUAL"
                         ? "from-purple-50 to-purple-100 dark:from-purple-950/40 dark:to-purple-900/30"
                         : item.category === "ACADEMIC"

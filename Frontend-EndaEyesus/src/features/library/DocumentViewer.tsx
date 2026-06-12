@@ -42,7 +42,7 @@ export default function DocumentViewer({
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-amber-100 to-orange-100">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-linear-to-r from-amber-100 to-orange-100">
           <div className="flex-1 min-w-0">
             <h3 className="font-bold text-amber-900 truncate">{title}</h3>
           </div>

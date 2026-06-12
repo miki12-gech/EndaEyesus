@@ -110,17 +110,19 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Replace the regularNavItems with dropdown items for Courses
+ const coursesDropdownItems = [
+  { href: "/dashboard/courses?phase=GUBAE_ABEW", label: "ጉባኤ አበው", icon: GraduationCap },
+  { href: "/dashboard/courses?phase=GUBAE_HAWARYAT", label: "ጉባኤ ሐዋርያት", icon: GraduationCap },
+  { href: "/dashboard/courses?phase=GUBAE_ECCLESIAE", label: "ጉባኤ ኤቅሌስያ", icon: GraduationCap },
+];
+
+  // Keep announcements and about as regular links
   const regularNavItems = [
     {
       href: "/dashboard/announcements",
       label: "Announcements",
       icon: Bell,
-      show: true,
-    },
-    {
-      href: "/dashboard/courses",
-      label: "Courses",
-      icon: GraduationCap,
       show: true,
     },
     { href: "/dashboard/about", label: "About", icon: User, show: true },
@@ -216,8 +218,13 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
       icon: FileText,
     },
     {
+      href: "/dashboard/education?tab=graduation",
+      label: "Graduation",
+      icon: GraduationCap,
+    },
+    {
       href: "/dashboard/education?tab=members",
-      label: "Members List",
+      label: "Class Members",
       icon: Users,
     },
   ];
@@ -253,6 +260,7 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
 
       {/* Middle navigation – hidden on mobile */}
       <nav className="hidden lg:flex items-center space-x-1 flex-1 justify-center px-6">
+        {/* Announcements & About */}
         {regularNavItems.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href;
           return (
@@ -273,6 +281,14 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
             </Link>
           );
         })}
+
+        {/* Courses Dropdown (replaces the static link) */}
+        <NavigationDropdown
+          label="Courses"
+          icon={GraduationCap}
+          items={coursesDropdownItems}
+        />
+
         <LibraryNavDropdown />
 
         {/* Member Affairs Dropdown */}
