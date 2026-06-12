@@ -18,6 +18,7 @@ export default function SubClassManager() {
   const [subClassName, setSubClassName] = useState("");
   const [subChairId, setSubChairId] = useState("");
   const [subSecretaryId, setSubSecretaryId] = useState("");
+  const [subViceId, setSubViceId] = useState("");
 
   const { data: subClasses, isLoading } = useQuery({
     queryKey: ["member-affairs", "sub-classes", classId],
@@ -49,6 +50,7 @@ export default function SubClassManager() {
       setSubClassName("");
       setSubChairId("");
       setSubSecretaryId("");
+      setSubViceId("");
     },
   });
 
@@ -67,13 +69,14 @@ export default function SubClassManager() {
         </Button>
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Sub‑Chair</TableHead>
               <TableHead>Sub‑Secretary</TableHead>
+              <TableHead>Sub‑Vice</TableHead>
               <TableHead>Members</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -85,6 +88,7 @@ export default function SubClassManager() {
                 {/* ✅ Use the correct relation name from backend */}
                 <TableCell>{sc.users_sub_classes_sub_chair_idTousers?.full_name_three_parts || "—"}</TableCell>
                 <TableCell>{sc.users_sub_classes_sub_secretary_idTousers?.full_name_three_parts || "—"}</TableCell>
+                <TableCell>{sc.users_sub_classes_sub_vice_idTousers?.full_name_three_parts || "—"}</TableCell>
                 <TableCell>{sc.members?.length || 0}</TableCell>
                 <TableCell>
                   <Button size="sm" variant="ghost" onClick={() => deleteMutation.mutate(sc.id)}>
@@ -123,6 +127,18 @@ export default function SubClassManager() {
             <Select value={subSecretaryId} onValueChange={setSubSecretaryId}>
               <SelectTrigger>
                 <SelectValue placeholder="Select Sub‑Secretary" />
+              </SelectTrigger>
+              <SelectContent>
+                {members?.map((m: any) => (
+                  <SelectItem key={m.id} value={m.id}>
+                    {m.full_name_three_parts}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={subViceId} onValueChange={setSubViceId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Sub‑Vice (Optional)" />
               </SelectTrigger>
               <SelectContent>
                 {members?.map((m: any) => (

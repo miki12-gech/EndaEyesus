@@ -3,7 +3,20 @@
 import React from "react";
 import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Download, Heart, Eye, FileText, File, Image, FileArchive, Film, Music, Cross, BookOpen } from "lucide-react";
+import {
+  Search,
+  Download,
+  Heart,
+  Eye,
+  FileText,
+  File,
+  Image,
+  FileArchive,
+  Film,
+  Music,
+  Cross,
+  BookOpen,
+} from "lucide-react";
 import apiClient from "@/api";
 import DocumentViewer from "./DocumentViewer";
 
@@ -63,27 +76,131 @@ function getThumbnailUrl(fileId: string): string {
 }
 
 // Determine file type and return a human‑readable label and icon
-function getFileTypeInfo(url: string): { label: string; icon: JSX.Element; bgClass: string } {
+function getFileTypeInfo(url: string): {
+  label: string;
+  icon: React.ReactElement;
+  bgClass: string;
+} {
   const lower = url.toLowerCase();
-  if (lower.includes('.pdf')) return { label: 'PDF', icon: <FileText className="w-8 h-8" />, bgClass: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' };
-  if (lower.includes('.doc') || lower.includes('.docx')) return { label: 'DOC', icon: <FileText className="w-8 h-8" />, bgClass: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' };
-  if (lower.includes('.ppt') || lower.includes('.pptx') || lower.includes('presentation')) return { label: 'PPT', icon: <FileText className="w-8 h-8" />, bgClass: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300' };
-  if (lower.includes('.xls') || lower.includes('.xlsx') || lower.includes('spreadsheet')) return { label: 'XLS', icon: <FileText className="w-8 h-8" />, bgClass: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' };
-  if (lower.includes('.jpg') || lower.includes('.jpeg') || lower.includes('.png') || lower.includes('.gif')) return { label: 'IMAGE', icon: <Image className="w-8 h-8" />, bgClass: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' };
-  if (lower.includes('.zip') || lower.includes('.rar') || lower.includes('.7z')) return { label: 'ARCHIVE', icon: <FileArchive className="w-8 h-8" />, bgClass: 'bg-gray-100 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300' };
-  if (lower.includes('.mp4') || lower.includes('.mov') || lower.includes('.avi')) return { label: 'VIDEO', icon: <Film className="w-8 h-8" />, bgClass: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' };
-  if (lower.includes('.mp3') || lower.includes('.wav')) return { label: 'AUDIO', icon: <Music className="w-8 h-8" />, bgClass: 'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300' };
-  if (lower.includes('docs.google.com/document')) return { label: 'GOOGLE DOC', icon: <FileText className="w-8 h-8" />, bgClass: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' };
-  if (lower.includes('docs.google.com/presentation')) return { label: 'GOOGLE SLIDES', icon: <FileText className="w-8 h-8" />, bgClass: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300' };
-  if (lower.includes('docs.google.com/spreadsheets')) return { label: 'GOOGLE SHEETS', icon: <FileText className="w-8 h-8" />, bgClass: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' };
-  if (lower.includes('docs.google.com/forms')) return { label: 'GOOGLE FORM', icon: <FileText className="w-8 h-8" />, bgClass: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' };
-  return { label: 'FILE', icon: <File className="w-8 h-8" />, bgClass: 'bg-gray-100 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300' };
+  if (lower.includes(".pdf"))
+    return {
+      label: "PDF",
+      icon: <FileText className="w-8 h-8" />,
+      bgClass: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300",
+    };
+  if (lower.includes(".doc") || lower.includes(".docx"))
+    return {
+      label: "DOC",
+      icon: <FileText className="w-8 h-8" />,
+      bgClass:
+        "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300",
+    };
+  if (
+    lower.includes(".ppt") ||
+    lower.includes(".pptx") ||
+    lower.includes("presentation")
+  )
+    return {
+      label: "PPT",
+      icon: <FileText className="w-8 h-8" />,
+      bgClass:
+        "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300",
+    };
+  if (
+    lower.includes(".xls") ||
+    lower.includes(".xlsx") ||
+    lower.includes("spreadsheet")
+  )
+    return {
+      label: "XLS",
+      icon: <FileText className="w-8 h-8" />,
+      bgClass:
+        "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300",
+    };
+  if (
+    lower.includes(".jpg") ||
+    lower.includes(".jpeg") ||
+    lower.includes(".png") ||
+    lower.includes(".gif")
+  )
+    return {
+      label: "IMAGE",
+      icon: <Image className="w-8 h-8" />,
+      bgClass:
+        "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300",
+    };
+  if (lower.includes(".zip") || lower.includes(".rar") || lower.includes(".7z"))
+    return {
+      label: "ARCHIVE",
+      icon: <FileArchive className="w-8 h-8" />,
+      bgClass:
+        "bg-gray-100 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300",
+    };
+  if (
+    lower.includes(".mp4") ||
+    lower.includes(".mov") ||
+    lower.includes(".avi")
+  )
+    return {
+      label: "VIDEO",
+      icon: <Film className="w-8 h-8" />,
+      bgClass:
+        "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300",
+    };
+  if (lower.includes(".mp3") || lower.includes(".wav"))
+    return {
+      label: "AUDIO",
+      icon: <Music className="w-8 h-8" />,
+      bgClass:
+        "bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300",
+    };
+  if (lower.includes("docs.google.com/document"))
+    return {
+      label: "GOOGLE DOC",
+      icon: <FileText className="w-8 h-8" />,
+      bgClass:
+        "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300",
+    };
+  if (lower.includes("docs.google.com/presentation"))
+    return {
+      label: "GOOGLE SLIDES",
+      icon: <FileText className="w-8 h-8" />,
+      bgClass:
+        "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300",
+    };
+  if (lower.includes("docs.google.com/spreadsheets"))
+    return {
+      label: "GOOGLE SHEETS",
+      icon: <FileText className="w-8 h-8" />,
+      bgClass:
+        "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300",
+    };
+  if (lower.includes("docs.google.com/forms"))
+    return {
+      label: "GOOGLE FORM",
+      icon: <FileText className="w-8 h-8" />,
+      bgClass:
+        "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300",
+    };
+  return {
+    label: "FILE",
+    icon: <File className="w-8 h-8" />,
+    bgClass: "bg-gray-100 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300",
+  };
 }
 
-export default function LibraryListing({ initialCategory }: { initialCategory?: string }) {
-  const [filters, setFilters] = useState<FilterOptions>({ category: initialCategory });
+export default function LibraryListing({
+  initialCategory,
+}: {
+  initialCategory?: string;
+}) {
+  const [filters, setFilters] = useState<FilterOptions>({
+    category: initialCategory,
+  });
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedPreview, setSelectedPreview] = useState<LibraryItem | null>(null);
+  const [selectedPreview, setSelectedPreview] = useState<LibraryItem | null>(
+    null,
+  );
   const [activeTab, setActiveTab] = useState<string>(initialCategory || "ALL");
   const [departments, setDepartments] = useState<string[]>([]);
   const [academicYears, setAcademicYears] = useState<number[]>([]);
@@ -94,19 +211,30 @@ export default function LibraryListing({ initialCategory }: { initialCategory?: 
     queryKey: ["library", filters],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (filters.category && filters.category !== "ALL") params.append("category", filters.category);
+      if (filters.category && filters.category !== "ALL")
+        params.append("category", filters.category);
       if (filters.department) params.append("department", filters.department);
-      if (filters.academic_year) params.append("academic_year", filters.academic_year.toString());
+      if (filters.academic_year)
+        params.append("academic_year", filters.academic_year.toString());
       if (filters.course_id) params.append("course_id", filters.course_id);
-      if (filters.document_type) params.append("document_type", filters.document_type);
+      if (filters.document_type)
+        params.append("document_type", filters.document_type);
       if (filters.search) params.append("search", filters.search);
 
-      const response = await apiClient.instance.get(`/library?${params.toString()}`);
+      const response = await apiClient.instance.get(
+        `/library?${params.toString()}`,
+      );
       const items = response.data.items;
 
-      const depts = Array.from(new Set(items.map((i: any) => i.academic_department).filter(Boolean))) as string[];
-      const years = Array.from(new Set(items.map((i: any) => i.academic_year).filter(Boolean))) as number[];
-      const courses = Array.from(new Set(items.map((i: any) => i.course_id).filter(Boolean))) as string[];
+      const depts = Array.from(
+        new Set(items.map((i: any) => i.academic_department).filter(Boolean)),
+      ) as string[];
+      const years = Array.from(
+        new Set(items.map((i: any) => i.academic_year).filter(Boolean)),
+      ) as number[];
+      const courses = Array.from(
+        new Set(items.map((i: any) => i.course_id).filter(Boolean)),
+      ) as string[];
       setDepartments(depts);
       setAcademicYears(years.sort((a, b) => a - b));
       setCourseIds(courses);
@@ -118,39 +246,47 @@ export default function LibraryListing({ initialCategory }: { initialCategory?: 
   const queryClient = useQueryClient();
 
   const likeMutation = useMutation({
-    mutationFn: (itemId: string) => apiClient.instance.post(`/library/${itemId}/like`, {}),
+    mutationFn: (itemId: string) =>
+      apiClient.instance.post(`/library/${itemId}/like`, {}),
     onMutate: async (itemId: string) => {
       await queryClient.cancelQueries({ queryKey: ["library"] });
       const previous = queryClient.getQueryData<any>(["library", filters]);
       queryClient.setQueryData(["library", filters], (old: any) => {
         if (!old) return old;
         return old.map((it: any) =>
-          it.id === itemId ? { ...it, likes_count: (it.likes_count || 0) + 1 } : it
+          it.id === itemId
+            ? { ...it, likes_count: (it.likes_count || 0) + 1 }
+            : it,
         );
       });
       return { previous };
     },
     onError: (err, itemId, context: any) => {
-      if (context?.previous) queryClient.setQueryData(["library", filters], context.previous);
+      if (context?.previous)
+        queryClient.setQueryData(["library", filters], context.previous);
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ["library"] }),
   });
 
   const downloadMutation = useMutation({
-    mutationFn: (itemId: string) => apiClient.instance.post(`/library/${itemId}/download`, {}),
+    mutationFn: (itemId: string) =>
+      apiClient.instance.post(`/library/${itemId}/download`, {}),
     onMutate: async (itemId: string) => {
       await queryClient.cancelQueries({ queryKey: ["library"] });
       const previous = queryClient.getQueryData<any>(["library", filters]);
       queryClient.setQueryData(["library", filters], (old: any) => {
         if (!old) return old;
         return old.map((it: any) =>
-          it.id === itemId ? { ...it, downloads_count: (it.downloads_count || 0) + 1 } : it
+          it.id === itemId
+            ? { ...it, downloads_count: (it.downloads_count || 0) + 1 }
+            : it,
         );
       });
       return { previous };
     },
     onError: (err, itemId, context: any) => {
-      if (context?.previous) queryClient.setQueryData(["library", filters], context.previous);
+      if (context?.previous)
+        queryClient.setQueryData(["library", filters], context.previous);
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ["library"] }),
   });
@@ -189,9 +325,12 @@ export default function LibraryListing({ initialCategory }: { initialCategory?: 
 
   const getIconForCategory = (category: string) => {
     switch (category) {
-      case "SPIRITUAL": return <Cross className="w-5 h-5" />;
-      case "ACADEMIC": return <BookOpen className="w-5 h-5" />;
-      default: return <FileText className="w-5 h-5" />;
+      case "SPIRITUAL":
+        return <Cross className="w-5 h-5" />;
+      case "ACADEMIC":
+        return <BookOpen className="w-5 h-5" />;
+      default:
+        return <FileText className="w-5 h-5" />;
     }
   };
 
@@ -225,7 +364,8 @@ export default function LibraryListing({ initialCategory }: { initialCategory?: 
         {data && data.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {data.map((item: LibraryItem) => {
-              const fileId = item.drive_file_id || extractGoogleFileId(item.drive_url);
+              const fileId =
+                item.drive_file_id || extractGoogleFileId(item.drive_url);
               const thumbnailUrl = fileId ? getThumbnailUrl(fileId) : null;
               const hasImageError = imageErrors[item.id];
               const fileTypeInfo = getFileTypeInfo(item.drive_url);
@@ -242,22 +382,35 @@ export default function LibraryListing({ initialCategory }: { initialCategory?: 
                         src={thumbnailUrl}
                         alt={item.title}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        onError={() => setImageErrors(prev => ({ ...prev, [item.id]: true }))}
+                        onError={() =>
+                          setImageErrors((prev) => ({
+                            ...prev,
+                            [item.id]: true,
+                          }))
+                        }
                       />
                     </div>
                   ) : (
-                    <div className={`w-full h-40 flex flex-col items-center justify-center gap-2 ${fileTypeInfo.bgClass}`}>
+                    <div
+                      className={`w-full h-40 flex flex-col items-center justify-center gap-2 ${fileTypeInfo.bgClass}`}
+                    >
                       {fileTypeInfo.icon}
-                      <span className="text-xs font-bold uppercase tracking-wide">{fileTypeInfo.label}</span>
+                      <span className="text-xs font-bold uppercase tracking-wide">
+                        {fileTypeInfo.label}
+                      </span>
                     </div>
                   )}
 
                   {/* Category Ribbon */}
-                  <div className={`px-4 py-2 flex items-center justify-between border-b border-border bg-gradient-to-r ${
-                    item.category === "SPIRITUAL" ? "from-purple-50 to-purple-100 dark:from-purple-950/40 dark:to-purple-900/30" :
-                    item.category === "ACADEMIC" ? "from-blue-50 to-blue-100 dark:from-blue-950/40 dark:to-blue-900/30" :
-                    "from-gray-50 to-gray-100 dark:from-gray-800/40 dark:to-gray-700/30"
-                  }`}>
+                  <div
+                    className={`px-4 py-2 flex items-center justify-between border-b border-border bg-gradient-to-r ${
+                      item.category === "SPIRITUAL"
+                        ? "from-purple-50 to-purple-100 dark:from-purple-950/40 dark:to-purple-900/30"
+                        : item.category === "ACADEMIC"
+                          ? "from-blue-50 to-blue-100 dark:from-blue-950/40 dark:to-blue-900/30"
+                          : "from-gray-50 to-gray-100 dark:from-gray-800/40 dark:to-gray-700/30"
+                    }`}
+                  >
                     <div className="flex items-center gap-2">
                       {getIconForCategory(item.category)}
                       <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -284,7 +437,8 @@ export default function LibraryListing({ initialCategory }: { initialCategory?: 
                     {item.academic_department && (
                       <div className="text-xs text-muted-foreground mb-3">
                         <span className="inline-block px-2 py-1 bg-muted rounded-md">
-                          {item.academic_department} • Year {item.academic_year} • {item.course_id}
+                          {item.academic_department} • Year {item.academic_year}{" "}
+                          • {item.course_id}
                         </span>
                       </div>
                     )}
@@ -325,8 +479,12 @@ export default function LibraryListing({ initialCategory }: { initialCategory?: 
           !isLoading && (
             <div className="text-center py-16">
               <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-30" />
-              <p className="text-muted-foreground text-lg">No resources found</p>
-              <p className="text-sm text-muted-foreground mt-1">Try adjusting your search or filters</p>
+              <p className="text-muted-foreground text-lg">
+                No resources found
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Try adjusting your search or filters
+              </p>
             </div>
           )
         )}
