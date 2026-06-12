@@ -1,103 +1,94 @@
+// src/features/education/CoursesPage.tsx
 "use client";
 
-import Link from "next/link";
-import { GraduationCap, Lock, CheckCircle, Clock, Users, BookOpen, Award } from "lucide-react";
+import { useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { educationApi } from "@/features/education/educationApi";
+import CourseViewer from "@/features/education/CourseViewer";
 import { useAuthStore } from "@/store/authStore";
+import { Button } from "@/components/ui/button";
 
-export default function LMSPhaseHubPage() {
-    const user = useAuthStore((s) => s.user);
-    const role = user?.system_role || user?.role || "USER";
-    const isMember = ["MEMBER", "TEACHER", "SERVICE_MANAGER", "SECRETARIAT_SECRETARY", "SECRETARIAT_VICE", "SECRETARIAT_CHAIRMAN", "SUPER_ADMIN", "CLASS_LEADER"].includes(role);
+const phases = [
+  { value: "GUBAE_ABEW", label: "ጉባኤ አበው" },
+  { value: "GUBAE_HAWARYAT", label: "ጉባኤ ሐዋርያት" },
+  { value: "GUBAE_ECCLESIAE", label: "ጉባኤ ኤቅሌስያ" },
+];
 
+const phaseOrder: Record<string, number> = {
+  GUBAE_ABEW: 0,
+  GUBAE_HAWARYAT: 1,
+  GUBAE_ECCLESIAE: 2,
+};
+
+export default function CoursesPage() {
+  const [selectedPhase, setSelectedPhase] = useState("");
+  const { user } = useAuthStore();
+  const queryClient = useQueryClient();
+
+  const { data: enrollmentResp, refetch } = useQuery({
+    queryKey: ["education", "my-enrollment", selectedPhase],
+    queryFn: () => educationApi.getMyEnrollment(selectedPhase),
+    enabled: !!selectedPhase,
+  });
+  const enrollment = enrollmentResp?.data;
+
+  const { data: batchesResp } = useQuery({
+    queryKey: ["education", "batches", selectedPhase],
+    queryFn: () => educationApi.listBatches(selectedPhase),
+    enabled: !!selectedPhase,
+  });
+  const batches = batchesResp?.data;
+  const activeBatch = batches?.[0]; // most recent batch
+
+  const requestRegistration = useMutation({
+    mutationFn: () => educationApi.requestRegistration(selectedPhase, activeBatch?.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["education", "my-enrollment", selectedPhase] });
+    },
+  });
+
+  if (!selectedPhase) {
     return (
-        <div className="space-y-6">
-            <div className="mb-8">
-                <h1 className="text-2xl font-bold text-[#7A1C1C] dark:text-[#D4AF37]">Educational Phases</h1>
-                <p className="text-[#6b6b6b] dark:text-[#B0B0B0] mt-1">
-                    Progress through the Enda Eyesus fellowship educational phases to serve in various roles.
-                </p>
-            </div>
-
-            <div className="bg-white dark:bg-[#1C1C1F] rounded-2xl p-6 border border-[#ddd8d0] dark:border-[#2a2a2d] mb-6">
-                <h2 className="text-lg font-bold text-[#7A1C1C] dark:text-[#D4AF37] mb-3">About Service Class Requirements</h2>
-                <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0] mb-4">
-                    According to the bylaws, different service roles require completion of specific educational phases:
-                </p>
-                <div className="grid md:grid-cols-2 gap-4 text-sm">
-                    <div className="flex items-start gap-2">
-                        <CheckCircle className="h-4 w-4 text-[#7A1C1C] dark:text-[#D4AF37] mt-0.5 flex-shrink-0" />
-                        <span className="text-[#6b6b6b] dark:text-[#B0B0B0]"><strong>General Service:</strong> Complete Gubae Abew</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                        <Users className="h-4 w-4 text-[#7A1C1C] dark:text-[#D4AF37] mt-0.5 flex-shrink-0" />
-                        <span className="text-[#6b6b6b] dark:text-[#B0B0B0]"><strong>Sub-department Leaders:</strong> Complete Gubae Hawaryat</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                        <BookOpen className="h-4 w-4 text-[#7A1C1C] dark:text-[#D4AF37] mt-0.5 flex-shrink-0" />
-                        <span className="text-[#6b6b6b] dark:text-[#B0B0B0]"><strong>Stage Leadership:</strong> Complete Gubae Hawaryat & start Gubae Ecclesiae</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                        <Award className="h-4 w-4 text-[#7A1C1C] dark:text-[#D4AF37] mt-0.5 flex-shrink-0" />
-                        <span className="text-[#6b6b6b] dark:text-[#B0B0B0]"><strong>Academic Writings:</strong> Follow Gubae Ecclesiae teachings</span>
-                    </div>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Phase 1: Gubae Abew - Always Accessible */}
-                <Link href="/dashboard/courses/gubae-abew" className="block group">
-                    <div className="h-full bg-white dark:bg-[#1C1C1F] rounded-2xl p-6 border-2 border-[#7A1C1C]/20 dark:border-[#7A1C1C]/40 hover:border-[#7A1C1C] transition-all shadow-sm group-hover:shadow-md relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-[#7A1C1C]/5 rounded-bl-full" />
-                        <div className="w-12 h-12 rounded-xl bg-[#7A1C1C]/10 flex items-center justify-center mb-4 text-[#7A1C1C]">
-                            <GraduationCap className="h-6 w-6" />
-                        </div>
-                        <h2 className="text-lg font-bold text-[#1a1a1a] dark:text-[#F5F5F5] mb-2">Phase 1: Gubae Abew</h2>
-                        <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0] mb-2 font-semibold">ጉባኤ ዓቤው</p>
-                        <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0] mb-4">
-                            Introduction to the fellowship and foundational Orthodox teachings. Required for all general service roles.
-                        </p>
-                        <div className="flex items-center gap-2 text-xs font-semibold text-[#7A1C1C] dark:text-[#D4AF37]">
-                            <span>Accessible</span> <CheckCircle className="h-4 w-4" />
-                        </div>
-                    </div>
-                </Link>
-
-                {/* Phase 2: Gubae Hawaryat - Requires Membership */}
-                <div className={`h-full bg-white dark:bg-[#1C1C1F] rounded-2xl p-6 border border-[#ddd8d0] dark:border-[#2a2a2d] shadow-sm relative overflow-hidden ${!isMember ? 'opacity-75' : ''}`}>
-                    <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-[#252529] flex items-center justify-center mb-4 text-gray-500">
-                        <GraduationCap className="h-6 w-6" />
-                    </div>
-                    <h2 className="text-lg font-bold text-[#1a1a1a] dark:text-[#F5F5F5] mb-2">Phase 2: Gubae Hawaryat</h2>
-                    <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0] mb-2 font-semibold">ጉባኤ ሐዋርያት</p>
-                    <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0] mb-4">
-                        Intermediate teachings for sub-department leaders. Required for leadership roles within service departments.
-                    </p>
-                    {isMember ? (
-                        <div className="flex items-center gap-2 text-xs font-semibold text-gray-500">
-                            <span>Coming Soon</span> <Clock className="h-4 w-4" />
-                        </div>
-                    ) : (
-                        <div className="flex items-center gap-2 text-xs font-semibold text-red-500/80">
-                            <Lock className="h-4 w-4" /> <span>Requires Membership</span>
-                        </div>
-                    )}
-                </div>
-
-                {/* Phase 3: Gubae Ecclesiae - Requires Completion of Phase 2 */}
-                <div className="h-full bg-white dark:bg-[#1C1C1F] rounded-2xl p-6 border border-[#ddd8d0] dark:border-[#2a2a2d] shadow-sm opacity-75 relative overflow-hidden">
-                    <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-[#252529] flex items-center justify-center mb-4 text-gray-500">
-                        <GraduationCap className="h-6 w-6" />
-                    </div>
-                    <h2 className="text-lg font-bold text-[#1a1a1a] dark:text-[#F5F5F5] mb-2">Phase 3: Gubae Ecclesiae</h2>
-                    <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0] mb-2 font-semibold">ጉባኤ ኤቅሌስያ</p>
-                    <p className="text-sm text-[#6b6b6b] dark:text-[#B0B0B0] mb-4">
-                        Advanced theological study and leadership training. Required for stage leadership and academic writings.
-                    </p>
-                    <div className="flex items-center gap-2 text-xs font-semibold text-red-500/80">
-                        <Lock className="h-4 w-4" /> <span>Prerequisites not met</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+      <div className="max-w-md mx-auto">
+        <label className="block text-sm font-medium mb-2">Select Course Phase</label>
+        <Select onValueChange={setSelectedPhase}>
+          <SelectTrigger><SelectValue placeholder="Choose phase" /></SelectTrigger>
+          <SelectContent>
+            {phases.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
     );
+  }
+
+  if (!enrollment) {
+    const canRegister = checkPrerequisite(selectedPhase, (user as any)?.graduated_phases);
+    if (!canRegister) {
+      return <div className="text-center p-8">You must complete the previous phase first.</div>;
+    }
+    if (!activeBatch) {
+      return <div className="text-center p-8">No active batch available for this phase.</div>;
+    }
+    return (
+      <div className="text-center p-8">
+        <p>You are not registered for this course.</p>
+        <Button onClick={() => requestRegistration.mutate()} disabled={requestRegistration.isPending}>
+          Request Registration
+        </Button>
+      </div>
+    );
+  }
+
+  if (enrollment.status === "PENDING") return <div className="text-center p-8">Registration request pending approval.</div>;
+  if (enrollment.status === "REJECTED") return <div className="text-center p-8 text-red-600">Registration denied.</div>;
+
+  return <CourseViewer phase={selectedPhase} batchId={enrollment.batch_id} />;
+}
+
+function checkPrerequisite(phase: string, graduatedPhases: any): boolean {
+  const current = phaseOrder[phase];
+  if (current === 0) return true;
+  const prevPhase = Object.keys(phaseOrder).find(p => phaseOrder[p] === current - 1);
+  return graduatedPhases?.includes(prevPhase);
 }

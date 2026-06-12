@@ -1,4 +1,3 @@
-// src/components/dashboard/Topbar.tsx
 "use client";
 
 import Link from "next/link";
@@ -27,6 +26,7 @@ const PAGE_TITLES: Record<string, string> = {
     "/dashboard/agent/roles": "Role Management",
     "/dashboard/agent/members": "Member Census",
     "/dashboard/agent/audit-logs": "Audit Logs",
+    "/dashboard/education": "Education Manager",
 };
 
 interface TopbarProps {
@@ -52,6 +52,7 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
     const isAdmin = ADMIN_ROLES.includes(role);
     const isChairman = role === 'SECRETARIAT_CHAIRMAN';
     const isMemberAffairsManager = role === "SERVICE_MANAGER" && user?.serviceClassName === "የአባልነት ጉዳይ ክፍል";
+    const isEducationManager = role === "SERVICE_MANAGER" && user?.serviceClassName === "የትምህርት ክፍል";
     const isSecretariat = ["SECRETARIAT_CHAIRMAN", "SECRETARIAT_VICE", "SECRETARIAT_SECRETARY", "SUPER_ADMIN"].includes(role);
 
     const handleSearch = (e: React.FormEvent) => {
@@ -86,7 +87,6 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
         ] : []),
     ];
 
-    // Member Affairs dropdown items (tabs of the dashboard)
     const memberAffairsItems = [
         { href: "/dashboard/member-affairs?tab=pending", label: "Pending Approvals", icon: UserCheck },
         { href: "/dashboard/member-affairs?tab=census", label: "Member Census", icon: Users },
@@ -94,6 +94,17 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
         { href: "/dashboard/member-affairs?tab=subclasses", label: "Sub‑Classes", icon: Layers },
         { href: "/dashboard/member-affairs?tab=documents", label: "Plans & Reports", icon: FileText },
         { href: "/dashboard/member-affairs?tab=batch", label: "Batch Assign", icon: UserPlus },
+    ];
+
+    const educationItems = [
+        { href: "/dashboard/education?tab=batches", label: "Batches", icon: Layers },
+        { href: "/dashboard/education?tab=subjects", label: "Subjects & Lessons", icon: BookOpen },
+        { href: "/dashboard/education?tab=registrations", label: "Registration Approvals", icon: UserCheck },
+        { href: "/dashboard/education?tab=results", label: "Student Results", icon: FileText },
+        { href: "/dashboard/education?tab=subclasses", label: "Sub‑Classes", icon: Layers },
+        { href: "/dashboard/education?tab=announcements", label: "Announcements", icon: Bell },
+        { href: "/dashboard/education?tab=plans", label: "Plans & Reports", icon: FileText },
+        { href: "/dashboard/education?tab=members", label: "Members List", icon: Users },
     ];
 
     return (
@@ -147,9 +158,14 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
                 })}
                 <LibraryNavDropdown />
                 
-                {/* Member Affairs Dropdown – for Member Affairs manager or Secretariat */}
+                {/* Member Affairs Dropdown */}
                 {(isMemberAffairsManager || isSecretariat) && (
                     <NavigationDropdown label="Member Affairs" icon={Users} items={memberAffairsItems} />
+                )}
+                
+                {/* Education Dropdown */}
+                {(isEducationManager || isSecretariat) && (
+                    <NavigationDropdown label="Education" icon={GraduationCap} items={educationItems} />
                 )}
                 
                 {isAdmin && <NavigationDropdown label="Admin" icon={Shield} items={adminDropdownItems} />}

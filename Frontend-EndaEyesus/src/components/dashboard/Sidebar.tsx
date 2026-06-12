@@ -16,7 +16,6 @@ interface SidebarProps {
 }
 
 const ADMIN_ROLES = ["SECRETARIAT_CHAIRMAN", "SECRETARIAT_VICE", "SECRETARIAT_SECRETARY", "SUPER_ADMIN", "SERVICE_MANAGER"];
-const MEMBER_ROLES = ["MEMBER", "TEACHER", "SERVICE_MANAGER", "SECRETARIAT_SECRETARY", "SECRETARIAT_VICE", "SECRETARIAT_CHAIRMAN", "SUPER_ADMIN", "CLASS_LEADER"];
 
 function getRoleBadge(role: string) {
     switch (role) {
@@ -43,6 +42,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     const [libraryOpen, setLibraryOpen] = useState(false);
     const [adminOpen, setAdminOpen] = useState(false);
     const [memberAffairsOpen, setMemberAffairsOpen] = useState(false);
+    const [educationOpen, setEducationOpen] = useState(false);
 
     const handleLogout = () => {
         logout();
@@ -55,6 +55,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
     const canAccessMemberAffairs = 
         (role === "SERVICE_MANAGER" && user?.serviceClassName === "የአባልነት ጉዳይ ክፍል") ||
+        ["SECRETARIAT_CHAIRMAN", "SECRETARIAT_VICE", "SECRETARIAT_SECRETARY", "SUPER_ADMIN"].includes(role);
+
+    const canAccessEducation = 
+        (role === "SERVICE_MANAGER" && user?.serviceClassName === "የትምህርት ክፍል") ||
         ["SECRETARIAT_CHAIRMAN", "SECRETARIAT_VICE", "SECRETARIAT_SECRETARY", "SUPER_ADMIN"].includes(role);
 
     const mainNavItems = [
@@ -85,6 +89,17 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         { href: "/dashboard/member-affairs?tab=subclasses", label: "Sub‑Classes", icon: Layers },
         { href: "/dashboard/member-affairs?tab=documents", label: "Plans & Reports", icon: FileText },
         { href: "/dashboard/member-affairs?tab=batch", label: "Batch Assign", icon: UserPlus },
+    ];
+
+    const educationItems = [
+        { href: "/dashboard/education?tab=batches", label: "Batches", icon: Layers },
+        { href: "/dashboard/education?tab=subjects", label: "Subjects & Lessons", icon: BookOpen },
+        { href: "/dashboard/education?tab=registrations", label: "Registration Approvals", icon: UserCheck },
+        { href: "/dashboard/education?tab=results", label: "Student Results", icon: FileText },
+        { href: "/dashboard/education?tab=subclasses", label: "Sub‑Classes", icon: Layers },
+        { href: "/dashboard/education?tab=announcements", label: "Announcements", icon: Bell },
+        { href: "/dashboard/education?tab=plans", label: "Plans & Reports", icon: FileText },
+        { href: "/dashboard/education?tab=members", label: "Members List", icon: Users },
     ];
 
     return (
@@ -179,6 +194,40 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                             <div className="ml-8 mt-1 space-y-1 border-l border-[#ddd8d0] dark:border-[#2a2a2d] pl-3">
                                 {memberAffairsItems.map(({ href, label, icon: Icon }) => {
                                     const isActive = pathname === "/dashboard/member-affairs" && new URLSearchParams(window.location.search).get("tab") === href.split("=")[1];
+                                    return (
+                                        <Link
+                                            key={href}
+                                            href={href}
+                                            onClick={onClose}
+                                            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${isActive ? "text-[#C9A227] dark:text-[#D4AF37] bg-[#F8F5F0] dark:bg-[#252529]" : "text-muted-foreground hover:text-foreground hover:bg-[#F8F5F0] dark:hover:bg-[#252529]"}`}
+                                        >
+                                            <Icon className="h-4 w-4" />
+                                            {label}
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Education Dropdown */}
+                {canAccessEducation && (
+                    <div>
+                        <button
+                            onClick={() => setEducationOpen(!educationOpen)}
+                            className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:bg-[#F8F5F0] dark:hover:bg-[#252529] transition-all duration-200 group"
+                        >
+                            <div className="flex items-center gap-3">
+                                <GraduationCap className="h-5 w-5" />
+                                Education
+                            </div>
+                            {educationOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                        </button>
+                        {educationOpen && (
+                            <div className="ml-8 mt-1 space-y-1 border-l border-[#ddd8d0] dark:border-[#2a2a2d] pl-3">
+                                {educationItems.map(({ href, label, icon: Icon }) => {
+                                    const isActive = pathname === href;
                                     return (
                                         <Link
                                             key={href}
