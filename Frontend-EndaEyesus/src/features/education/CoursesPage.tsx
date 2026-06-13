@@ -1,13 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { educationApi } from "@/features/education/educationApi";
 import CourseViewer from "@/features/education/CourseViewer";
-import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import apiClient from "@/api";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const phases = [
   { value: "GUBAE_ABEW", label: "ጉባኤ አበው" },
@@ -27,35 +33,49 @@ interface CoursesPageProps {
 
 export default function CoursesPage({ preselectedPhase = "" }: CoursesPageProps) {
   const [selectedPhase, setSelectedPhase] = useState(preselectedPhase);
-  const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
-  // ✅ Fetch current user's graduation phases from backend
-  const { data: userData, isLoading: userLoading } = useQuery({
+  // ✅ Fetch current user data directly from backend (ensures fresh graduated_phases)
+  const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ["current-user"],
     queryFn: async () => {
-      const res = await fetch("/api/v1/auth/me", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      if (!res.ok) throw new Error("Failed to fetch user");
-      return res.json();
+      const res = await apiClient.instance.get("/auth/me");
+      return res.data;
     },
-    enabled: !!user?.id,
   });
 
-  const graduatedPhases = userData?.graduated_phases
-    ? JSON.parse(userData.graduated_phases)
-    : [];
+  // Parse graduated_phases (it can be a JSON string or array)
+  let graduatedPhases: string[] = [];
+  if (user?.graduated_phases) {
+    try {
+      const raw = user.graduated_phases;
+      if (typeof raw === "string") {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) graduatedPhases = parsed;
+      } else if (Array.isArray(raw)) {
+        graduatedPhases = raw;
+      }
+    } catch (e) {
+      console.error("Failed to parse graduated_phases", e);
+    }
+  }
+
+  // Sync selected phase with URL
+  useEffect(() => {
+    if (preselectedPhase && preselectedPhase !== selectedPhase) {
+      setSelectedPhase(preselectedPhase);
+    }
+  }, [preselectedPhase, selectedPhase]);
 
   // Fetch enrollment for selected phase
-  const { data: enrollmentResp, isLoading: enrollmentLoading, refetch } = useQuery({
-    queryKey: ["education", "my-enrollment", selectedPhase],
+  const { data: enrollmentResp, isLoading: enrollmentLoading } = useQuery({
+    queryKey: ["education", "my-enrollment", selectedPhase, user?.id],
     queryFn: () => educationApi.getMyEnrollment(selectedPhase),
-    enabled: !!selectedPhase,
+    enabled: !!selectedPhase && !!user,
   });
   const enrollment = enrollmentResp?.data;
 
-  // Fetch batches for the selected phase (to get the active batch)
+  // Fetch batches for the selected phase
   const { data: batchesResp, isLoading: batchesLoading } = useQuery({
     queryKey: ["education", "batches", selectedPhase],
     queryFn: () => educationApi.listBatches(selectedPhase),
@@ -71,17 +91,24 @@ export default function CoursesPage({ preselectedPhase = "" }: CoursesPageProps)
     },
   });
 
-  // Helper: check prerequisite
+  // ✅ Prerequisite check – compare uppercase
   const canRegisterForPhase = (phase: string): boolean => {
     const current = phaseOrder[phase];
     if (current === 0) return true;
     const prevPhaseKey = Object.keys(phaseOrder).find(p => phaseOrder[p] === current - 1);
     if (!prevPhaseKey) return false;
-    const prevPhaseLower = prevPhaseKey.toLowerCase();
-    return graduatedPhases.some((p: string) => p.toLowerCase() === prevPhaseLower);
+    const graduatedUpper = graduatedPhases.map(p => p.toUpperCase());
+    return graduatedUpper.includes(prevPhaseKey);
   };
 
-  // If no phase is preselected, show the dropdown
+  if (userLoading) {
+    return (
+      <div className="text-center p-8">
+        <Loader2 className="animate-spin inline-block mr-2" /> Loading user data...
+      </div>
+    );
+  }
+
   if (!selectedPhase) {
     return (
       <div className="max-w-md mx-auto p-4">
@@ -100,16 +127,14 @@ export default function CoursesPage({ preselectedPhase = "" }: CoursesPageProps)
     );
   }
 
-  // Loading state
-  if (userLoading || enrollmentLoading || batchesLoading) {
+  if (enrollmentLoading || batchesLoading) {
     return (
       <div className="text-center p-8">
-        <Loader2 className="animate-spin inline-block mr-2" /> Loading...
+        <Loader2 className="animate-spin inline-block mr-2" /> Loading course data...
       </div>
     );
   }
 
-  // Prerequisite not met
   if (!canRegisterForPhase(selectedPhase)) {
     const prevPhaseLabel = phases[phaseOrder[selectedPhase] - 1]?.label;
     return (
@@ -119,15 +144,11 @@ export default function CoursesPage({ preselectedPhase = "" }: CoursesPageProps)
           <p className="text-yellow-700">
             You must complete <strong>{prevPhaseLabel}</strong> before accessing this course.
           </p>
-          <p className="text-sm text-yellow-600 mt-2">
-            After completing the previous phase, you can register for this course.
-          </p>
         </div>
       </div>
     );
   }
 
-  // Not registered
   if (!enrollment) {
     if (!activeBatch) {
       return (
@@ -153,34 +174,31 @@ export default function CoursesPage({ preselectedPhase = "" }: CoursesPageProps)
     );
   }
 
-  // Pending approval
   if (enrollment.status === "PENDING") {
     return (
       <div className="text-center p-8 max-w-md mx-auto">
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
           <h2 className="text-xl font-semibold text-yellow-800 mb-2">Registration Pending</h2>
           <p className="text-yellow-700">
-            Your registration request is waiting for approval by the Education Manager. You will be notified once approved.
+            Your registration request is waiting for approval by the Education Manager.
           </p>
         </div>
       </div>
     );
   }
 
-  // Rejected
   if (enrollment.status === "REJECTED") {
     return (
       <div className="text-center p-8 max-w-md mx-auto">
         <div className="bg-red-50 border border-red-200 rounded-lg p-6">
           <h2 className="text-xl font-semibold text-red-800 mb-2">Registration Denied</h2>
           <p className="text-red-700">
-            Your registration request was denied. Please contact the Education Manager for more information.
+            Your registration request was denied. Please contact the Education Manager.
           </p>
         </div>
       </div>
     );
   }
 
-  // Active enrollment – show the course viewer
   return <CourseViewer phase={selectedPhase} />;
 }

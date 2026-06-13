@@ -27,18 +27,6 @@ const components: Record<string, React.ReactNode> = {
   members: <ClassMemberList />,
 };
 
-const pageTitles: Record<string, { title: string; description: string }> = {
-  batches: { title: "Batches", description: "Manage course batches (ዙር) for each phase" },
-  subjects: { title: "Subjects & Lessons", description: "Create and manage subjects, lessons, and inline explanations" },
-  registrations: { title: "Registration Approvals", description: "Approve or reject member course registration requests" },
-  results: { title: "Student Results", description: "View exam scores and graduate members" },
-  subclasses: { title: "Sub‑Classes", description: "Manage internal sub‑classes within the Education department" },
-  announcements: { title: "Department Announcements", description: "Post announcements visible only to Education department members" },
-  plans: { title: "Plans & Reports", description: "Upload annual plans and quarterly progress reports" },
-  graduation: { title: "Graduation Management", description: "Graduate members who have completed at least one phase" },
-  members: { title: "Class Members", description: "All members of the Education class (for sub‑class assignment)" },
-};
-
 function EducationContent() {
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab") || "batches";
@@ -52,17 +40,7 @@ function EducationContent() {
   }
 
   const currentComponent = components[tab] || components.batches;
-  const { title, description } = pageTitles[tab] || pageTitles.batches;
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-[#7A1C1C] dark:text-[#D4AF37]">{title}</h1>
-        <p className="text-muted-foreground">{description}</p>
-      </div>
-      {currentComponent}
-    </div>
-  );
+  return <>{currentComponent}</>;
 }
 
 export default function EducationDashboard() {
