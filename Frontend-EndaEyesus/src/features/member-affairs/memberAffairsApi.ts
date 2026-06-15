@@ -1,4 +1,3 @@
-// src/features/member-affairs/memberAffairsApi.ts
 import apiClient from '@/api';
 import { useAuthStore } from '@/store/authStore';
 
@@ -37,15 +36,44 @@ export const memberAffairsApi = {
   removeMemberFromSubClass: (subClassId: string, userId: string) =>
     apiClient.instance.delete(`/member-affairs/sub-classes/${subClassId}/members/${userId}`),
 
-  // Documents (Plans & Reports)
+  // Documents (Plans & Reports) – for service managers (with class ID)
   getDocuments: (serviceClassId: string, type: 'PLAN' | 'REPORT') =>
     apiClient.instance.get(`/member-affairs/documents/${serviceClassId}/${type}`),
   uploadDocument: (serviceClassId: string, data: any) =>
     apiClient.instance.post(`/member-affairs/documents/${serviceClassId}`, data),
+
+  // Secretariat endpoints (no class ID)
+  uploadSecretariatDocument: (data: any) =>
+    apiClient.instance.post('/member-affairs/documents/secretariat', data),
+  getSecretariatDocuments: (type: 'PLAN' | 'REPORT') =>
+    apiClient.instance.get(`/member-affairs/documents/secretariat/${type}`),
+
+  // Document approval & interactions
+  getDocument: (id: string) => apiClient.instance.get(`/member-affairs/documents/${id}`),
+  approveDocument: (id: string) => apiClient.instance.post(`/member-affairs/documents/${id}/approve`),
+  rejectDocument: (id: string, reason: string) => apiClient.instance.post(`/member-affairs/documents/${id}/reject`, { reason }),
+  addComment: (documentId: string, content: string, parentId?: string) =>
+    apiClient.instance.post(`/member-affairs/documents/${documentId}/comments`, { content, parentId }),
+  deleteComment: (commentId: string) => apiClient.instance.delete(`/member-affairs/documents/comments/${commentId}`),
+  addReaction: (documentId: string, reactionType: 'LIKE' | 'STAR') =>
+    apiClient.instance.post(`/member-affairs/documents/${documentId}/reactions`, { reactionType }),
+  removeReaction: (documentId: string) => apiClient.instance.delete(`/member-affairs/documents/${documentId}/reactions`),
   deleteDocument: (id: string) => apiClient.instance.delete(`/member-affairs/documents/${id}`),
 
   // Service classes (for dropdowns)
   getServiceClasses: () => apiClient.instance.get('/classes'),
+
+  // Notifications for document actions
+  notifyChairmanOfPendingDocument: () =>
+    apiClient.instance.post('/member-affairs/notifications/document-pending'),
+  notifyDocumentApproved: (documentTitle: string) =>
+    apiClient.instance.post('/member-affairs/notifications/document-approved', { documentTitle }),
+  notifyDocumentRejected: (userId: string, documentTitle: string, reason: string) =>
+    apiClient.instance.post('/member-affairs/notifications/document-rejected', { userId, documentTitle, reason }),
+  notifyCommentAdded: (userId: string, documentTitle: string) =>
+    apiClient.instance.post('/member-affairs/notifications/comment-added', { userId, documentTitle }),
+  notifyReactionAdded: (userId: string, documentTitle: string) =>
+    apiClient.instance.post('/member-affairs/notifications/reaction-added', { userId, documentTitle }),
 };
 
 export const useMemberAffairsClassId = () => {

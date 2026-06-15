@@ -110,14 +110,12 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Replace the regularNavItems with dropdown items for Courses
- const coursesDropdownItems = [
-  { href: "/dashboard/courses?phase=GUBAE_ABEW", label: "ጉባኤ አበው", icon: GraduationCap },
-  { href: "/dashboard/courses?phase=GUBAE_HAWARYAT", label: "ጉባኤ ሐዋርያት", icon: GraduationCap },
-  { href: "/dashboard/courses?phase=GUBAE_ECCLESIAE", label: "ጉባኤ ኤቅሌስያ", icon: GraduationCap },
-];
+  const coursesDropdownItems = [
+    { href: "/dashboard/courses?phase=GUBAE_ABEW", label: "ጉባኤ አበው", icon: GraduationCap },
+    { href: "/dashboard/courses?phase=GUBAE_HAWARYAT", label: "ጉባኤ ሐዋርያት", icon: GraduationCap },
+    { href: "/dashboard/courses?phase=GUBAE_ECCLESIAE", label: "ጉባኤ ኤቅሌስያ", icon: GraduationCap },
+  ];
 
-  // Keep announcements and about as regular links
   const regularNavItems = [
     {
       href: "/dashboard/announcements",
@@ -128,6 +126,7 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
     { href: "/dashboard/about", label: "About", icon: User, show: true },
   ].filter((item) => item.show);
 
+  // Add "Plans & Reports" to the Admin dropdown
   const adminDropdownItems = [
     { href: "/dashboard/agent", label: "Admin Panel", icon: Shield },
     ...(isChairman
@@ -144,6 +143,8 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
           },
         ]
       : []),
+    // ✅ Added for all secretariat (including chairman)
+    { href: "/dashboard/member-affairs?tab=documents", label: "Plans & Reports", icon: FileText },
   ];
 
   const showAdminDropdown = isSecretariat;
@@ -229,6 +230,10 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
     },
   ];
 
+  // Hide Member Affairs and Education dropdowns for chairman
+  const showMemberAffairs = !isChairman && (isMemberAffairsManager || isSecretariat);
+  const showEducation = !isChairman && (isEducationManager || isSecretariat);
+
   return (
     <header className="h-16 lg:h-20 bg-white dark:bg-[#1C1C1F] border-b border-[#ddd8d0] dark:border-[#2a2a2d] flex items-center justify-between px-4 lg:px-8 fixed top-0 right-0 left-0 z-50 shadow-md transition-all duration-300">
       <div className="absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-transparent via-[#C9A227] to-transparent dark:via-[#D4AF37]" />
@@ -260,7 +265,6 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
 
       {/* Middle navigation – hidden on mobile */}
       <nav className="hidden lg:flex items-center space-x-1 flex-1 justify-center px-6">
-        {/* Announcements & About */}
         {regularNavItems.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href;
           return (
@@ -282,39 +286,17 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
           );
         })}
 
-        {/* Courses Dropdown (replaces the static link) */}
-        <NavigationDropdown
-          label="Courses"
-          icon={GraduationCap}
-          items={coursesDropdownItems}
-        />
-
+        <NavigationDropdown label="Courses" icon={GraduationCap} items={coursesDropdownItems} />
         <LibraryNavDropdown />
 
-        {/* Member Affairs Dropdown */}
-        {(isMemberAffairsManager || isSecretariat) && (
-          <NavigationDropdown
-            label="Member Affairs"
-            icon={Users}
-            items={memberAffairsItems}
-          />
+        {showMemberAffairs && (
+          <NavigationDropdown label="Member Affairs" icon={Users} items={memberAffairsItems} />
         )}
-
-        {/* Education Dropdown */}
-        {(isEducationManager || isSecretariat) && (
-          <NavigationDropdown
-            label="Education"
-            icon={GraduationCap}
-            items={educationItems}
-          />
+        {showEducation && (
+          <NavigationDropdown label="Education" icon={GraduationCap} items={educationItems} />
         )}
-
         {showAdminDropdown && (
-          <NavigationDropdown
-            label="Admin"
-            icon={Shield}
-            items={adminDropdownItems}
-          />
+          <NavigationDropdown label="Admin" icon={Shield} items={adminDropdownItems} />
         )}
       </nav>
 
@@ -327,10 +309,7 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
         <Link href="/dashboard/profile" className="relative shrink-0">
           <Avatar className="h-8 w-8 lg:h-10 lg:w-10 border-2 border-[#C9A227] dark:border-[#D4AF37] shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
             {user?.profileImage && (
-              <AvatarImage
-                src={`${API_BASE}${user.profileImage}`}
-                alt={user.fullName}
-              />
+              <AvatarImage src={`${API_BASE}${user.profileImage}`} alt={user.fullName} />
             )}
             <AvatarFallback className="bg-linear-to-br from-[#7A1C1C] to-[#9B2323] dark:from-[#D4AF37] dark:to-[#B8860B] text-white dark:text-[#0E0E0F] font-bold text-sm">
               {initials}
