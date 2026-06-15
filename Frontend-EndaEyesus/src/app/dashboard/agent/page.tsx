@@ -1,3 +1,4 @@
+//src/app/dashboard/agent/page.tsx
 import { AgentControlView } from "@/features/agent/agent.view";
 
 export const metadata = {

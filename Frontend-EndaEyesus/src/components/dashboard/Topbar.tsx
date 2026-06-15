@@ -126,7 +126,7 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
     { href: "/dashboard/about", label: "About", icon: User, show: true },
   ].filter((item) => item.show);
 
-  // Add "Plans & Reports" to the Admin dropdown
+  // Admin dropdown items – grouped under one dropdown
   const adminDropdownItems = [
     { href: "/dashboard/agent", label: "Admin Panel", icon: Shield },
     ...(isChairman
@@ -143,7 +143,6 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
           },
         ]
       : []),
-    // ✅ Added for all secretariat (including chairman)
     { href: "/dashboard/member-affairs?tab=documents", label: "Plans & Reports", icon: FileText },
   ];
 
@@ -230,7 +229,7 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
     },
   ];
 
-  // Hide Member Affairs and Education dropdowns for chairman
+  // Hide Member Affairs and Education for chairman
   const showMemberAffairs = !isChairman && (isMemberAffairsManager || isSecretariat);
   const showEducation = !isChairman && (isEducationManager || isSecretariat);
 
