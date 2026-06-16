@@ -1,3 +1,4 @@
+// src/app/dashboard/my-class/page.tsx
 "use client";
 
 import { BookOpen, Clock, Users, Music, ChevronRight, ArrowLeft } from "lucide-react";
@@ -56,7 +57,7 @@ export default function MyClassPage() {
                 style={{ borderTop: "4px solid #C9A227" }}
             >
                 <div className="flex items-center gap-5">
-                    <div className="w-16 h-16 rounded-2xl bg-[#7A1C1C] dark:bg-[#9B2323] flex items-center justify-center flex-shrink-0">
+                    <div className="w-16 h-16 rounded-2xl bg-[#7A1C1C] dark:bg-[#9B2323] flex items-center justify-center shrink-0">
                         <Music className="h-7 w-7 text-[#C9A227] dark:text-[#D4AF37]" />
                     </div>
                     <div>

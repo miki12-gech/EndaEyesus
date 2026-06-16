@@ -14,6 +14,9 @@ import {
   FileText,
   Layers,
   UserPlus,
+  Activity,
+  CheckCircle,
+  ShieldCheck,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuthStore } from "@/store/authStore";
@@ -40,10 +43,13 @@ const PAGE_TITLES: Record<string, string> = {
   "/dashboard/messages": "Messages",
   "/dashboard/announcements": "እንዳ ኢየሱስ ግቢ ጉባኤ",
   "/dashboard/profile": "Profile",
-  "/dashboard/agent": "Admin Panel",
   "/dashboard/agent/roles": "Role Management",
   "/dashboard/agent/members": "Member Census",
   "/dashboard/agent/audit-logs": "Audit Logs",
+  "/dashboard/agent/overview": "Overview",
+  "/dashboard/agent/pending-approvals": "Pending Approvals",
+  "/dashboard/agent/subclass-approvals": "Sub‑Class Approvals",
+  "/dashboard/agent/access-control": "Access Control",
   "/dashboard/education": "Education Manager",
 };
 
@@ -86,12 +92,13 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
     "SECRETARIAT_SECRETARY",
     "SUPER_ADMIN",
   ].includes(role);
+  const isServiceManager = role === "SERVICE_MANAGER";
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       router.push(
-        `/dashboard/search?q=${encodeURIComponent(searchQuery.trim())}`,
+        `/dashboard/search?q=${encodeURIComponent(searchQuery.trim())}`
       );
       setShowSearchResults(false);
     }
@@ -111,9 +118,21 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
   }, []);
 
   const coursesDropdownItems = [
-    { href: "/dashboard/courses?phase=GUBAE_ABEW", label: "ጉባኤ አበው", icon: GraduationCap },
-    { href: "/dashboard/courses?phase=GUBAE_HAWARYAT", label: "ጉባኤ ሐዋርያት", icon: GraduationCap },
-    { href: "/dashboard/courses?phase=GUBAE_ECCLESIAE", label: "ጉባኤ ኤቅሌስያ", icon: GraduationCap },
+    {
+      href: "/dashboard/courses?phase=GUBAE_ABEW",
+      label: "ጉባኤ አበው",
+      icon: GraduationCap,
+    },
+    {
+      href: "/dashboard/courses?phase=GUBAE_HAWARYAT",
+      label: "ጉባኤ ሐዋርያት",
+      icon: GraduationCap,
+    },
+    {
+      href: "/dashboard/courses?phase=GUBAE_ECCLESIAE",
+      label: "ጉባኤ ኤቅሌስያ",
+      icon: GraduationCap,
+    },
   ];
 
   const regularNavItems = [
@@ -126,9 +145,47 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
     { href: "/dashboard/about", label: "About", icon: User, show: true },
   ].filter((item) => item.show);
 
-  // Admin dropdown items – grouped under one dropdown
+  // ✅ Admin dropdown – each feature as a separate item (no intermediate "Admin Panel" page)
   const adminDropdownItems = [
-    { href: "/dashboard/agent", label: "Admin Panel", icon: Shield },
+    // Overview – visible to all except service managers
+    ...(!isServiceManager
+      ? [{ href: "/dashboard/agent/overview", label: "Overview", icon: Activity }]
+      : []),
+
+    // Pending Approvals – only for Member Affairs manager (not chairman)
+    ...(isMemberAffairsManager
+      ? [
+          {
+            href: "/dashboard/agent/pending-approvals",
+            label: "Pending Approvals",
+            icon: CheckCircle,
+          },
+        ]
+      : []),
+
+    // Sub‑Class Approvals – only for Chairman
+    ...(isChairman
+      ? [
+          {
+            href: "/dashboard/agent/subclass-approvals",
+            label: "Sub‑Class Approvals",
+            icon: Layers,
+          },
+        ]
+      : []),
+
+    // Access Control (permissions matrix) – for all secretariat
+    ...(isSecretariat
+      ? [
+          {
+            href: "/dashboard/agent/access-control",
+            label: "Access Control",
+            icon: ShieldCheck,
+          },
+        ]
+      : []),
+
+    // Existing chairman‑only items
     ...(isChairman
       ? [
           {
@@ -141,9 +198,24 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
             label: "Member Census",
             icon: Users,
           },
+          {
+            href: "/dashboard/agent/audit-logs",
+            label: "Audit Logs",
+            icon: Activity,
+          },
         ]
       : []),
-    { href: "/dashboard/member-affairs?tab=documents", label: "Plans & Reports", icon: FileText },
+
+    // Plans & Reports – for all secretariat
+    ...(isSecretariat
+      ? [
+          {
+            href: "/dashboard/member-affairs?tab=documents",
+            label: "Plans & Reports",
+            icon: FileText,
+          },
+        ]
+      : []),
   ];
 
   const showAdminDropdown = isSecretariat;
@@ -285,14 +357,26 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
           );
         })}
 
-        <NavigationDropdown label="Courses" icon={GraduationCap} items={coursesDropdownItems} />
+        <NavigationDropdown
+          label="Courses"
+          icon={GraduationCap}
+          items={coursesDropdownItems}
+        />
         <LibraryNavDropdown />
 
         {showMemberAffairs && (
-          <NavigationDropdown label="Member Affairs" icon={Users} items={memberAffairsItems} />
+          <NavigationDropdown
+            label="Member Affairs"
+            icon={Users}
+            items={memberAffairsItems}
+          />
         )}
         {showEducation && (
-          <NavigationDropdown label="Education" icon={GraduationCap} items={educationItems} />
+          <NavigationDropdown
+            label="Education"
+            icon={GraduationCap}
+            items={educationItems}
+          />
         )}
         {showAdminDropdown && (
           <NavigationDropdown label="Admin" icon={Shield} items={adminDropdownItems} />
@@ -308,7 +392,10 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
         <Link href="/dashboard/profile" className="relative shrink-0">
           <Avatar className="h-8 w-8 lg:h-10 lg:w-10 border-2 border-[#C9A227] dark:border-[#D4AF37] shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
             {user?.profileImage && (
-              <AvatarImage src={`${API_BASE}${user.profileImage}`} alt={user.fullName} />
+              <AvatarImage
+                src={`${API_BASE}${user.profileImage}`}
+                alt={user.fullName}
+              />
             )}
             <AvatarFallback className="bg-linear-to-br from-[#7A1C1C] to-[#9B2323] dark:from-[#D4AF37] dark:to-[#B8860B] text-white dark:text-[#0E0E0F] font-bold text-sm">
               {initials}

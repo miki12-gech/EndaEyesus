@@ -1,4 +1,4 @@
-//src/components/ui/notifications/Notifications.tsx
+// src/components/dashboard/NotificationDropdown.tsx
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -39,6 +39,51 @@ function formatRelativeTime(dateString: string): string {
     return date.toLocaleDateString();
 }
 
+// ✅ Fix incorrect notification routes
+function getCorrectRoute(target_route: string | null): string {
+    if (!target_route) return "/dashboard";
+
+    // ✅ Handle announcement notifications
+    // Matches routes like "/announcements/abc-123" or "/dashboard/announcements/abc-123"
+    const announcementMatch = target_route.match(/\/(?:dashboard\/)?announcements\/([a-f0-9-]+)/i);
+    if (announcementMatch && announcementMatch[1]) {
+        return `/dashboard/announcements?announcementId=${announcementMatch[1]}`;
+    }
+
+    // If it's exactly "/announcements" or "/dashboard/announcements" without an ID
+    if (target_route.match(/\/(?:dashboard\/)?announcements\/?$/i)) {
+        return "/dashboard/announcements";
+    }
+
+    // If already starts with /dashboard, keep it
+    if (target_route.startsWith("/dashboard")) {
+        return target_route;
+    }
+
+    // Handle old /member-affairs paths
+    if (target_route.startsWith("/member-affairs")) {
+        if (target_route.includes("/documents")) {
+            return "/dashboard/member-affairs?tab=documents";
+        }
+        if (target_route.includes("/pending")) {
+            return "/dashboard/member-affairs?tab=pending";
+        }
+        if (target_route.includes("/census")) {
+            return "/dashboard/member-affairs?tab=census";
+        }
+        const queryIndex = target_route.indexOf("?");
+        if (queryIndex !== -1) {
+            const path = target_route.substring(0, queryIndex);
+            const query = target_route.substring(queryIndex);
+            return `/dashboard${path}${query}`;
+        }
+        return `/dashboard${target_route}`;
+    }
+
+    // For any other path, just prefix with /dashboard
+    return `/dashboard${target_route}`;
+}
+
 export function NotificationDropdown() {
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -54,7 +99,6 @@ export function NotificationDropdown() {
             const data = res.data as any;
             setUnreadCount(typeof data?.unreadCount === "number" ? data.unreadCount : 0);
         } catch (e: any) {
-            // Ignore 403 forbidden if user is pending
             if (e.response?.status !== 403) {
                 console.error("Failed to fetch unread count", e);
             }
@@ -73,7 +117,6 @@ export function NotificationDropdown() {
             setNotifications(data?.items || data || []);
             setUnreadCount(typeof data?.unreadCount === "number" ? data.unreadCount : 0);
         } catch (e: any) {
-            // Ignore 403 forbidden if user is pending
             if (e.response?.status !== 403) {
                 console.error("Failed to fetch notifications", e);
             }
@@ -94,11 +137,11 @@ export function NotificationDropdown() {
         } catch (e) {
             console.error(e);
         }
-        // Optimistically update UI
         setNotifications((p) => p.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
         setUnreadCount((p) => Math.max(0, p - 1));
         setIsOpen(false);
-        if (linkTarget) router.push(linkTarget);
+        const correctedRoute = getCorrectRoute(linkTarget || null);
+        router.push(correctedRoute);
     };
 
     const markAsReadOnly = async (id: string, e: React.MouseEvent) => {
@@ -135,7 +178,6 @@ export function NotificationDropdown() {
         }
     };
 
-    // Refresh notifications when dropdown opens
     useEffect(() => {
         if (isOpen) {
             fetchNotifications();
@@ -151,7 +193,7 @@ export function NotificationDropdown() {
                 >
                     <Bell className="h-5 w-5 text-[#6b6b6b] dark:text-[#B0B0B0]" />
                     {unreadCount > 0 && (
-                        <span className="absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-[#7A1C1C] dark:bg-[#8B2C2C] text-white text-[10px] font-bold">
+                        <span className="absolute top-1 right-1 flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-[#7A1C1C] dark:bg-[#8B2C2C] text-white text-[10px] font-bold">
                             {unreadCount > 99 ? "99+" : unreadCount}
                         </span>
                     )}
@@ -159,7 +201,7 @@ export function NotificationDropdown() {
             </PopoverTrigger>
             <PopoverContent
                 align="end"
-                className="w-[360px] p-0 shadow-lg border-[#ddd8d0] dark:border-[#2a2a2d] bg-white dark:bg-[#1C1C1F]"
+                className="w-90 p-0 shadow-lg border-[#ddd8d0] dark:border-[#2a2a2d] bg-white dark:bg-[#1C1C1F]"
             >
                 <div className="flex items-center justify-between p-4 border-b border-[#ddd8d0] dark:border-[#2a2a2d]">
                     <h3 className="font-semibold text-[#7A1C1C] dark:text-[#D4AF37]">Notifications</h3>
@@ -172,7 +214,7 @@ export function NotificationDropdown() {
                         </button>
                     )}
                 </div>
-                <div className="max-h-[400px] overflow-y-auto">
+                <div className="max-h-100 overflow-y-auto">
                     {notifications.length === 0 ? (
                         <div className="p-8 text-center text-[#6b6b6b] dark:text-[#B0B0B0] text-sm">
                             No notifications yet

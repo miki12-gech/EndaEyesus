@@ -1,7 +1,6 @@
-//src/app/(auth)/register/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -42,10 +41,29 @@ export default function RegisterPage() {
     const [profileImage, setProfileImage] = useState<File | null>(null);
     const [uploadingImage, setUploadingImage] = useState(false);
     
+    const [serviceClassId, setServiceClassId] = useState("");
+    const [academicDept, setAcademicDept] = useState("");
+    const [academicYear, setAcademicYear] = useState("");
+    const [dormBlock, setDormBlock] = useState("");
+    const [dormRoom, setDormRoom] = useState("");
+    const [serviceClasses, setServiceClasses] = useState<any[]>([]);
+    
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [error, setError] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
+
+    useEffect(() => {
+        const fetchClasses = async () => {
+            try {
+                const res = await apiClient.instance.get("/member-affairs/service-classes");
+                setServiceClasses(res.data.data || []);
+            } catch (err) {
+                console.error("Failed to load service classes", err);
+            }
+        };
+        fetchClasses();
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -63,7 +81,6 @@ export default function RegisterPage() {
         try {
             let profileImageUrl = "";
             
-            // Upload profile image if provided
             if (profileImage) {
                 setUploadingImage(true);
                 try {
@@ -75,27 +92,30 @@ export default function RegisterPage() {
                     profileImageUrl = uploadRes.data.data.imageURL;
                 } catch (uploadErr) {
                     console.error("Image upload failed:", uploadErr);
-                    // Continue without image
                 } finally {
                     setUploadingImage(false);
                 }
             }
 
-            // Register using the generated apiClient
-            const regRes = await apiClient.auth.register({
+            // ✅ Use type assertion to bypass generated type
+            const regRes = await (apiClient.auth.register as any)({
                 full_name_three_parts: fullName,
                 email,
                 password,
                 sex: sex as "MALE" | "FEMALE",
                 clerical_rank: clericalRank as "NONE" | "DEACON" | "PRIEST" | "LECTOR" | "OTHER",
                 profile_image_url: profileImageUrl || undefined,
+                phone_number: phoneNumber || undefined,
+                service_class_id: serviceClassId || undefined,
+                academic_dept: academicDept || undefined,
+                academic_year: academicYear ? parseInt(academicYear) : undefined,
+                dorm_block: dormBlock || undefined,
+                dorm_room: dormRoom || undefined,
             });
             const regToken = (regRes.data as any).token || 'authenticated';
 
-            // Fetch profile immediately
             const userProfileRes = await apiClient.auth.getCurrentUser();
             const mappedUser = mapGeneratedUserToAuthUser(userProfileRes.data);
-
             setAuth(mappedUser, regToken);
             
             setSuccessMessage("Registration successful! Redirecting...");
@@ -215,6 +235,58 @@ export default function RegisterPage() {
                                 <div className="relative">
                                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6b6b6b] dark:text-[#B0B0B0]" />
                                     <Input id="phoneNumber" type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="09XXXXXXXX" className={inputCls} />
+                                </div>
+                            </div>
+
+                            {/* Service Class */}
+                            <div className="space-y-1.5">
+                                <FieldLabel htmlFor="serviceClass">Service Class (የአገልግሎት ክፍል)</FieldLabel>
+                                <Select value={serviceClassId} onValueChange={setServiceClassId}>
+                                    <SelectTrigger className={inputCls.replace("pl-10", "pl-3")}>
+                                        <SelectValue placeholder="Select your class" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {serviceClasses.map((c) => (
+                                            <SelectItem key={c.id} value={c.id}>
+                                                {c.class_name_amharic}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Academic Department */}
+                            <div className="space-y-1.5">
+                                <FieldLabel htmlFor="academicDept">Academic Department</FieldLabel>
+                                <Input id="academicDept" value={academicDept} onChange={(e) => setAcademicDept(e.target.value)} placeholder="e.g., Engineering" className={inputCls} />
+                            </div>
+
+                            {/* Academic Year */}
+                            <div className="space-y-1.5">
+                                <FieldLabel htmlFor="academicYear">Academic Year</FieldLabel>
+                                <Select value={academicYear} onValueChange={setAcademicYear}>
+                                    <SelectTrigger className={inputCls.replace("pl-10", "pl-3")}>
+                                        <SelectValue placeholder="Select year" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="1">Year 1</SelectItem>
+                                        <SelectItem value="2">Year 2</SelectItem>
+                                        <SelectItem value="3">Year 3</SelectItem>
+                                        <SelectItem value="4">Year 4</SelectItem>
+                                        <SelectItem value="5">Year 5+</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Dorm Block & Room */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1.5">
+                                    <FieldLabel htmlFor="dormBlock">Dorm Block</FieldLabel>
+                                    <Input id="dormBlock" value={dormBlock} onChange={(e) => setDormBlock(e.target.value)} placeholder="e.g., A" className={inputCls} />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <FieldLabel htmlFor="dormRoom">Room Number</FieldLabel>
+                                    <Input id="dormRoom" value={dormRoom} onChange={(e) => setDormRoom(e.target.value)} placeholder="e.g., 101" className={inputCls} />
                                 </div>
                             </div>
 

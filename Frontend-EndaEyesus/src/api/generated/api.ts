@@ -9,7 +9,6 @@
  * ## SOURCE: https://github.com/acacode/swagger-typescript-api ##
  * ---------------------------------------------------------------
  */
-//src/api/generated/api.ts
 
 export interface ProblemDetail {
   type?: string;
@@ -117,17 +116,11 @@ export type QueryParamsType = Record<string | number, any>;
 
 export interface FullRequestParams
   extends Omit<AxiosRequestConfig, "data" | "params" | "url" | "responseType"> {
-  /** set parameter to `true` for call `securityWorker` for this request */
   secure?: boolean;
-  /** request path */
   path: string;
-  /** content type of request body */
   type?: ContentType;
-  /** query params */
   query?: QueryParamsType;
-  /** format of response (i.e. response.json() -> format: "json") */
   format?: ResponseType;
-  /** request body */
   body?: unknown;
 }
 
@@ -184,7 +177,6 @@ export class HttpClient<SecurityDataType = unknown> {
     params2?: AxiosRequestConfig,
   ): AxiosRequestConfig {
     const method = params1.method || (params2 && params2.method);
-
     return {
       ...this.instance.defaults,
       ...params1,
@@ -217,7 +209,6 @@ export class HttpClient<SecurityDataType = unknown> {
       const property = input[key];
       const propertyContent: any[] =
         property instanceof Array ? property : [property];
-
       for (const formItem of propertyContent) {
         const isFileType = formItem instanceof Blob || formItem instanceof File;
         formData.append(
@@ -225,7 +216,6 @@ export class HttpClient<SecurityDataType = unknown> {
           isFileType ? formItem : this.stringifyFormItem(formItem),
         );
       }
-
       return formData;
     }, new FormData());
   }
@@ -293,27 +283,12 @@ export class Api<
   SecurityDataType extends unknown,
 > extends HttpClient<SecurityDataType> {
   classes = {
-    /**
-     * No description
-     *
-     * @name ListServiceClasses
-     * @summary List service classes
-     * @request GET:/classes
-     * @secure
-     */
     listServiceClasses: (
-      query?: {
-        is_public_registration?: boolean;
-      },
+      query?: { is_public_registration?: boolean },
       params: RequestParams = {},
     ) =>
       this.request<
-        {
-          /** @format uuid */
-          id?: string;
-          name?: string;
-          description?: string | null;
-        }[],
+        { id?: string; name?: string; description?: string | null }[],
         any
       >({
         path: `/classes`,
@@ -326,23 +301,23 @@ export class Api<
   };
   auth = {
     /**
-     * No description
-     *
-     * @name Register
-     * @summary Tier 1 registration
-     * @request POST:/auth/register
-     * @secure
+     * ✅ Extended register method to accept Academic & Residence fields
      */
     register: (
       data: {
         full_name_three_parts: string;
-        /** @format email */
         email: string;
-        /** @minLength 8 */
         password: string;
         sex?: string;
         clerical_rank?: string;
         profile_image_url?: string;
+        // ✅ New fields
+        phone_number?: string;
+        service_class_id?: string;
+        academic_dept?: string;
+        academic_year?: number;
+        dorm_block?: string;
+        dorm_room?: string;
       },
       params: RequestParams = {},
     ) =>
@@ -356,28 +331,12 @@ export class Api<
         ...params,
       }),
 
-    /**
-     * No description
-     *
-     * @name Login
-     * @summary Login and receive JWT cookie
-     * @request POST:/auth/login
-     * @secure
-     */
     login: (
-      data: {
-        /** @format email */
-        email: string;
-        password: string;
-      },
+      data: { email: string; password: string },
       params: RequestParams = {},
     ) =>
       this.request<
-        {
-          /** @format uuid */
-          id?: string;
-          system_role?: string;
-        },
+        { id?: string; system_role?: string },
         ProblemDetail
       >({
         path: `/auth/login`,
@@ -389,14 +348,6 @@ export class Api<
         ...params,
       }),
 
-    /**
-     * No description
-     *
-     * @name Logout
-     * @summary Logout (clear cookie)
-     * @request POST:/auth/logout
-     * @secure
-     */
     logout: (params: RequestParams = {}) =>
       this.request<void, any>({
         path: `/auth/logout`,
@@ -405,14 +356,6 @@ export class Api<
         ...params,
       }),
 
-    /**
-     * No description
-     *
-     * @name GetCurrentUser
-     * @summary Get current user profile
-     * @request GET:/auth/me
-     * @secure
-     */
     getCurrentUser: (params: RequestParams = {}) =>
       this.request<User, any>({
         path: `/auth/me`,
@@ -423,26 +366,13 @@ export class Api<
       }),
   };
   membership = {
-    /**
-     * No description
-     *
-     * @name ApplyMembership
-     * @summary Apply for full membership
-     * @request POST:/membership/apply
-     * @secure
-     */
     applyMembership: (
       data: {
         university_id: string;
         academic_dept: string;
-        /**
-         * @min 1
-         * @max 5
-         */
         academic_year: number;
         dorm_block: string;
         dorm_room: string;
-        /** @format uuid */
         preferred_class_id?: string;
       },
       params: RequestParams = {},
@@ -450,7 +380,6 @@ export class Api<
       this.request<
         {
           status?: "MEMBER_UPGRADED";
-          /** @format uuid */
           service_class_id?: string;
           orientation_checklist?: object;
         },
@@ -466,35 +395,16 @@ export class Api<
       }),
   };
   announcements = {
-    /**
-     * No description
-     *
-     * @name ListAnnouncements
-     * @summary List announcements
-     * @request GET:/announcements
-     * @secure
-     */
     listAnnouncements: (
       query?: {
-        /**
-         * @max 100
-         * @default 20
-         */
         limit?: number;
-        /** @default 0 */
         offset?: number;
-        /** @format uuid */
         class_id?: string;
       },
       params: RequestParams = {},
     ) =>
       this.request<
-        {
-          items?: Announcement[];
-          total?: number;
-          limit?: number;
-          offset?: number;
-        },
+        { items?: Announcement[]; total?: number; limit?: number; offset?: number },
         any
       >({
         path: `/announcements`,
@@ -505,20 +415,11 @@ export class Api<
         ...params,
       }),
 
-    /**
-     * No description
-     *
-     * @name CreateAnnouncement
-     * @summary Create announcement
-     * @request POST:/announcements
-     * @secure
-     */
     createAnnouncement: (
       data: {
         title: string;
         content: string;
         is_public: boolean;
-        /** @format uuid */
         target_class_id?: string;
       },
       params: RequestParams = {},
@@ -533,19 +434,9 @@ export class Api<
         ...params,
       }),
 
-    /**
-     * No description
-     *
-     * @name ReactToAnnouncement
-     * @summary Add or remove a reaction
-     * @request POST:/announcements/{id}/reactions
-     * @secure
-     */
     reactToAnnouncement: (
       id: string,
-      data: {
-        type: "LIKE" | "STAR";
-      },
+      data: { type: "LIKE" | "STAR" },
       params: RequestParams = {},
     ) =>
       this.request<void, any>({
@@ -557,20 +448,9 @@ export class Api<
         ...params,
       }),
 
-    /**
-     * No description
-     *
-     * @name CommentOnAnnouncement
-     * @summary Add a comment
-     * @request POST:/announcements/{id}/comments
-     * @secure
-     */
     commentOnAnnouncement: (
       id: string,
-      data: {
-        content: string;
-        parentCommentId?: string;
-      },
+      data: { content: string; parentCommentId?: string },
       params: RequestParams = {},
     ) =>
       this.request<void, any>({
@@ -581,36 +461,78 @@ export class Api<
         type: ContentType.Json,
         ...params,
       }),
+
+    updateAnnouncement: (
+      id: string,
+      data: {
+        title?: string;
+        content?: string;
+        targetType?: "ALL" | "CLASS" | "LEADERS";
+        targetClassID?: string;
+        imageUrl?: string[];
+        videoUrl?: string[];
+        pdfUrl?: string[];
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<Announcement, any>({
+        path: `/announcements/${id}`,
+        method: "PATCH",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    deleteAnnouncement: (
+      id: string,
+      params: RequestParams = {},
+    ) =>
+      this.request<{ status: string; message: string }, any>({
+        path: `/announcements/${id}`,
+        method: "DELETE",
+        secure: true,
+        ...params,
+      }),
+
+    editComment: (
+      id: string,
+      commentId: string,
+      data: { content: string },
+      params: RequestParams = {},
+    ) =>
+      this.request<void, any>({
+        path: `/announcements/${id}/comments/${commentId}`,
+        method: "PATCH",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    deleteComment: (
+      id: string,
+      commentId: string,
+      params: RequestParams = {},
+    ) =>
+      this.request<{ message: string }, any>({
+        path: `/announcements/${id}/comments/${commentId}`,
+        method: "DELETE",
+        secure: true,
+        ...params,
+      }),
   };
   lms = {
-    /**
-     * No description
-     *
-     * @name ListBatches
-     * @summary List batches
-     * @request GET:/lms/batches
-     * @secure
-     */
     listBatches: (
       query?: {
         course_track?: "GUBAE_ABEW" | "GUBAE_HAWARYAT" | "GUBAE_ECCLESIAE";
-        /**
-         * @max 100
-         * @default 20
-         */
         limit?: number;
-        /** @default 0 */
         offset?: number;
       },
       params: RequestParams = {},
     ) =>
-      this.request<
-        {
-          items?: Batch[];
-          total?: number;
-        },
-        any
-      >({
+      this.request<{ items?: Batch[]; total?: number }, any>({
         path: `/lms/batches`,
         method: "GET",
         query: query,
@@ -619,14 +541,6 @@ export class Api<
         ...params,
       }),
 
-    /**
-     * No description
-     *
-     * @name CreateBatch
-     * @summary Create new batch (Education Manager only)
-     * @request POST:/lms/batches
-     * @secure
-     */
     createBatch: (
       data: {
         course_track: "GUBAE_ABEW" | "GUBAE_HAWARYAT" | "GUBAE_ECCLESIAE";
@@ -645,21 +559,9 @@ export class Api<
         ...params,
       }),
 
-    /**
-     * No description
-     *
-     * @name GraduateBatch
-     * @summary Graduate a batch
-     * @request PUT:/lms/batches/{id}/graduate
-     * @secure
-     */
     graduateBatch: (id: string, params: RequestParams = {}) =>
       this.request<
-        {
-          message?: string;
-          certificates_generated?: number;
-          failed_students?: number;
-        },
+        { message?: string; certificates_generated?: number; failed_students?: number },
         any
       >({
         path: `/lms/batches/${id}/graduate`,
@@ -669,21 +571,8 @@ export class Api<
         ...params,
       }),
 
-    /**
-     * No description
-     *
-     * @name CreateSubmission
-     * @summary Create draft submission (Teacher)
-     * @request POST:/lms/submissions
-     * @secure
-     */
     createSubmission: (
-      data: {
-        /** @format uuid */
-        batch_id: string;
-        title: string;
-        content_package: object;
-      },
+      data: { batch_id: string; title: string; content_package: object },
       params: RequestParams = {},
     ) =>
       this.request<CourseSubmission, any>({
@@ -696,14 +585,6 @@ export class Api<
         ...params,
       }),
 
-    /**
-     * No description
-     *
-     * @name ListSubmissions
-     * @summary List submissions (filter by status)
-     * @request GET:/lms/submissions
-     * @secure
-     */
     listSubmissions: (
       query?: {
         status?:
@@ -714,21 +595,11 @@ export class Api<
           | "REJECTED"
           | "IMPLEMENTATION_IN_PROGRESS"
           | "PUBLISHED";
-        /**
-         * @max 100
-         * @default 20
-         */
         limit?: number;
       },
       params: RequestParams = {},
     ) =>
-      this.request<
-        {
-          items?: CourseSubmission[];
-          total?: number;
-        },
-        any
-      >({
+      this.request<{ items?: CourseSubmission[]; total?: number }, any>({
         path: `/lms/submissions`,
         method: "GET",
         query: query,
@@ -737,14 +608,6 @@ export class Api<
         ...params,
       }),
 
-    /**
-     * No description
-     *
-     * @name SubmitForReview
-     * @summary Submit draft for review
-     * @request PATCH:/lms/submissions/{id}/submit
-     * @secure
-     */
     submitForReview: (id: string, params: RequestParams = {}) =>
       this.request<CourseSubmission, any>({
         path: `/lms/submissions/${id}/submit`,
@@ -754,22 +617,8 @@ export class Api<
         ...params,
       }),
 
-    /**
-     * No description
-     *
-     * @name ApproveSubmission
-     * @summary Approve submission (Education Manager)
-     * @request PUT:/lms/submissions/{id}/approve
-     * @secure
-     */
     approveSubmission: (id: string, params: RequestParams = {}) =>
-      this.request<
-        {
-          status?: "APPROVED";
-          message?: string;
-        },
-        any
-      >({
+      this.request<{ status?: "APPROVED"; message?: string }, any>({
         path: `/lms/submissions/${id}/approve`,
         method: "PUT",
         secure: true,
@@ -777,29 +626,12 @@ export class Api<
         ...params,
       }),
 
-    /**
-     * No description
-     *
-     * @name ImplementSubmission
-     * @summary Set implemented page URL (Technical Team)
-     * @request PUT:/lms/submissions/{id}/implement
-     * @secure
-     */
     implementSubmission: (
       id: string,
-      data: {
-        /** @format uri */
-        implemented_page_url: string;
-      },
+      data: { implemented_page_url: string },
       params: RequestParams = {},
     ) =>
-      this.request<
-        {
-          status?: "PUBLISHED";
-          implemented_page_url?: string;
-        },
-        any
-      >({
+      this.request<{ status?: "PUBLISHED"; implemented_page_url?: string }, any>({
         path: `/lms/submissions/${id}/implement`,
         method: "PUT",
         body: data,
@@ -809,29 +641,8 @@ export class Api<
         ...params,
       }),
 
-    /**
-     * No description
-     *
-     * @name Enroll
-     * @summary Enroll in a batch
-     * @request POST:/lms/enrollments
-     * @secure
-     */
-    enroll: (
-      data: {
-        /** @format uuid */
-        batch_id: string;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        {
-          /** @format uuid */
-          enrollment_id?: string;
-          status?: "ENROLLED";
-        },
-        ProblemDetail
-      >({
+    enroll: (data: { batch_id: string }, params: RequestParams = {}) =>
+      this.request<{ enrollment_id?: string; status?: "ENROLLED" }, ProblemDetail>({
         path: `/lms/enrollments`,
         method: "POST",
         body: data,
@@ -841,28 +652,12 @@ export class Api<
         ...params,
       }),
 
-    /**
-     * No description
-     *
-     * @name CompleteLesson
-     * @summary Mark a lesson as completed
-     * @request POST:/lms/enrollments/{id}/complete-lesson
-     * @secure
-     */
     completeLesson: (
       id: string,
-      data: {
-        lesson_id: string;
-      },
+      data: { lesson_id: string },
       params: RequestParams = {},
     ) =>
-      this.request<
-        {
-          progress?: number;
-          completed_lessons?: string[];
-        },
-        any
-      >({
+      this.request<{ progress?: number; completed_lessons?: string[] }, any>({
         path: `/lms/enrollments/${id}/complete-lesson`,
         method: "POST",
         body: data,
@@ -873,42 +668,19 @@ export class Api<
       }),
   };
   library = {
-    /**
-     * No description
-     *
-     * @name ListLibrary
-     * @summary List library items
-     * @request GET:/library
-     * @secure
-     */
     listLibrary: (
       query?: {
         category?: "SPIRITUAL" | "ACADEMIC" | "OTHER";
         academic_department?: string;
-        /**
-         * @min 1
-         * @max 5
-         */
         academic_year?: number;
         course_id?: string;
         document_type?: "TEXTBOOK" | "PAST_EXAM";
-        /**
-         * @max 100
-         * @default 20
-         */
         limit?: number;
-        /** @default 0 */
         offset?: number;
       },
       params: RequestParams = {},
     ) =>
-      this.request<
-        {
-          items?: LibraryItem[];
-          total?: number;
-        },
-        any
-      >({
+      this.request<{ items?: LibraryItem[]; total?: number }, any>({
         path: `/library`,
         method: "GET",
         query: query,
@@ -917,21 +689,8 @@ export class Api<
         ...params,
       }),
 
-    /**
-     * No description
-     *
-     * @name LikeLibraryItem
-     * @summary Like a library item
-     * @request POST:/library/{id}/like
-     * @secure
-     */
     likeLibraryItem: (id: string, params: RequestParams = {}) =>
-      this.request<
-        {
-          likes?: number;
-        },
-        any
-      >({
+      this.request<{ likes?: number }, any>({
         path: `/library/${id}/like`,
         method: "POST",
         secure: true,
@@ -940,37 +699,18 @@ export class Api<
       }),
   };
   notifications = {
-    /**
-     * No description
-     *
-     * @name ListNotifications
-     * @summary Get user notifications
-     * @request GET:/notifications
-     * @secure
-     */
     listNotifications: (
-      query?: {
-        unread_only?: boolean;
-        /**
-         * @max 100
-         * @default 20
-         */
-        limit?: number;
-        /** @default 0 */
-        offset?: number;
-      },
+      query?: { unread_only?: boolean; limit?: number; offset?: number },
       params: RequestParams = {},
     ) =>
       this.request<
         {
           items?: {
-            /** @format uuid */
             id?: string;
             title?: string;
             message?: string;
             target_route?: string;
             is_read?: boolean;
-            /** @format date-time */
             created_at?: string;
           }[];
           unread_count?: number;
@@ -985,14 +725,6 @@ export class Api<
         ...params,
       }),
 
-    /**
-     * No description
-     *
-     * @name MarkAllRead
-     * @summary Mark all notifications as read
-     * @request PATCH:/notifications/read-all
-     * @secure
-     */
     markAllRead: (params: RequestParams = {}) =>
       this.request<void, any>({
         path: `/notifications/read-all`,
@@ -1002,14 +734,6 @@ export class Api<
       }),
   };
   admin = {
-    /**
-     * No description
-     *
-     * @name ChangeUserRole
-     * @summary Change user role
-     * @request PUT:/admin/users/{id}/role
-     * @secure
-     */
     changeUserRole: (
       id: string,
       data: {
@@ -1025,12 +749,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<
-        {
-          /** @format uuid */
-          user_id?: string;
-          previous_role?: string;
-          new_role?: string;
-        },
+        { user_id?: string; previous_role?: string; new_role?: string },
         any
       >({
         path: `/admin/users/${id}/role`,
@@ -1042,35 +761,17 @@ export class Api<
         ...params,
       }),
 
-    /**
-     * No description
-     *
-     * @name CreateSubClass
-     * @summary Create a sub‑class under a department
-     * @request POST:/admin/departments/{id}/subclasses
-     * @secure
-     */
     createSubClass: (
       id: string,
       data: {
         sub_class_name: string;
-        /** @format uuid */
         sub_chair_id?: string;
-        /** @format uuid */
         sub_vice_id?: string;
-        /** @format uuid */
         sub_secretary_id?: string;
       },
       params: RequestParams = {},
     ) =>
-      this.request<
-        {
-          /** @format uuid */
-          sub_class_id?: string;
-          message?: string;
-        },
-        any
-      >({
+      this.request<{ sub_class_id?: string; message?: string }, any>({
         path: `/admin/departments/${id}/subclasses`,
         method: "POST",
         body: data,

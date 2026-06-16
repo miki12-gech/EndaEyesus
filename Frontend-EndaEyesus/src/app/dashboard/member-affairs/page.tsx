@@ -1,3 +1,4 @@
+//src/app/dashboard/member-affairs/page.tsx
 import { Suspense } from "react";
 import MemberAffairsContent from "./MemberAffairsContent";
 
