@@ -90,7 +90,7 @@ function Lightbox({
 
     return (
         <div 
-            className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300"
+            className="fixed inset-0 z-100 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300"
             onClick={onClose}
         >
             <div 
@@ -275,7 +275,7 @@ const AnnouncementItem = memo((props: AnnouncementItemProps) => {
         >
             <div className="flex items-start gap-4">
                 {/* Avatar */}
-                <div className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden bg-gradient-to-br from-[#7A1C1C] to-[#C9A227] dark:from-[#D4AF37] dark:to-[#1E4D3A] shadow-md">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center shrink-0 overflow-hidden bg-linear-to-br from-[#7A1C1C] to-[#C9A227] dark:from-[#D4AF37] dark:to-[#1E4D3A] shadow-md">
                     {announcement.author?.profileImageUrl ? (
                         <img src={announcement.author.profileImageUrl.startsWith("http") ? announcement.author.profileImageUrl : `${API_BASE}${announcement.author.profileImageUrl}`} alt={announcement.author.fullName} className="w-full h-full object-cover" />
                     ) : announcement.author?.fullName ? (
@@ -439,7 +439,7 @@ const AnnouncementItem = memo((props: AnnouncementItemProps) => {
                             {editError && <p className="text-xs text-red-500">{editError}</p>}
                             <div className="flex gap-2">
                                 <button type="button" onClick={() => setEditingId(null)} className="flex-1 py-2 rounded-xl border">Cancel</button>
-                                <button type="submit" disabled={editSubmitting} className="flex-[2] py-2 rounded-xl bg-[#7A1C1C] text-white">Update</button>
+                                <button type="submit" disabled={editSubmitting} className="flex-2 py-2 rounded-xl bg-[#7A1C1C] text-white">Update</button>
                             </div>
                         </form>
                     ) : (
@@ -517,7 +517,7 @@ const AnnouncementItem = memo((props: AnnouncementItemProps) => {
                                     <div className="flex flex-wrap gap-2">
                                         {pdfUrls.map((url: string, idx: number) => (
                                             <a key={idx} href={url.startsWith("http") ? url : `${API_BASE}${url}`} target="_blank" rel="noopener noreferrer"
-                                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#7A1C1C] to-[#C9A227] text-white hover:from-[#C9A227] hover:to-[#7A1C1C] transition-all shadow-md hover:shadow-lg">
+                                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-linear-to-r from-[#7A1C1C] to-[#C9A227] text-white hover:from-[#C9A227] hover:to-[#7A1C1C] transition-all shadow-md hover:shadow-lg">
                                                 <span className="text-lg">📄</span>
                                                 <span className="text-xs font-semibold">PDF {idx + 1}</span>
                                             </a>
@@ -994,7 +994,7 @@ useEffect(() => {
             {/* Create Form */}
             {showForm && (
                 <div className="bg-white dark:bg-[#1C1C1F] rounded-2xl border-2 border-[#C9A227] dark:border-[#D4AF37] shadow-lg overflow-hidden">
-                    <div className="p-6 border-b border-[#ddd8d0] dark:border-[#2a2a2d] bg-gradient-to-r from-[#7A1C1C] to-[#C9A227] dark:from-[#D4AF37] dark:to-[#1E4D3A]">
+                    <div className="p-6 border-b border-[#ddd8d0] dark:border-[#2a2a2d] bg-linear-to-r from-[#7A1C1C] to-[#C9A227] dark:from-[#D4AF37] dark:to-[#1E4D3A]">
                         <h2 className="text-2xl font-bold text-white dark:text-[#0E0E0F]">Create Announcement</h2>
                         <p className="text-white/80 dark:text-[#0E0E0F]/80 text-sm mt-1">Share updates, media, and more with your community</p>
                     </div>
@@ -1170,7 +1170,7 @@ useEffect(() => {
                             <button
                                 type="submit"
                                 disabled={submitting}
-                                className="flex-[2] py-3 rounded-xl bg-gradient-to-r from-[#7A1C1C] to-[#C9A227] dark:from-[#D4AF37] dark:to-[#1E4D3A] text-white dark:text-[#0E0E0F] font-semibold hover:shadow-lg transition-all disabled:opacity-50"
+                                className="flex-2 py-3 rounded-xl bg-linear-to-r from-[#7A1C1C] to-[#C9A227] dark:from-[#D4AF37] dark:to-[#1E4D3A] text-white dark:text-[#0E0E0F] font-semibold hover:shadow-lg transition-all disabled:opacity-50"
                             >
                                 {submitting ? (
                                     <span className="flex items-center justify-center gap-2">
@@ -1192,7 +1192,7 @@ useEffect(() => {
                     {[1, 2, 3].map((i: number) => (
                         <div key={i} className="bg-white dark:bg-[#1C1C1F] rounded-xl p-5 border border-[#ddd8d0] dark:border-[#2a2a2d] animate-pulse">
                             <div className="flex gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-[#EDE9E2] dark:bg-[#252529] flex-shrink-0" />
+                                <div className="w-10 h-10 rounded-xl bg-[#EDE9E2] dark:bg-[#252529] shrink-0" />
                                 <div className="flex-1 space-y-2">
                                     <div className="h-3 bg-[#EDE9E2] dark:bg-[#252529] rounded w-1/4" />
                                     <div className="h-4 bg-[#EDE9E2] dark:bg-[#252529] rounded w-2/3" />

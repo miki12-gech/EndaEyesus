@@ -1,4 +1,3 @@
-// src/app/dashboard/layout.tsx
 "use client";
 
 import { useState } from "react";
@@ -14,7 +13,8 @@ export default function DashboardLayout({
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     return (
-        <div className="min-h-screen bg-[#F8F5F0] dark:bg-[#0E0E0F] transition-colors duration-300">
+        // ✅ Changed background to match the topbar
+        <div className="min-h-screen bg-white dark:bg-[#1C1C1F] transition-colors duration-300">
             {/* Mobile overlay */}
             {sidebarOpen && (
                 <div
@@ -31,6 +31,7 @@ export default function DashboardLayout({
             <Topbar onMenuOpen={() => setSidebarOpen(true)} />
 
             <main className="pt-14 lg:pt-16 min-h-screen flex flex-col w-full">
+                {/* ✅ Content area now inherits the white background, no extra background needed */}
                 <div className="p-4 sm:p-6 lg:p-8 flex-1 w-full">{children}</div>
                 <DashboardFooter />
             </main>

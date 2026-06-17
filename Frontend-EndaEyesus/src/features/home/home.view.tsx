@@ -1,287 +1,305 @@
-//src/features/home/home.view.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Music, Users, Shield, GraduationCap, Star, ChevronDown } from "lucide-react";
-import { ServiceClassFeature, TimelineEvent, Testimonial } from "./home.types";
+import { motion, easeOut } from "framer-motion";
+import {
+  ArrowRight,
+  BookOpen,
+  Music,
+  Users,
+  Shield,
+  GraduationCap,
+  ChevronDown,
+  CrossIcon,
+  FileText,
+  HandHeart,
+  DollarSign,
+  UserCheck,
+  Briefcase,
+  Filter,
+  Eye,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ServiceClassFeature, TimelineEvent, Testimonial } from "./home.types";
 
+// ─── DATA ───
 const serviceClasses: ServiceClassFeature[] = [
-    { id: "1", title: "Mezmur (Choir)", description: "Praising God through sacred Ethiopian Orthodox hymns and spiritual songs.", icon: Music, color: "#C9A227" },
-    { id: "2", title: "Sunday School", description: "Deepening our understanding of the Gospel, Dogma, and Church history.", icon: BookOpen, color: "#7A1C1C" },
-    { id: "3", title: "General Assembly", description: "Weekly gatherings for prayer, sermons, and community fellowship.", icon: Users, color: "#7A1C1C" },
-    { id: "4", title: "Youth Leadership", description: "Training the next generation of dedicated church servants.", icon: Shield, color: "#D4AF37" },
+  { id: "1", title: "ጽሕፈት ቤት (ሰብሳቢ፣ ምክትል፣ ጸሐፊ)", description: "የግቢ ጉባኤውን ሥራ በበላይነት ይመራል፣ ስብሰባዎችን ያዘጋጃል፣ የውጭ ግንኙነትን ያስተዳድራል።", icon: Shield, color: "#C9A227" },
+  { id: "2", title: "ትምህርት ክፍል", description: "መደበኛና መደበኛ ያልሆኑ ትምህርቶችን ያስተባብራል፣ መምህራንን ይመድባል፣ የአብነት ትምህርትን ያስተዳድራል።", icon: GraduationCap, color: "#7A1C1C" },
+  { id: "3", title: "መዝሙርና ሥነ ጥበባት", description: "የመዝሙር ትምህርትን ያስተምራል፣ ሥነ ጽሑፍና ሥነ ምስል ተሰጥኦዎችን ያጎለብታል፣ መንፈሳዊ ጭውውቶችን ያዘጋጃል።", icon: Music, color: "#D4AF37" },
+  { id: "4", title: "ልማት ክፍል", description: "የገቢ ማስገኛ መርሐግብሮችን ያዘጋጃል፣ ቋሚ የልማት ተቋማትን ያስተዳድራል (በረከት ሱቅ፣ ንጻሬ ሕትመት ቤት)።", icon: HandHeart, color: "#C9A227" },
+  { id: "5", title: "ሒሳብና ንብረት", description: "የግቢ ጉባኤውን ገቢና ወጪ ይቆጣጠራል፣ ንብረቶችን ይመዘግባል፣ ዓመታዊ የሒሳብ ሪፖርት ያቀርባል።", icon: DollarSign, color: "#7A1C1C" },
+  { id: "6", title: "አባላት ጉዳይ", description: "አባላትን ይመዘግባል፣ ወደ ክፍላት ይመድባል፣ የምክር አገልግሎት ያስተባብራል፣ የሟሟያ ጽሑፎችን ያስተዳድራል።", icon: UserCheck, color: "#D4AF37" },
+  { id: "7", title: "ባች/ዲፓርትመንት ማስተባበሪያ", description: "ተማሪዎችን በዲፓርትመንት ያደራጃል፣ ለትምህርቶች ጥሪ ያደርጋል፣ የማስታወቂያ ስርጭትን ያስተባብራል።", icon: Users, color: "#7A1C1C" },
+  { id: "8", title: "ሞያ አገልግሎት", description: "ተማሪዎችን በትምህርታቸው ያጠነክራል፣ በሙያቸው ለቤተ ክርስቲያን አገልግሎት ያዘጋጃል፣ የበጎ አድራጎት ሥራዎችን ያስተባብራል።", icon: Briefcase, color: "#C9A227" },
+  { id: "9", title: "ሳንሱርና መርሐ ግብር", description: "የግቢ ጉባኤው መርሐግብሮችን ያዘጋጃል፣ የሚቀርቡ ጽሑፎችን፣ መዝሙሮችን ይመረምራል፣ አዳራሾችን ያስተዳድራል።", icon: Filter, color: "#7A1C1C" },
+  { id: "10", title: "ኦዲትና ኢንስፔክሽን", description: "የግቢ ጉባኤውን የሒሳብ ሪፖርት ይመረምራል፣ ንብረቶችን ይቆጣጠራል፣ የአገልግሎት ክፍሎችን እንቅስቃሴ ይገመግማል።", icon: Eye, color: "#D4AF37" },
 ];
 
 const timelineEvents: TimelineEvent[] = [
-    { year: "1986 E.C. (ታሕሳስ 29)", title: "Foundation", description: "The fellowship began with a small group of devoted students meeting in campus dorms." },
-    { year: "1998 E.C.", title: "Official Recognition", description: "Granted official recognition by the university and local diocese." },
-    { year: "2005 E.C.", title: "First Grand Conference", description: "Hosted over 5,000 students for a three-day spiritual conference." },
-    { year: "2015 E.C.", title: "Digital Expansion", description: "Launched our first digital initiatives to connect alumni and current students." },
+  { year: "1986 ዓ.ም (ታሕሳስ 29)", title: "መሠረት", description: "ጥቂት ተማሪዎች በግቢ መደባቸው በትንሹ መሰብሰብ ጀመሩ።" },
+  { year: "1998 ዓ.ም", title: "ኦፊሴላዊ እውቅና", description: "ከዩኒቨርሲቲውና ከሀገረ ስብከቱ እውቅና አገኘ።" },
+  { year: "2005 ዓ.ም", title: "የመጀመሪያ ታላቅ ጉባኤ", description: "ለሦስት ቀናት በተካሄደው ጉባኤ ከ5,000 በላይ ተማሪዎች ተሳትፈዋል።" },
+  { year: "2015 ዓ.ም", title: "ዲጂታል መስፋፋት", description: "የቀድሞ አባላትንና ወቅታዊ ተማሪዎችን ለማገናኘት የመጀመሪያውን ዲጂታል መድረክ አስጀመርን።" },
 ];
 
-const testimonials: Testimonial[] = [
-    { id: "t1", name: "Amanuel Tesfaye", department: "Software Engineering", serviceClass: "Choir Member", quote: "Enda Eyesus has been my spiritual anchor throughout my difficult engineering studies. The hymns give me strength." },
-    { id: "t2", name: "Meron Hailu", department: "Medicine", serviceClass: "Sunday School Teacher", quote: "Teaching the youth has taught me more about my faith than I ever imagined. This fellowship is a true family." },
-    { id: "t3", name: "Dawit Girma", department: "Law", serviceClass: "General Assembly", quote: "The weekly teachings have shaped my moral compass. I am forever grateful for the brothers and sisters I met here." },
-];
+// ─── VARIANTS ───
+const fadeInUp = {
+  hidden: { opacity: 0, y: 50 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: easeOut } },
+};
 
 export function HomeView() {
-    const [mounted, setMounted] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-    useEffect(() => {
-        setMounted(true);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-        // Intersection Observer for scroll animations
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add("opacity-100", "translate-y-0");
-                    entry.target.classList.remove("opacity-0", "translate-y-10");
-                }
-            });
-        }, { threshold: 0.1 });
+  if (!mounted) return <div className="min-h-screen bg-white" />;
 
-        document.querySelectorAll('.animate-on-scroll').forEach((el) => observer.observe(el));
+  return (
+    <div className="min-h-screen bg-white text-[#1a1a1a] selection:bg-[#C9A227] selection:text-[#1a1a1a] overflow-x-hidden">
 
-        return () => observer.disconnect();
-    }, []);
+      {/* ─── HERO SECTION: ARCHITECTURAL SLASHES ─── */}
+      <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-4 overflow-hidden pt-28 lg:pt-32 bg-white">
+        
+        {/* Astonishing Background Layers */}
+        <div className="absolute inset-0 pointer-events-none z-0">
+          {/* Top Right Massive Red Polygon */}
+          <motion.div 
+            className="absolute top-0 right-0 w-[100vw] md:w-[60vw] h-[80vh] bg-[#7A1C1C] origin-right"
+            style={{ clipPath: 'polygon(100% 0, 20% 0, 100% 100%)' }}
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+          />
+          {/* Top Right Overlapping Black Polygon */}
+          <motion.div 
+            className="absolute top-0 right-0 w-[100vw] md:w-[50vw] h-[60vh] bg-[#1a1a1a] origin-right"
+            style={{ clipPath: 'polygon(100% 0, 50% 0, 100% 80%)' }}
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 1.4, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          />
+          {/* Bottom Left Black Polygon */}
+          <motion.div 
+            className="absolute bottom-0 left-0 w-[80vw] md:w-[40vw] h-[50vh] bg-[#1a1a1a] origin-left"
+            style={{ clipPath: 'polygon(0 0, 0 100%, 100% 100%)' }}
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 1.2, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          />
 
-    if (!mounted) return <div className="min-h-screen bg-[#0E0E0F]" />; // Prevent hydration mismatch
+          {/* Glowing White Protection Layer (ensures center text is perfectly readable over the dark corners) */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,1)_35%,rgba(255,255,255,0.7)_60%,rgba(255,255,255,0)_100%)] z-10" />
 
-    return (
-        <div className="bg-[#0E0E0F] text-[#F5F5F5] min-h-screen selection:bg-[#D4AF37] selection:text-[#0E0E0F]">
-
-            {/* 1. HERO SECTION */}
-            <section className="relative min-h-[95vh] flex flex-col items-center justify-center text-center px-4 overflow-hidden pt-20">
-
-                {/* Sacred Cross Watermark */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
-                    <svg width="600" height="600" viewBox="0 0 400 400" fill="none">
-                        <rect x="180" y="20" width="40" height="360" rx="4" fill="#D4AF37" />
-                        <rect x="40" y="120" width="320" height="40" rx="4" fill="#D4AF37" />
-                    </svg>
-                </div>
-
-                {/* Ambient Glow */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
-
-                <div className="relative z-10 max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 ease-out">
-                    <div className="text-[#D4AF37] font-serif tracking-[0.3em] uppercase text-sm md:text-base mb-4 animate-pulse">
-                        .Mekelle University
-                    </div>
-
-                    <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight text-[#D4AF37] leading-tight" style={{ fontFamily: "serif" }}>
-                        እንዳ ኢየሱስ<br />ግቢ ጉባኤ
-                    </h1>
-
-                    <p className="text-lg md:text-xl text-[#F5F5F5]/70 max-w-2xl mx-auto font-light leading-relaxed">
-                        Uniting Ethiopian Orthodox university students in faith, service, and academic excellence. A spiritual home away from home.
-                    </p>
-
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-                        <Button asChild size="lg" className="bg-[#D4AF37] hover:bg-[#C9A227] text-[#0E0E0F] font-bold rounded-full px-8 h-14 text-base w-full sm:w-auto shadow-[0_0_30px_rgba(212,175,55,0.2)] transition-all hover:transform hover:scale-105">
-                            <Link href="/register">Join the Fellowship</Link>
-                        </Button>
-                        <Button asChild size="lg" variant="outline" className="border-[#D4AF37]/30 text-[#D4AF37] hover:bg-[#D4AF37]/10 hover:border-[#D4AF37] h-14 rounded-full px-8 w-full sm:w-auto transition-all">
-                            <Link href="/login">Member Login</Link>
-                        </Button>
-                        <Button asChild size="lg" variant="ghost" className="relative h-14 rounded-full px-8 w-full sm:w-auto text-[#D4AF37] overflow-hidden group border border-[#D4AF37]/30 hover:border-[#D4AF37] transition-all duration-500">
-                            <Link href="/history">
-                                <span className="relative z-10 flex items-center font-medium tracking-wide">
-                                    <BookOpen className="w-4 h-4 mr-2" />
-                                    View History
-                                </span>
-                                <div className="absolute inset-0 bg-[#D4AF37]/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-in-out" />
-                            </Link>
-                        </Button>
-                    </div>
-                </div>
-
-                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce text-[#D4AF37]/50">
-                    <ChevronDown className="w-8 h-8" />
-                </div>
-            </section>
-
-            {/* 2. INSPIRATION / MANUSCRIPT SECTION */}
-            <section className="py-24 bg-[#151516] border-y border-[#2a2a2d]/50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-                        <div className="order-2 lg:order-1 space-y-6 animate-on-scroll opacity-0 translate-y-10 transition-all duration-1000 ease-out">
-                            <h2 className="text-[#D4AF37] text-sm font-bold uppercase tracking-widest">Our Foundation</h2>
-                            <h3 className="text-3xl md:text-4xl font-serif font-bold text-[#F5F5F5] leading-snug">
-                                Rooted in the ancient faith of the Apostles.
-                            </h3>
-                            <p className="text-[#F5F5F5]/60 leading-relaxed text-lg">
-                                The Enda Eyesus Fellowship is built upon the unspoken foundation of the Ethiopian Orthodox Tewahedo Church. We strive to maintain the spiritual discipline, love, and unity taught by the early church fathers while navigating the modern university landscape.
-                            </p>
-                            <ul className="space-y-4 pt-4">
-                                {[
-                                    "Maintaining apostolic traditions",
-                                    "Fostering spiritual growth and theological education",
-                                    "Supporting members academically and socially"
-                                ].map((item, i) => (
-                                    <li key={i} className="flex items-center gap-3 text-[#F5F5F5]/80">
-                                        <span className="w-6 h-6 rounded-full bg-[#9B2323]/20 text-[#9B2323] flex items-center justify-center text-sm font-bold border border-[#9B2323]/30 flex-shrink-0">✓</span>
-                                        {item}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                        <div className="order-1 lg:order-2 relative h-[500px] rounded-2xl overflow-hidden border border-[#D4AF37]/20 shadow-2xl animate-on-scroll opacity-0 translate-y-10 transition-all duration-1000 delay-200">
-                            {/* Abstract Manuscript visual representation */}
-                            <div className="absolute inset-0 bg-[#0E0E0F] flex flex-col justify-between p-8">
-                                <div className="w-full border-b-2 border-dashed border-[#D4AF37]/30 pb-4">
-                                    <div className="w-3/4 h-6 bg-[#D4AF37]/20 rounded-md mb-3" />
-                                    <div className="w-1/2 h-4 bg-[#D4AF37]/10 rounded-md" />
-                                </div>
-                                <div className="flex-1 py-8 flex items-center justify-center opacity-20">
-                                    <svg width="200" height="200" viewBox="0 0 200 200" fill="none">
-                                        <rect x="90" y="10" width="20" height="180" rx="4" fill="#D4AF37" />
-                                        <rect x="20" y="60" width="160" height="20" rx="4" fill="#D4AF37" />
-                                    </svg>
-                                </div>
-                                <div className="w-full border-t-2 border-dashed border-[#D4AF37]/30 pt-4">
-                                    <div className="w-full h-4 bg-[#D4AF37]/10 rounded-md mb-2" />
-                                    <div className="w-5/6 h-4 bg-[#D4AF37]/10 rounded-md" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* 3. SERVICE CLASSES */}
-            <section className="py-24 bg-[#0E0E0F]">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center max-w-2xl mx-auto mb-16 animate-on-scroll opacity-0 translate-y-10 transition-all duration-1000">
-                        <h2 className="text-[#D4AF37] text-sm font-bold uppercase tracking-widest mb-3">Get Involved</h2>
-                        <h3 className="text-3xl md:text-5xl font-serif font-bold text-[#F5F5F5] mb-6">Service Classes</h3>
-                        <p className="text-[#F5F5F5]/60 text-lg">
-                            Find your calling within the church. Our fellowship operates through dedicated service classes, ensuring every member can contribute their unique gifts to the glory of God.
-                        </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {serviceClasses.map((cls, idx) => (
-                            <div
-                                key={cls.id}
-                                className="bg-[#1C1C1F] rounded-2xl p-6 border border-[#2a2a2d] hover:border-[#D4AF37]/50 transition-all duration-300 group hover:-translate-y-2 animate-on-scroll opacity-0 translate-y-10"
-                                style={{ transitionDelay: `${idx * 150}ms` }}
-                            >
-                                <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-6 transition-colors" style={{ backgroundColor: `${cls.color}15` }}>
-                                    <cls.icon className="w-7 h-7 transition-colors" style={{ color: cls.color }} />
-                                </div>
-                                <h4 className="text-xl font-bold text-[#F5F5F5] mb-3 group-hover:text-[#D4AF37] transition-colors">{cls.title}</h4>
-                                <p className="text-[#F5F5F5]/60 text-sm leading-relaxed">{cls.description}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* 4. SPIRITUAL JOURNEY TIMELINE */}
-            <section className="py-24 bg-[#151516] border-y border-[#2a2a2d]/50">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-16 animate-on-scroll opacity-0 translate-y-10 transition-all duration-1000">
-                        <h2 className="text-[#D4AF37] text-sm font-bold uppercase tracking-widest mb-3">Our History</h2>
-                        <h3 className="text-3xl font-serif font-bold text-[#F5F5F5]">The Journey of Faith</h3>
-                    </div>
-
-                    <div className="relative border-l-2 border-[#D4AF37]/20 ml-4 md:mx-auto md:w-3/4">
-                        {timelineEvents.map((evt, idx) => (
-                            <div key={idx} className="mb-12 ml-8 relative animate-on-scroll opacity-0 translate-y-10 transition-all duration-700" style={{ transitionDelay: `${idx * 200}ms` }}>
-                                <span className="absolute -left-[41px] top-1 w-5 h-5 rounded-full bg-[#151516] border-2 border-[#D4AF37]" />
-                                <div className="bg-[#1C1C1F] p-6 rounded-2xl border border-[#2a2a2d] hover:border-[#D4AF37]/30 transition-colors">
-                                    <span className="text-[#D4AF37] font-bold text-sm tracking-widest mb-2 block">{evt.year}</span>
-                                    <h4 className="text-lg font-bold text-[#F5F5F5] mb-2">{evt.title}</h4>
-                                    <p className="text-[#F5F5F5]/60 text-sm leading-relaxed">{evt.description}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="text-center mt-20 animate-on-scroll opacity-0 translate-y-10 transition-all duration-1000">
-                        <Button asChild size="lg" className="relative group overflow-hidden bg-transparent hover:bg-transparent border border-[#D4AF37]/50 text-[#D4AF37] h-16 px-10 rounded-full transition-all duration-500 hover:border-[#D4AF37] hover:shadow-[0_0_40px_rgba(212,175,55,0.2)]">
-                            <Link href="/history" className="flex items-center">
-                                <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-[#D4AF37]/10 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]" />
-                                <span className="relative font-serif text-lg tracking-wide flex items-center">
-                                    <BookOpen className="w-5 h-5 mr-3 text-[#D4AF37]" />
-                                    Explore the Sacred Archive
-                                    <ArrowRight className="ml-3 w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
-                                </span>
-                            </Link>
-                        </Button>
-                    </div>
-                </div>
-            </section>
-
-            {/* 5. TESTIMONIALS */}
-            <section className="py-24 bg-[#0E0E0F]">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center max-w-2xl mx-auto mb-16 animate-on-scroll opacity-0 translate-y-10 transition-all duration-1000">
-                        <h2 className="text-[#D4AF37] text-sm font-bold uppercase tracking-widest mb-3">Student Voices</h2>
-                        <h3 className="text-3xl font-serif font-bold text-[#F5F5F5]">Testimonies of Grace</h3>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {testimonials.map((test, idx) => (
-                            <div
-                                key={test.id}
-                                className="bg-[#1C1C1F] p-8 rounded-2xl border border-[#2a2a2d] relative animate-on-scroll opacity-0 translate-y-10 transition-all duration-700 hover:border-[#D4AF37]/30"
-                                style={{ transitionDelay: `${idx * 150}ms` }}
-                            >
-                                <Star className="absolute top-6 right-6 w-8 h-8 text-[#D4AF37]/10" aria-hidden="true" />
-                                <p className="text-[#F5F5F5]/80 italic text-sm leading-relaxed mb-6 font-serif tracking-wide">
-                                    "{test.quote}"
-                                </p>
-                                <div className="flex items-center gap-3 border-t border-[#2a2a2d] pt-6">
-                                    <div className="w-10 h-10 rounded-full bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30 flex items-center justify-center font-bold text-sm">
-                                        {test.name.charAt(0)}
-                                    </div>
-                                    <div>
-                                        <p className="text-[#F5F5F5] font-bold text-sm">{test.name}</p>
-                                        <p className="text-[#F5F5F5]/50 text-xs">{test.department} · {test.serviceClass}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* 6. EMERALD CTA CRESENDO */}
-            <section className="relative py-24 overflow-hidden border-t-4 border-[#D4AF37]">
-                {/* Deep Emerald Background with gradient */}
-                <div className="absolute inset-0 bg-[#9B2323] mix-blend-multiply" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0E0E0F] to-transparent opacity-80" />
-
-                <div className="relative z-10 max-w-4xl mx-auto px-4 text-center animate-on-scroll opacity-0 translate-y-10 transition-all duration-1000">
-                    <h2 className="text-4xl md:text-6xl font-serif font-bold text-white mb-6">
-                        Ready to Serve?
-                    </h2>
-                    <p className="text-white/80 text-lg md:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
-                        Join thousands of Ethiopian Orthodox students who have found their spiritual family at Mekelle University.
-                    </p>
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <Button asChild size="lg" className="bg-[#D4AF37] hover:bg-[#C9A227] text-[#0E0E0F] font-bold rounded-full px-10 h-14 text-base w-full sm:w-auto shadow-2xl transition-all hover:scale-105">
-                            <Link href="/register">Create an Account <ArrowRight className="ml-2 w-5 h-5" /></Link>
-                        </Button>
-                    </div>
-                </div>
-            </section>
-
+          {/* Rotating Concentric Circular Rings */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 opacity-30 flex items-center justify-center">
+            <motion.div className="absolute w-[90vw] h-[90vw] max-w-[1000px] max-h-[1000px] rounded-full border-[1px] border-[#1a1a1a]" animate={{ rotate: 360 }} transition={{ duration: 120, repeat: Infinity, ease: "linear" }} />
+            <motion.div className="absolute w-[70vw] h-[70vw] max-w-[800px] max-h-[800px] rounded-full border-[2px] border-[#C9A227] border-dashed" animate={{ rotate: -360 }} transition={{ duration: 90, repeat: Infinity, ease: "linear" }} />
+          </div>
         </div>
-    );
-}
 
-// Inline component for the glowing badge
-function Badge({ children }: { children: React.ReactNode }) {
-    return (
-        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 text-[#D4AF37] text-xs font-bold uppercase tracking-widest mx-auto">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse" />
-            {children}
-        </span>
-    );
+        {/* Hero Content */}
+        <motion.div className="relative z-20 max-w-5xl mx-auto space-y-8" initial="hidden" animate="visible" variants={fadeInUp}>
+          <motion.div
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-[#C9A227]/50 text-[#7A1C1C] text-sm font-bold tracking-widest shadow-lg"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.5, type: "spring" }}
+          >
+            <span className="w-2.5 h-2.5 rounded-full bg-[#C9A227] animate-pulse shadow-[0_0_10px_#C9A227]" />
+            መቀሌ ዩኒቨርሲቲ
+          </motion.div>
+
+          <motion.h1
+            className="text-6xl md:text-8xl lg:text-9xl font-bold tracking-tighter text-[#1a1a1a] leading-[1.1]"
+            style={{ fontFamily: "serif" }}
+            variants={fadeInUp}
+          >
+            እንዳ <span className="text-[#7A1C1C]">ኢየሱስ</span>
+            <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#C9A227] to-[#D4AF37]">ግቢ ጉባኤ</span>
+          </motion.h1>
+
+          <motion.p
+            className="text-xl md:text-2xl text-[#1a1a1a]/80 max-w-3xl mx-auto font-medium leading-relaxed"
+            variants={fadeInUp}
+          >
+            የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ እምነት ተከታዮች ተማሪዎችን በእምነት፣ በአገልግሎትና በትምህርት የሚያስተሳስር መንፈሳዊ ቤት።
+          </motion.p>
+
+          <motion.div className="flex flex-col sm:flex-row items-center justify-center gap-5 pt-8" variants={fadeInUp}>
+            <Button asChild size="lg" className="bg-[#1a1a1a] hover:bg-[#C9A227] text-white hover:text-[#1a1a1a] font-bold rounded-full px-10 h-16 text-lg w-full sm:w-auto shadow-2xl transition-all duration-300 hover:-translate-y-1">
+              <Link href="/register">አባል ይሁኑ</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="border-[#1a1a1a] text-[#1a1a1a] hover:bg-[#1a1a1a] hover:text-white h-16 rounded-full px-10 w-full sm:w-auto transition-all duration-300 bg-white shadow-xl">
+              <Link href="/login">ይግቡ</Link>
+            </Button>
+          </motion.div>
+
+          <motion.div className="absolute -bottom-10 left-1/2 -translate-x-1/2 animate-bounce text-[#7A1C1C]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}>
+            <ChevronDown className="w-10 h-10" />
+          </motion.div>
+        </motion.div>
+      </section>
+
+      {/* ─── SECTION 3: OVERLAPPING SERVICE CLASSES (FIXED HOVER) ─── */}
+      <section className="py-32 bg-white relative z-10">
+        <div className="max-w-[100vw] mx-auto px-4 sm:px-6 lg:px-8 relative z-20">
+          <motion.div className="text-center max-w-3xl mx-auto mb-20" initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeInUp}>
+            <h2 className="text-[#C9A227] text-base font-bold uppercase tracking-[0.3em] mb-4">የአገልግሎት ክፍሎች</h2>
+            <h3 className="text-4xl md:text-6xl font-serif font-bold text-[#1a1a1a] mb-6">9 መዋቅራዊ ክፍሎች</h3>
+            <p className="text-[#6b6b6b] text-xl">
+              ግቢ ጉባኤው በአሥሩ የአገልግሎት ክፍሎች አማካኝነት መንፈሳዊ፣ ማኅበራዊና አስተዳደራዊ አገልግሎቶችን ያስተባብራል።
+            </p>
+          </motion.div>
+
+          {/* Overlapping Horizontal Scroll Container */}
+          <div className="relative w-full overflow-x-auto pb-24 pt-10 scrollbar-hide px-10 -mx-4 flex items-center" style={{ minHeight: '550px' }}>
+            {serviceClasses.map((cls, idx) => (
+              <motion.div
+                key={cls.id}
+                className="relative flex-shrink-0 w-[320px] md:w-[380px] transition-all duration-300 ease-out group"
+                style={{
+                  marginLeft: idx === 0 ? '0' : '-5rem', // Overlap
+                  zIndex: 10 + idx, // Default stacking order
+                }}
+                /* THE FIX: zIndex 50 pulls the hovered card completely to the front! */
+                whileHover={{ 
+                  scale: 1.1, 
+                  y: -30, 
+                  rotate: 0, // Snaps straight up from its messy initial rotation
+                  zIndex: 50 
+                }}
+                /* Starts slightly rotated like holding a hand of cards */
+                initial={{ opacity: 0, x: 100, rotate: idx % 2 === 0 ? 3 : -3 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4 }}
+              >
+                <div className="bg-white h-[420px] rounded-[2rem] p-10 border border-[#ddd8d0] shadow-[0_15px_40px_rgba(0,0,0,0.08)] group-hover:shadow-[0_40px_80px_rgba(201,162,39,0.3)] group-hover:border-[#C9A227] flex flex-col justify-between relative overflow-hidden transition-colors duration-500">
+                  
+                  {/* Decorative background angle inside card */}
+                  <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full opacity-10 transition-transform duration-500 group-hover:scale-[2.5]" style={{ backgroundColor: cls.color }} />
+
+                  <div className="relative z-10">
+                    <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-8 shadow-inner transition-transform group-hover:scale-110" style={{ backgroundColor: `${cls.color}15` }}>
+                      <cls.icon className="w-10 h-10" style={{ color: cls.color }} />
+                    </div>
+                    <h4 className="text-2xl font-bold text-[#1a1a1a] mb-4 leading-tight group-hover:text-[#C9A227] transition-colors">
+                      {cls.title}
+                    </h4>
+                  </div>
+                  <p className="text-[#6b6b6b] text-base leading-relaxed relative z-10 group-hover:text-[#1a1a1a] transition-colors">{cls.description}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+          
+          <div className="flex justify-center mt-2 text-[#1a1a1a]/40 animate-pulse tracking-widest uppercase text-sm font-bold">
+            ← ወደ ጎን ያንሸራትቱ →
+          </div>
+        </div>
+      </section>
+
+      {/* ─── SECTION 4: ANGLED TIMELINE ─── */}
+      <div 
+        className="relative bg-white pt-40 pb-32 -mt-20 z-0"
+        style={{ 
+          clipPath: 'polygon(0 8vw, 100% 0, 100% calc(100% - 8vw), 0 100%)',
+          backgroundColor: '#faf8f5'
+        }}
+      >
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <motion.div className="text-center mb-24" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}>
+            <h2 className="text-[#7A1C1C] text-base font-bold uppercase tracking-widest mb-4">ታሪካችን</h2>
+            <h3 className="text-4xl md:text-6xl font-serif font-bold text-[#1a1a1a]">የእምነት ጉዞ</h3>
+          </motion.div>
+
+          <div className="relative border-l-4 border-[#1a1a1a]/10 ml-4 md:mx-auto md:w-3/4">
+            {timelineEvents.map((evt, idx) => (
+              <motion.div
+                key={idx}
+                className="mb-16 ml-10 relative group"
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-50px" }}
+                variants={fadeInUp}
+                transition={{ delay: idx * 0.15 }}
+              >
+                <div className="absolute -left-[54px] top-0 w-8 h-8 rounded-full bg-[#1a1a1a] border-4 border-white shadow-[0_0_15px_rgba(0,0,0,0.2)] group-hover:bg-[#C9A227] group-hover:scale-125 transition-all duration-300 flex items-center justify-center" />
+                
+                <div className="bg-white p-8 rounded-3xl border border-[#ddd8d0]/50 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 hover:border-[#1a1a1a]/20 relative overflow-hidden">
+                  <span className="inline-block px-4 py-1 rounded-full bg-[#7A1C1C]/10 text-[#7A1C1C] font-bold text-sm tracking-widest mb-4 group-hover:bg-[#C9A227]/10 group-hover:text-[#C9A227] transition-colors">{evt.year}</span>
+                  <h4 className="text-2xl font-bold text-[#1a1a1a] mb-3">{evt.title}</h4>
+                  <p className="text-[#6b6b6b] text-base leading-relaxed">{evt.description}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div className="text-center mt-24" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}>
+            <Button
+              asChild
+              size="lg"
+              className="relative group overflow-hidden bg-white border-2 border-[#1a1a1a] text-[#1a1a1a] h-16 px-10 rounded-full transition-all duration-500 hover:shadow-[0_0_40px_rgba(26,26,26,0.2)] hover:-translate-y-1"
+            >
+              <Link href="/about" className="flex items-center">
+                <span className="absolute inset-0 w-full h-full bg-[#1a1a1a] -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out" />
+                <span className="relative font-serif text-xl tracking-wide flex items-center z-10 group-hover:text-white transition-colors duration-500">
+                  <BookOpen className="w-6 h-6 mr-3 text-[#7A1C1C] group-hover:text-[#C9A227] transition-colors" />
+                  ታሪካችንን ይመልከቱ
+                  <ArrowRight className="ml-3 w-6 h-6 group-hover:translate-x-3 transition-transform duration-300" />
+                </span>
+              </Link>
+            </Button>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* ─── CTA SECTION: DRAMATIC RED SLASH ─── */}
+      <section 
+        className="relative pt-40 pb-32 overflow-hidden -mt-16"
+        style={{ clipPath: 'polygon(0 10vw, 100% 0, 100% 100%, 0 100%)' }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-[#7A1C1C] via-[#5a1313] to-[#1a1a1a]" />
+        
+        {/* Dynamic geometric overlay */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-overlay">
+          <svg className="w-full h-full" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <pattern id="crossPattern" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <rect x="35" y="0" width="10" height="80" rx="5" fill="white"/>
+              <rect x="0" y="35" width="80" height="10" rx="5" fill="white"/>
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#crossPattern)"/>
+          </svg>
+        </div>
+
+        <div className="relative z-10 max-w-5xl mx-auto px-4 text-center">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}>
+            <h2 className="text-5xl md:text-7xl font-serif font-bold text-white mb-8 leading-tight">
+              ለማገልገል <span className="text-[#C9A227] italic">ዝግጁ</span> ነዎት?
+            </h2>
+            <p className="text-white/80 text-xl md:text-2xl mb-12 max-w-3xl mx-auto leading-relaxed font-light">
+              በመቀሌ ዩኒቨርሲቲ መንፈሳዊ ቤተሰባቸውን ካገኙ በሺዎች ከሚቆጠሩ የኢትዮጵያ ኦርቶዶክስ ተማሪዎች ጋር ይቀላቀሉ።
+            </p>
+            <Button
+              asChild
+              size="lg"
+              className="bg-[#C9A227] hover:bg-white text-[#1a1a1a] hover:text-[#7A1C1C] font-bold rounded-full px-12 h-20 text-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-500 hover:scale-110 group"
+            >
+              <Link href="/register">
+                አባል ይሁኑ 
+                <ArrowRight className="ml-4 w-8 h-8 group-hover:translate-x-3 transition-transform duration-300" />
+              </Link>
+            </Button>
+          </motion.div>
+        </div>
+      </section>
+
+    </div>
+  );
 }
