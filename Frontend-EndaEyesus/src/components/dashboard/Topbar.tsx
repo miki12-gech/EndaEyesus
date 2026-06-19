@@ -145,14 +145,11 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
     { href: "/dashboard/about", label: "About", icon: User, show: true },
   ].filter((item) => item.show);
 
-  // ✅ Admin dropdown – each feature as a separate item (no intermediate "Admin Panel" page)
+  // Admin dropdown (Secretariat only)
   const adminDropdownItems = [
-    // Overview – visible to all except service managers
     ...(!isServiceManager
       ? [{ href: "/dashboard/agent/overview", label: "Overview", icon: Activity }]
       : []),
-
-    // Pending Approvals – only for Member Affairs manager (not chairman)
     ...(isMemberAffairsManager
       ? [
           {
@@ -162,8 +159,6 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
           },
         ]
       : []),
-
-    // Sub‑Class Approvals – only for Chairman
     ...(isChairman
       ? [
           {
@@ -173,8 +168,6 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
           },
         ]
       : []),
-
-    // Access Control (permissions matrix) – for all secretariat
     ...(isSecretariat
       ? [
           {
@@ -184,8 +177,6 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
           },
         ]
       : []),
-
-    // Existing chairman‑only items
     ...(isChairman
       ? [
           {
@@ -205,8 +196,6 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
           },
         ]
       : []),
-
-    // Plans & Reports – for all secretariat
     ...(isSecretariat
       ? [
           {
@@ -220,6 +209,32 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
 
   const showAdminDropdown = isSecretariat;
 
+  // ✅ Class dropdown for other service managers (excludes Member Affairs & Education)
+  const classDropdownItems = [
+    {
+      href: "/dashboard/my-class",
+      label: "My Class",
+      icon: Users,
+    },
+    {
+      href: "/dashboard/member-affairs?tab=documents",
+      label: "Plans & Reports",
+      icon: FileText,
+    },
+    {
+      href: "/dashboard/member-affairs?tab=subclasses",
+      label: "Sub‑Classes",
+      icon: Layers,
+    },
+  ];
+
+  const showClassDropdown =
+    isServiceManager &&
+    !isMemberAffairsManager &&
+    !isEducationManager &&
+    !!user?.serviceClassName;
+
+  // ✅ Member Affairs dropdown – "My Class" now points to the shared page
   const memberAffairsItems = [
     {
       href: "/dashboard/member-affairs?tab=pending",
@@ -227,8 +242,8 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
       icon: UserCheck,
     },
     {
-      href: "/dashboard/member-affairs?tab=census",
-      label: "Member Census",
+      href: "/dashboard/my-class", // ✅ shared page
+      label: "My Class",
       icon: Users,
     },
     {
@@ -253,6 +268,7 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
     },
   ];
 
+  // ✅ Education dropdown – "My Class" now points to the shared page
   const educationItems = [
     {
       href: "/dashboard/education?tab=batches",
@@ -295,8 +311,8 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
       icon: GraduationCap,
     },
     {
-      href: "/dashboard/education?tab=members",
-      label: "Class Members",
+      href: "/dashboard/my-class", // ✅ shared page
+      label: "My Class",
       icon: Users,
     },
   ];
@@ -376,6 +392,13 @@ export function Topbar({ onMenuOpen }: TopbarProps) {
             label="Education"
             icon={GraduationCap}
             items={educationItems}
+          />
+        )}
+        {showClassDropdown && (
+          <NavigationDropdown
+            label={user?.serviceClassName || "Class"}
+            icon={Users}
+            items={classDropdownItems}
           />
         )}
         {showAdminDropdown && (

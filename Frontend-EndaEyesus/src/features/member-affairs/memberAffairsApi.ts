@@ -1,3 +1,4 @@
+// src/features/member-affairs/memberAffairsApi.ts
 import apiClient from '@/api';
 import { useAuthStore } from '@/store/authStore';
 
@@ -41,6 +42,9 @@ export const memberAffairsApi = {
     apiClient.instance.get(`/member-affairs/documents/${serviceClassId}/${type}`),
   uploadDocument: (serviceClassId: string, data: any) =>
     apiClient.instance.post(`/member-affairs/documents/${serviceClassId}`, data),
+  // NEW: update document
+  updateDocument: (id: string, data: any) =>
+    apiClient.instance.patch(`/member-affairs/documents/${id}`, data),
 
   // Secretariat endpoints (no class ID)
   uploadSecretariatDocument: (data: any) =>
@@ -58,16 +62,17 @@ export const memberAffairsApi = {
   addReaction: (documentId: string, reactionType: 'LIKE' | 'STAR') =>
     apiClient.instance.post(`/member-affairs/documents/${documentId}/reactions`, { reactionType }),
   removeReaction: (documentId: string) => apiClient.instance.delete(`/member-affairs/documents/${documentId}/reactions`),
+  // Updated delete – now passing userId and role in body (controller uses it)
   deleteDocument: (id: string) => apiClient.instance.delete(`/member-affairs/documents/${id}`),
 
   // Service classes (for dropdowns)
   getServiceClasses: () => apiClient.instance.get('/classes'),
 
-  // Notifications for document actions
+  // Notifications – now use object with documentId and excludeUserId
   notifyChairmanOfPendingDocument: () =>
     apiClient.instance.post('/member-affairs/notifications/document-pending'),
-  notifyDocumentApproved: (documentTitle: string) =>
-    apiClient.instance.post('/member-affairs/notifications/document-approved', { documentTitle }),
+  notifyDocumentApproved: (data: { documentId: string; excludeUserId?: string }) =>
+    apiClient.instance.post('/member-affairs/notifications/document-approved', data),
   notifyDocumentRejected: (userId: string, documentTitle: string, reason: string) =>
     apiClient.instance.post('/member-affairs/notifications/document-rejected', { userId, documentTitle, reason }),
   notifyCommentAdded: (userId: string, documentTitle: string) =>

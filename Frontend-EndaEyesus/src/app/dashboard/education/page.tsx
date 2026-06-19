@@ -14,7 +14,6 @@ import SubClassManager from "@/features/member-affairs/SubClassManager";
 import DepartmentAnnouncements from "@/features/member-affairs/DepartmentAnnouncements";
 import PlanReportMatrix from "@/features/member-affairs/PlanReportMatrix";
 import GraduationList from "@/features/education/GraduationList";
-import ClassMemberList from "@/features/education/ClassMemberList";
 
 const components: Record<string, React.ReactNode> = {
   batches: <BatchList />,
@@ -25,7 +24,6 @@ const components: Record<string, React.ReactNode> = {
   announcements: <DepartmentAnnouncements />,
   plans: <PlanReportMatrix />,
   graduation: <GraduationList />,
-  members: <ClassMemberList />,
 };
 
 function EducationContent() {

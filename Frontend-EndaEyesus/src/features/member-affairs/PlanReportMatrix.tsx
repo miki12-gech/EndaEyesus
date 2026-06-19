@@ -31,7 +31,6 @@ import {
 } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/authStore";
-import { motion } from "framer-motion";
 import {
   Plus,
   Trash2,
@@ -44,6 +43,8 @@ import {
   Star,
   Reply,
   Send,
+  RefreshCw,
+  Edit,
 } from "lucide-react";
 
 const SacredBackground = () => (
@@ -104,6 +105,7 @@ export default function PlanReportMatrix() {
     "SECRETARIAT_SECRETARY",
     "SUPER_ADMIN",
   ].includes(userRole);
+  const isServiceManager = userRole === "SERVICE_MANAGER";
 
   const { data: serviceClassesData } = useQuery({
     queryKey: ["service-classes"],
@@ -125,29 +127,38 @@ export default function PlanReportMatrix() {
   const [commentText, setCommentText] = useState("");
   const [replyToId, setReplyToId] = useState<string | null>(null);
 
-  // Use secretariat endpoints for secretariat users
+  // Edit dialog state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingDoc, setEditingDoc] = useState<any>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editDriveUrl, setEditDriveUrl] = useState("");
+  const [editStatus, setEditStatus] = useState("");
+
+  // ---------- Fetch documents ----------
+  const fetchDocuments = async (type: "PLAN" | "REPORT") => {
+    if (isSecretariat) {
+      const res = await memberAffairsApi.getSecretariatDocuments(type);
+      return res.data;
+    } else {
+      const classId = userClassId || selectedClassId;
+      if (!classId) return [];
+      const res = await memberAffairsApi.getDocuments(classId, type);
+      return res.data;
+    }
+  };
+
   const { data: plans, refetch: refetchPlans } = useQuery({
     queryKey: [
       "member-affairs",
       "documents",
       "PLAN",
-      isSecretariat ? "secretariat" : userClassId,
+      isSecretariat ? "secretariat" : userClassId || selectedClassId,
     ],
     enabled: true,
-    staleTime: 2000, // Consider data stale after 2 seconds
-    refetchOnWindowFocus: true, // Refetch when window regains focus
-    queryFn: async () => {
-      if (isSecretariat) {
-        const res = await memberAffairsApi.getSecretariatDocuments("PLAN");
-        return res.data;
-      } else {
-        const res = await memberAffairsApi.getDocuments(
-          userClassId || "",
-          "PLAN",
-        );
-        return res.data;
-      }
-    },
+    staleTime: 2000,
+    refetchOnWindowFocus: true,
+    queryFn: () => fetchDocuments("PLAN"),
   });
 
   const { data: reports, refetch: refetchReports } = useQuery({
@@ -155,35 +166,29 @@ export default function PlanReportMatrix() {
       "member-affairs",
       "documents",
       "REPORT",
-      isSecretariat ? "secretariat" : userClassId,
+      isSecretariat ? "secretariat" : userClassId || selectedClassId,
     ],
     enabled: true,
-    staleTime: 2000, // Consider data stale after 2 seconds
-    refetchOnWindowFocus: true, // Refetch when window regains focus
-    queryFn: async () => {
-      if (isSecretariat) {
-        const res = await memberAffairsApi.getSecretariatDocuments("REPORT");
-        return res.data;
-      } else {
-        const res = await memberAffairsApi.getDocuments(
-          userClassId || "",
-          "REPORT",
-        );
-        return res.data;
-      }
-    },
+    staleTime: 2000,
+    refetchOnWindowFocus: true,
+    queryFn: () => fetchDocuments("REPORT"),
   });
 
-  // Auto-refresh documents to keep reactions and comments in sync
+  // Auto-refresh every 5 seconds
   useEffect(() => {
     const pollInterval = setInterval(() => {
       refetchPlans();
       refetchReports();
-    }, 3000); // Refresh every 3 seconds
-
+    }, 5000);
     return () => clearInterval(pollInterval);
   }, [refetchPlans, refetchReports]);
 
+  const handleRefresh = () => {
+    refetchPlans();
+    refetchReports();
+  };
+
+  // ---------- Mutations ----------
   const uploadMutation = useMutation({
     mutationFn: async () => {
       if (isSecretariat) {
@@ -208,12 +213,10 @@ export default function PlanReportMatrix() {
         });
       }
     },
-    onSuccess: async () => {
-      // Refetch both plans and reports
+    onSuccess: async (data) => {
       await Promise.all([refetchPlans(), refetchReports()]);
       setOpen(false);
       resetForm();
-      // Trigger notification to chairman if document needs approval
       if (!isSecretariat) {
         try {
           await memberAffairsApi.notifyChairmanOfPendingDocument();
@@ -221,11 +224,17 @@ export default function PlanReportMatrix() {
           console.error("Failed to notify chairman:", error);
         }
       } else {
-        // Notify all service managers and secretariat of approved document
-        try {
-          await memberAffairsApi.notifyDocumentApproved(title);
-        } catch (error) {
-          console.error("Failed to notify of approval:", error);
+        // Secretariat upload – notify everyone except the uploader
+        const doc = data?.data;
+        if (doc?.id) {
+          try {
+            await memberAffairsApi.notifyDocumentApproved({
+              documentId: doc.id,
+              excludeUserId: user?.id,
+            });
+          } catch (error) {
+            console.error("Failed to notify about new document:", error);
+          }
         }
       }
     },
@@ -233,10 +242,21 @@ export default function PlanReportMatrix() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => memberAffairsApi.deleteDocument(id),
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: ["member-affairs", "documents"],
-      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["member-affairs", "documents"] });
+      refetchPlans();
+      refetchReports();
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      memberAffairsApi.updateDocument(id, data),
+    onSuccess: async () => {
+      await Promise.all([refetchPlans(), refetchReports()]);
+      setEditDialogOpen(false);
+      setEditingDoc(null);
+    },
   });
 
   const approveMutation = useMutation({
@@ -244,13 +264,13 @@ export default function PlanReportMatrix() {
     onSuccess: async (response: any) => {
       const data = response?.data;
       await Promise.all([refetchPlans(), refetchReports()]);
-      // Notify all service managers and secretariat
       try {
-        await memberAffairsApi.notifyDocumentApproved(
-          data?.title || "Document",
-        );
+        await memberAffairsApi.notifyDocumentApproved({
+          documentId: data?.id,
+          excludeUserId: user?.id,
+        });
       } catch (error) {
-        console.error("Failed to notify of approval:", error);
+        console.error("Failed to notify class managers:", error);
       }
     },
   });
@@ -261,7 +281,6 @@ export default function PlanReportMatrix() {
     onSuccess: async (response: any) => {
       const data = response?.data;
       await Promise.all([refetchPlans(), refetchReports()]);
-      // Notify only the creator of rejection
       try {
         await memberAffairsApi.notifyDocumentRejected(
           data?.uploaded_by,
@@ -284,19 +303,18 @@ export default function PlanReportMatrix() {
       content: string;
       parentId?: string;
     }) => memberAffairsApi.addComment(docId, content, parentId),
-    onSuccess: async (data) => {
+    onSuccess: async () => {
       await Promise.all([refetchPlans(), refetchReports()]);
       setCommentText("");
       setReplyToId(null);
-      // Notify the document creator of the comment
       try {
         const doc = [...(plans || []), ...(reports || [])].find(
           (d) => d.id === selectedDocId,
         );
-        if (doc?.uploaded_by !== user?.id) {
+        if (doc && doc.uploaded_by !== user?.id) {
           await memberAffairsApi.notifyCommentAdded(
-            doc?.uploaded_by,
-            doc?.title || "Document",
+            doc.uploaded_by,
+            doc.title || "Document",
           );
         }
       } catch (error) {
@@ -323,17 +341,15 @@ export default function PlanReportMatrix() {
     }) => memberAffairsApi.addReaction(docId, reactionType),
     onSuccess: async (response: any) => {
       const data = response?.data;
-      const docId = data?.document_id;
       await Promise.all([refetchPlans(), refetchReports()]);
-      // Notify the document creator of the reaction
       try {
         const doc = [...(plans || []), ...(reports || [])].find(
-          (d) => d.id === docId,
+          (d) => d.id === data?.document_id,
         );
-        if (doc?.uploaded_by !== user?.id) {
+        if (doc && doc.uploaded_by !== user?.id) {
           await memberAffairsApi.notifyReactionAdded(
-            doc?.uploaded_by,
-            doc?.title || "Document",
+            doc.uploaded_by,
+            doc.title || "Document",
           );
         }
       } catch (error) {
@@ -372,6 +388,34 @@ export default function PlanReportMatrix() {
     }
   };
 
+  const handleDelete = (docId: string) => {
+    if (confirm("Are you sure you want to delete this document?")) {
+      deleteMutation.mutate(docId);
+    }
+  };
+
+  const handleEdit = (doc: any) => {
+    setEditingDoc(doc);
+    setEditTitle(doc.title);
+    setEditDescription(doc.description || "");
+    setEditDriveUrl(doc.drive_url);
+    setEditStatus(doc.status);
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdate = () => {
+    const payload: any = {
+      title: editTitle,
+      description: editDescription,
+      drive_url: editDriveUrl,
+    };
+    // Only chairman can change status
+    if (isChairman) {
+      payload.status = editStatus;
+    }
+    updateMutation.mutate({ id: editingDoc.id, data: payload });
+  };
+
   const renderDocumentCard = (doc: any) => (
     <Card key={doc.id} className="overflow-hidden">
       <CardHeader className="pb-3">
@@ -381,6 +425,14 @@ export default function PlanReportMatrix() {
             <CardDescription className="text-xs mt-1">
               Uploaded by {doc.uploader?.full_name_three_parts || "Unknown"} •{" "}
               {new Date(doc.created_at).toLocaleDateString()}
+              {!isSecretariat && (
+                <>
+                  <br />
+                  <span className="text-muted-foreground">
+                    Class: {doc.service_class?.class_name_amharic || "N/A"}
+                  </span>
+                </>
+              )}
             </CardDescription>
           </div>
           {getStatusBadge(doc.status)}
@@ -423,11 +475,24 @@ export default function PlanReportMatrix() {
               </Button>
             </>
           )}
-          {doc.uploaded_by === user?.id && (
+          {/* Edit button – visible to uploader or chairman */}
+          {(doc.uploaded_by === user?.id || isChairman) && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleEdit(doc)}
+              className="gap-2"
+            >
+              <Edit className="h-4 w-4" /> Edit
+            </Button>
+          )}
+          {/* Delete button – visible to uploader or chairman */}
+          {(doc.uploaded_by === user?.id || isChairman) && (
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => deleteMutation.mutate(doc.id)}
+              className="text-red-500 hover:text-red-700"
+              onClick={() => handleDelete(doc.id)}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -493,7 +558,17 @@ export default function PlanReportMatrix() {
     <div className="relative min-h-screen overflow-x-hidden">
       <SacredBackground />
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex justify-end mb-6">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              className="gap-2"
+            >
+              <RefreshCw className="h-4 w-4" /> Refresh
+            </Button>
+          </div>
           <Button
             onClick={() => setOpen(true)}
             className="bg-[#C9A227] hover:bg-[#B8911A]"
@@ -510,7 +585,7 @@ export default function PlanReportMatrix() {
           <TabsContent value="plans" className="space-y-6">
             {plans?.length === 0 ? (
               <div className="text-center py-12 bg-white/60 dark:bg-black/20 rounded-2xl border border-dashed border-[#C9A227]/40">
-                <p className="text-muted-foreground">No plans uploaded yet.</p>
+                <p className="text-muted-foreground">No plans found.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -521,9 +596,7 @@ export default function PlanReportMatrix() {
           <TabsContent value="reports" className="space-y-6">
             {reports?.length === 0 ? (
               <div className="text-center py-12 bg-white/60 dark:bg-black/20 rounded-2xl border border-dashed border-[#C9A227]/40">
-                <p className="text-muted-foreground">
-                  No reports uploaded yet.
-                </p>
+                <p className="text-muted-foreground">No reports found.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -632,7 +705,57 @@ export default function PlanReportMatrix() {
           </DialogContent>
         </Dialog>
 
-        {/* Comments Dialog */}
+        {/* Edit Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="bg-white/95 dark:bg-[#1C1C1F]/95 backdrop-blur-xl border border-[#C9A227]/40">
+            <DialogHeader>
+              <DialogTitle>Edit Document</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <Input
+                placeholder="Title"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+              />
+              <Input
+                placeholder="Description"
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+              />
+              <Input
+                placeholder="Google Drive URL"
+                value={editDriveUrl}
+                onChange={(e) => setEditDriveUrl(e.target.value)}
+              />
+              {isChairman && (
+                <Select value={editStatus} onValueChange={setEditStatus}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PENDING">Pending</SelectItem>
+                    <SelectItem value="APPROVED">Approved</SelectItem>
+                    <SelectItem value="REJECTED">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleUpdate}
+                disabled={updateMutation.isPending}
+                className="bg-[#C9A227]"
+              >
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Comments Dialog – unchanged */}
         <Dialog
           open={!!selectedDocId}
           onOpenChange={() => setSelectedDocId(null)}
