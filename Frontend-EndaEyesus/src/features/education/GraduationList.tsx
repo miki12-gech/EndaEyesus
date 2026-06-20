@@ -24,7 +24,7 @@ import {
 // ---------- Sacred Background (same as SubjectManager) ----------
 const SacredBackground = () => (
   <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-    <div className="absolute inset-0 bg-gradient-to-br from-[#F8F5F0]/90 via-[#FFF9F0]/70 to-[#EDE5D8]/90 dark:from-[#0E0E0F] dark:via-[#1A1816] dark:to-[#0A0A0B]" />
+    <div className="absolute inset-0 bg-linear-to-br from-[#F8F5F0]/90 via-[#FFF9F0]/70 to-[#EDE5D8]/90 dark:from-[#0E0E0F] dark:via-[#1A1816] dark:to-[#0A0A0B]" />
     <svg className="absolute inset-0 w-full h-full opacity-[0.06] dark:opacity-[0.08]" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <pattern id="crossPattern" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
@@ -115,7 +115,7 @@ export default function GraduationList() {
     return counts;
   }, [members]);
 
-  if (isLoading) return <div className="flex items-center justify-center min-h-[400px]"><Loader2 className="animate-spin h-10 w-10 text-[#C9A227]" /></div>;
+  if (isLoading) return <div className="flex items-center justify-center min-h-100"><Loader2 className="animate-spin h-10 w-10 text-[#C9A227]" /></div>;
 
   return (
     <div className="relative min-h-screen overflow-x-hidden">
@@ -155,7 +155,7 @@ export default function GraduationList() {
             {filteredMembers.map((member: any) => (
               <div key={member.id} className="group relative overflow-hidden rounded-2xl bg-white dark:bg-[#1C1C1F] border border-[#ddd8d0] dark:border-[#2a2a2d] shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
                 <div className="absolute -bottom-8 -right-8 text-8xl opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">✙</div>
-                <div className="relative p-6 pb-2 border-b border-[#ddd8d0] dark:border-[#2a2a2d] bg-gradient-to-r from-[#F8F5F0] to-white dark:from-[#1C1C1F] dark:to-[#1C1C1F]">
+                <div className="relative p-6 pb-2 border-b border-[#ddd8d0] dark:border-[#2a2a2d] bg-linear-to-r from-[#F8F5F0] to-white dark:from-[#1C1C1F] dark:to-[#1C1C1F]">
                   <div className="flex items-start justify-between gap-3">
                     <div><h3 className="text-xl font-bold text-[#7A1C1C] dark:text-[#D4AF37] tracking-wide">{member.fullName}</h3><p className="text-sm text-muted-foreground">{member.email}</p></div>
                     {member.enrollments.some((e: any) => e.graduated) && <div className="bg-amber-500/20 text-amber-700 dark:text-amber-400 px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1"><Award className="h-3 w-3" /> ሙሉ ተመራቂ</div>}
@@ -169,7 +169,7 @@ export default function GraduationList() {
                     const hasPassed = enrollment.isPassed;
                     const examScore = enrollment.finalExamScore;
                     return (
-                      <div key={enrollment.phase} className={`relative rounded-xl p-4 transition-all duration-300 ${isGraduated ? "bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/40 dark:to-amber-900/20 border border-amber-200 dark:border-amber-800" : "bg-[#F8F5F0] dark:bg-[#252529] border border-[#ddd8d0] dark:border-[#2a2a2d]"}`}>
+                      <div key={enrollment.phase} className={`relative rounded-xl p-4 transition-all duration-300 ${isGraduated ? "bg-linear-to-br from-amber-50 to-amber-100 dark:from-amber-950/40 dark:to-amber-900/20 border border-amber-200 dark:border-amber-800" : "bg-[#F8F5F0] dark:bg-[#252529] border border-[#ddd8d0] dark:border-[#2a2a2d]"}`}>
                         <div className="flex items-center justify-between flex-wrap gap-2">
                           <div className="flex items-center gap-2"><config.icon className="h-5 w-5 text-[#C9A227]" /><span className="font-semibold text-foreground">{config.labelAm}</span><StatusBadge status={enrollment.status} graduated={isGraduated} /></div>
                           {examScore && <ProgressRing score={examScore} size={44} />}
@@ -195,7 +195,7 @@ export default function GraduationList() {
                   })}
                   {member.enrollments.length === 0 && <div className="text-center py-4 text-muted-foreground text-sm italic">በምንም የትምህርት ደረጃ አልተመዘገቡም</div>}
                 </div>
-                <div className="p-3 border-t border-[#ddd8d0] dark:border-[#2a2a2d] bg-gradient-to-r from-transparent to-[#C9A227]/5 text-center text-[10px] text-muted-foreground">✙ እንዳ ኢየሱስ ግቢ ጉባኤ - ትምህርት ክፍል ✙</div>
+                <div className="p-3 border-t border-[#ddd8d0] dark:border-[#2a2a2d] bg-linear-to-r from-transparent to-[#C9A227]/5 text-center text-[10px] text-muted-foreground">✙ እንዳ ኢየሱስ ግቢ ጉባኤ - ትምህርት ክፍል ✙</div>
               </div>
             ))}
           </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { Bell, Plus, Edit, Trash2, MoreVertical, CheckCircle, XCircle, Share2, X, ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useState, useRef, useCallback, memo } from "react";
+import { useEffect, useState, useRef, useCallback, memo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import apiClient from "@/api";
 import api from "@/lib/api";
@@ -58,20 +58,20 @@ interface LightboxMedia {
     title?: string;
 }
 
-function Lightbox({ 
-    isOpen, 
-    media, 
-    currentIndex, 
-    onClose, 
-    onPrev, 
-    onNext 
-}: { 
-    isOpen: boolean; 
-    media: LightboxMedia[]; 
-    currentIndex: number; 
-    onClose: () => void; 
-    onPrev: () => void; 
-    onNext: () => void; 
+function Lightbox({
+    isOpen,
+    media,
+    currentIndex,
+    onClose,
+    onPrev,
+    onNext
+}: {
+    isOpen: boolean;
+    media: LightboxMedia[];
+    currentIndex: number;
+    onClose: () => void;
+    onPrev: () => void;
+    onNext: () => void;
 }) {
     if (!isOpen || media.length === 0) return null;
     const item = media[currentIndex];
@@ -89,18 +89,18 @@ function Lightbox({
     }, [onClose, onPrev, onNext]);
 
     return (
-        <div 
+        <div
             className="fixed inset-0 z-100 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300"
             onClick={onClose}
         >
-            <div 
+            <div
                 className="relative max-w-[90vw] max-h-[90vh] bg-black/20 rounded-2xl overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Media */}
                 <div className="relative w-full h-full flex items-center justify-center">
                     {isImage ? (
-                        <img 
+                        <img
                             src={item.url.startsWith('http') ? item.url : `${API_BASE}${item.url}`}
                             alt={item.title || 'Media'}
                             className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl"
@@ -142,9 +142,8 @@ function Lightbox({
                             {media.map((_, idx) => (
                                 <div
                                     key={idx}
-                                    className={`w-2 h-2 rounded-full transition-colors ${
-                                        idx === currentIndex ? 'bg-white' : 'bg-white/40'
-                                    }`}
+                                    className={`w-2 h-2 rounded-full transition-colors ${idx === currentIndex ? 'bg-white' : 'bg-white/40'
+                                        }`}
                                 />
                             ))}
                         </div>
@@ -342,11 +341,10 @@ const AnnouncementItem = memo((props: AnnouncementItemProps) => {
                                             key={t}
                                             type="button"
                                             onClick={() => setEditTarget(t)}
-                                            className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase border transition-all ${
-                                                editTarget === t
+                                            className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase border transition-all ${editTarget === t
                                                     ? "bg-[#7A1C1C] dark:bg-[#D4AF37] text-white dark:text-[#0E0E0F] border-transparent"
                                                     : "border-[#ddd8d0] dark:border-[#2a2a2d] text-[#6b6b6b] dark:text-[#B0B0B0]"
-                                            }`}
+                                                }`}
                                         >
                                             {t === "ALL" ? "Public" : "Class Only"}
                                         </button>
@@ -429,7 +427,7 @@ const AnnouncementItem = memo((props: AnnouncementItemProps) => {
                                     <div className="flex flex-wrap gap-2 mt-1">
                                         {editPdfUrls.map((url: string, idx: number) => (
                                             <div key={idx} className="relative px-3 py-1 bg-gray-100 rounded">
-                                                <a href={url.startsWith("http") ? url : `${API_BASE}${url}`} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">📄 PDF {idx+1}</a>
+                                                <a href={url.startsWith("http") ? url : `${API_BASE}${url}`} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">📄 PDF {idx + 1}</a>
                                                 <button type="button" onClick={() => setEditPdfUrls((prev: string[]) => prev.filter((_: string, i: number) => i !== idx))} className="ml-2 text-red-500">×</button>
                                             </div>
                                         ))}
@@ -453,14 +451,14 @@ const AnnouncementItem = memo((props: AnnouncementItemProps) => {
                                             const isLastVisible = idx === 2 && imageUrls.length > 3;
                                             const clickIndex = isLastVisible ? 2 : idx; // if "+N", open at index 2
                                             return (
-                                                <div 
-                                                    key={idx} 
+                                                <div
+                                                    key={idx}
                                                     className="relative group overflow-hidden rounded-xl cursor-pointer"
                                                     onClick={() => handleMediaClick(clickIndex)}
                                                 >
-                                                    <img 
-                                                        src={url.startsWith("http") ? url : `${API_BASE}${url}`} 
-                                                        className="w-full h-56 md:h-64 lg:h-72 object-cover transition-transform hover:scale-105 duration-300" 
+                                                    <img
+                                                        src={url.startsWith("http") ? url : `${API_BASE}${url}`}
+                                                        className="w-full h-56 md:h-64 lg:h-72 object-cover transition-transform hover:scale-105 duration-300"
                                                     />
                                                     {isLastVisible && (
                                                         <div className="absolute inset-0 bg-black/60 flex items-center justify-center transition-colors group-hover:bg-black/70">
@@ -479,7 +477,7 @@ const AnnouncementItem = memo((props: AnnouncementItemProps) => {
                                 )}
                                 {/* Video embed */}
                                 {videoUrl && embedUrl && (
-                                    <div 
+                                    <div
                                         className="rounded-xl overflow-hidden border shadow-sm cursor-pointer group relative"
                                         onClick={() => {
                                             const videoIdx = imageUrls.length; // after images
@@ -500,10 +498,10 @@ const AnnouncementItem = memo((props: AnnouncementItemProps) => {
                                         <div className="p-2 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 flex items-center gap-2">
                                             <span>{platformInfo?.icon}</span>
                                             <span>{platformInfo?.label}</span>
-                                            <a 
-                                                href={videoUrl} 
-                                                target="_blank" 
-                                                rel="noopener noreferrer" 
+                                            <a
+                                                href={videoUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
                                                 className="text-blue-600 hover:underline ml-auto"
                                                 onClick={(e) => e.stopPropagation()}
                                             >
@@ -545,11 +543,10 @@ const AnnouncementItem = memo((props: AnnouncementItemProps) => {
                                         e.stopPropagation();
                                         handleReact(announcement.id, "LIKE");
                                     }}
-                                    className={`group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ${
-                                        userLiked
+                                    className={`group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ${userLiked
                                             ? "bg-blue-500 text-white shadow-md scale-105"
                                             : "bg-[#F8F5F0] dark:bg-[#252529] text-[#6b6b6b] dark:text-[#B0B0B0] hover:bg-blue-100 dark:hover:bg-blue-900/30"
-                                    }`}
+                                        }`}
                                 >
                                     <span className="text-lg transition-transform group-hover:scale-110">👍</span>
                                     <span className="text-xs font-bold">{announcement.reaction_counts?.likes || 0}</span>
@@ -560,11 +557,10 @@ const AnnouncementItem = memo((props: AnnouncementItemProps) => {
                                         e.stopPropagation();
                                         handleReact(announcement.id, "STAR");
                                     }}
-                                    className={`group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ${
-                                        userDisliked
+                                    className={`group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ${userDisliked
                                             ? "bg-red-500 text-white shadow-md scale-105"
                                             : "bg-[#F8F5F0] dark:bg-[#252529] text-[#6b6b6b] dark:text-[#B0B0B0] hover:bg-red-100 dark:hover:bg-red-900/30"
-                                    }`}
+                                        }`}
                                 >
                                     <span className="text-lg transition-transform group-hover:scale-110">👎</span>
                                     <span className="text-xs font-bold">{announcement.reaction_counts?.stars || 0}</span>
@@ -586,8 +582,8 @@ const AnnouncementItem = memo((props: AnnouncementItemProps) => {
 });
 AnnouncementItem.displayName = 'AnnouncementItem';
 
-// ===== MAIN PAGE =====
-export default function AnnouncementsPage() {
+// ===== CONTENT COMPONENT (uses useSearchParams) =====
+function AnnouncementsContent() {
     const searchParams = useSearchParams();
     const highlightId = searchParams.get("announcementId");
 
@@ -685,25 +681,25 @@ export default function AnnouncementsPage() {
         }
     };
 
-const fetchAnnouncements = useCallback(async () => {
-    setLoading(true);
-    try {
-        const res = await apiClient.announcements.listAnnouncements();
-        const data = res.data;
-        const items = Array.isArray(data) ? data : (data as any)?.items || [];
-        setAnnouncements(items);
-    } catch (err) {
-        console.error(err);
-    } finally {
-        setLoading(false);
-    }
-}, []);
+    const fetchAnnouncements = useCallback(async () => {
+        setLoading(true);
+        try {
+            const res = await apiClient.announcements.listAnnouncements();
+            const data = res.data;
+            const items = Array.isArray(data) ? data : (data as any)?.items || [];
+            setAnnouncements(items);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
 
-useEffect(() => {
-    fetchAnnouncements();
-    const interval = setInterval(fetchAnnouncements, 30000); // Poll every 30s
-    return () => clearInterval(interval);
-}, [fetchAnnouncements]);
+    useEffect(() => {
+        fetchAnnouncements();
+        const interval = setInterval(fetchAnnouncements, 30000); // Poll every 30s
+        return () => clearInterval(interval);
+    }, [fetchAnnouncements]);
 
     useEffect(() => {
         if (!loading && highlightId && announcements.length > 0) {
@@ -872,8 +868,8 @@ useEffect(() => {
             isChairman
                 ? "ALL"
                 : announcement.is_public
-                ? "ALL"
-                : "CLASS"
+                    ? "ALL"
+                    : "CLASS"
         );
         const parseMedia = (field: any) => {
             if (!field) return [];
@@ -1008,11 +1004,10 @@ useEffect(() => {
                                         key={t}
                                         type="button"
                                         onClick={() => setFormTarget(t)}
-                                        className={`flex-1 py-2.5 rounded-xl text-sm font-bold uppercase border-2 transition-all ${
-                                            formTarget === t
+                                        className={`flex-1 py-2.5 rounded-xl text-sm font-bold uppercase border-2 transition-all ${formTarget === t
                                                 ? "bg-[#7A1C1C] dark:bg-[#D4AF37] text-white dark:text-[#0E0E0F] border-transparent shadow-md"
                                                 : "border-[#ddd8d0] dark:border-[#2a2a2d] text-[#6b6b6b] dark:text-[#B0B0B0] hover:border-[#C9A227]"
-                                        }`}
+                                            }`}
                                     >
                                         {t === "ALL" ? "Public" : "Class Only"}
                                     </button>
@@ -1286,5 +1281,14 @@ useEffect(() => {
                 </DialogContent>
             </Dialog>
         </div>
+    );
+}
+
+// ===== MAIN PAGE with Suspense =====
+export default function AnnouncementsPage() {
+    return (
+        <Suspense fallback={<div className="p-4 text-center">Loading announcements...</div>}>
+            <AnnouncementsContent />
+        </Suspense>
     );
 }

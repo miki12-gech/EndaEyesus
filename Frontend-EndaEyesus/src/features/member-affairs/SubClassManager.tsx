@@ -1,4 +1,3 @@
-// src/features/member-affairs/SubClassManager.tsx
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -6,11 +5,18 @@ import { memberAffairsApi, useMemberAffairsClassId } from "./memberAffairsApi";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Plus, Trash2 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner"; // adjust to your toast library if different
+import { toast } from "sonner";
 
 export default function SubClassManager() {
   const classId = useMemberAffairsClassId();
@@ -20,6 +26,7 @@ export default function SubClassManager() {
   const [subChairId, setSubChairId] = useState("");
   const [subSecretaryId, setSubSecretaryId] = useState("");
 
+  // Fetch sub‑classes
   const { data: subClasses, isLoading } = useQuery({
     queryKey: ["member-affairs", "sub-classes", classId],
     enabled: !!classId,
@@ -29,33 +36,51 @@ export default function SubClassManager() {
     },
   });
 
+  // Fetch members of this class only
   const { data: allMembers, isLoading: membersLoading } = useQuery({
-    queryKey: ["member-affairs", "members-for-subclass"],
+    queryKey: ["member-affairs", "members-for-subclass", classId],
+    enabled: !!classId,
     queryFn: async () => {
-      const res = await memberAffairsApi.listMembers({});
+      const res = await memberAffairsApi.listMembers({ serviceClassId: classId! });
       return res.data;
     },
   });
 
-  // ✅ Filter: members of current class AND have graduated Gubae Hawaryat
+  // Debugging: log members and their graduations
+  useEffect(() => {
+    if (allMembers) {
+      console.log("All members of class:", allMembers);
+      allMembers.forEach((m: any) => {
+        console.log(`Member ${m.full_name_three_parts}: graduated_phases =`, m.graduated_phases);
+      });
+    }
+  }, [allMembers]);
+
+  // Filter: only members who have graduated Gubae Hawaryat or higher
   const eligibleMembers = useMemo(() => {
     if (!allMembers || !classId) return [];
-    return allMembers.filter((m: any) => {
-      // Belongs to current service class
-      const sameClass = (m.service_class_id === classId || m.classId === classId);
-      if (!sameClass) return false;
 
-      // Check graduation
-let graduatedPhases: string[] = [];
-if (m.graduated_phases) {
-  try {
-    graduatedPhases = typeof m.graduated_phases === 'string'
-      ? JSON.parse(m.graduated_phases)
-      : m.graduated_phases;
-    graduatedPhases = graduatedPhases.map(p => p.toLowerCase());
-  } catch { graduatedPhases = []; }
-}
-return graduatedPhases.includes('gubae_hawaryat') || graduatedPhases.includes('gubae_eclessia');
+    return allMembers.filter((m: any) => {
+      // Graduation check – handle both stringified JSON and raw array
+      let phases: string[] = [];
+      const gradData = m.graduated_phases;
+      if (gradData) {
+        try {
+          phases = typeof gradData === "string" ? JSON.parse(gradData) : gradData;
+          if (!Array.isArray(phases)) phases = [];
+          phases = phases.map((p: string) => p.toLowerCase());
+        } catch (e) {
+          console.warn("Failed to parse graduated_phases for user", m.id, e);
+          phases = [];
+        }
+      }
+
+      const hasRequired = phases.includes("gubae_hawaryat") || phases.includes("gubae_eclessia");
+      // Also log the result for debugging
+      if (hasRequired) {
+        console.log(`✅ ${m.full_name_three_parts} is eligible`);
+      }
+      return hasRequired;
     });
   }, [allMembers, classId]);
 
@@ -92,17 +117,17 @@ return graduatedPhases.includes('gubae_hawaryat') || graduatedPhases.includes('g
     },
   });
 
-  if (isLoading || membersLoading) return <div>Loading sub‑classes...</div>;
+  if (isLoading || membersLoading) return <div className="p-4 text-center">Loading sub‑classes...</div>;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-end">
-        <Button onClick={() => setOpen(true)}>
+        <Button onClick={() => setOpen(true)} className="bg-[#C9A227] hover:bg-[#B8911A]">
           <Plus className="h-4 w-4 mr-2" /> Create Sub‑Class
         </Button>
       </div>
 
-      <div className="rounded-md border overflow-x-auto">
+      <div className="rounded-md border overflow-x-auto bg-white/60 dark:bg-[#1C1C1F]/60 backdrop-blur-sm">
         <Table>
           <TableHeader>
             <TableRow>
@@ -132,23 +157,31 @@ return graduatedPhases.includes('gubae_hawaryat') || graduatedPhases.includes('g
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="bg-white/95 dark:bg-[#1C1C1F]/95 backdrop-blur-xl border border-[#C9A227]/40">
           <DialogHeader>
-            <DialogTitle>Create New Sub‑Class</DialogTitle>
+            <DialogTitle className="text-[#7A1C1C] dark:text-[#D4AF37]">Create New Sub‑Class</DialogTitle>
+            <DialogDescription>
+              Assign a name and select leaders for the new sub‑class. Only members who have completed
+              at least Gubae Hawaryat are eligible for leadership roles.
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
+          <div className="space-y-4 py-2">
             <Input
               placeholder="Sub‑Class Name"
               value={subClassName}
               onChange={(e) => setSubClassName(e.target.value)}
+              className="bg-white/80 dark:bg-[#1C1C1F]/80"
             />
+
             <Select value={subChairId} onValueChange={setSubChairId}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-white/80 dark:bg-[#1C1C1F]/80">
                 <SelectValue placeholder="Select Sub‑Chair" />
               </SelectTrigger>
               <SelectContent>
                 {eligibleMembers.length === 0 ? (
-                  <div className="p-2 text-sm text-muted-foreground">No eligible members (must have graduated Gubae Hawaryat)</div>
+                  <div className="p-2 text-sm text-muted-foreground">
+                    No eligible members in this class (must have completed Gubae Hawaryat or higher)
+                  </div>
                 ) : (
                   eligibleMembers.map((m: any) => (
                     <SelectItem key={m.id} value={m.id}>
@@ -158,13 +191,16 @@ return graduatedPhases.includes('gubae_hawaryat') || graduatedPhases.includes('g
                 )}
               </SelectContent>
             </Select>
+
             <Select value={subSecretaryId} onValueChange={setSubSecretaryId}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-white/80 dark:bg-[#1C1C1F]/80">
                 <SelectValue placeholder="Select Sub‑Secretary" />
               </SelectTrigger>
               <SelectContent>
                 {eligibleMembers.length === 0 ? (
-                  <div className="p-2 text-sm text-muted-foreground">No eligible members (must have graduated Gubae Hawaryat)</div>
+                  <div className="p-2 text-sm text-muted-foreground">
+                    No eligible members in this class (must have completed Gubae Hawaryat or higher)
+                  </div>
                 ) : (
                   eligibleMembers.map((m: any) => (
                     <SelectItem key={m.id} value={m.id}>
@@ -177,7 +213,7 @@ return graduatedPhases.includes('gubae_hawaryat') || graduatedPhases.includes('g
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={() => createMutation.mutate()} disabled={createMutation.isPending}>
+            <Button onClick={() => createMutation.mutate()} disabled={createMutation.isPending} className="bg-[#C9A227] hover:bg-[#B8911A]">
               Create
             </Button>
           </DialogFooter>

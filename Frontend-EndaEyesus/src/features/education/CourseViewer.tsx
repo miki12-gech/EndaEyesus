@@ -16,7 +16,7 @@ import { useAuthStore } from "@/store/authStore";
 
 const SacredBackground = () => (
   <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-    <div className="absolute inset-0 bg-gradient-to-br from-[#F8F5F0]/90 via-[#FFF9F0]/70 to-[#EDE5D8]/90 dark:from-[#0E0E0F] dark:via-[#1A1816] dark:to-[#0A0A0B]" />
+    <div className="absolute inset-0 bg-linear-to-br from-[#F8F5F0]/90 via-[#FFF9F0]/70 to-[#EDE5D8]/90 dark:from-[#0E0E0F] dark:via-[#1A1816] dark:to-[#0A0A0B]" />
     <svg className="absolute inset-0 w-full h-full opacity-[0.06] dark:opacity-[0.08]" xmlns="http://www.w3.org/2000/svg">
       <defs><pattern id="crossPattern" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
         <path d="M50 15 L52 48 L85 50 L52 52 L50 85 L48 52 L15 50 L48 48 Z" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#C9A227]" />
@@ -214,7 +214,7 @@ export default function CourseViewer({ phase }: { phase: string }) {
         <div className="space-y-12">
           {subjects.map((subject) => (
             <div key={subject.id} className="rounded-2xl border border-[#ddd8d0] dark:border-[#2a2a2d] bg-white/80 dark:bg-[#1C1C1F]/80 backdrop-blur-md shadow-xl overflow-hidden">
-              <div className="bg-gradient-to-r from-[#7A1C1C]/10 to-[#C9A227]/10 p-6 border-b">
+              <div className="bg-linear-to-r from-[#7A1C1C]/10 to-[#C9A227]/10 p-6 border-b">
                 <h2 className="text-2xl md:text-3xl font-bold text-[#7A1C1C] dark:text-[#D4AF37]">{subject.title}</h2>
                 {subject.description && <p className="text-muted-foreground mt-1 italic">{subject.description}</p>}
               </div>

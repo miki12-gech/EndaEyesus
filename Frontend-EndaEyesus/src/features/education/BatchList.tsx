@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 // ---------- Animated Sacred Background ----------
 const SacredBackground = () => (
   <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-    <div className="absolute inset-0 bg-gradient-to-br from-[#F8F5F0]/80 via-[#FFF9F0]/60 to-[#EDE5D8]/80 dark:from-[#0E0E0F] dark:via-[#1A1816] dark:to-[#0A0A0B]" />
+    <div className="absolute inset-0 bg-linear-to-br from-[#F8F5F0]/80 via-[#FFF9F0]/60 to-[#EDE5D8]/80 dark:from-[#0E0E0F] dark:via-[#1A1816] dark:to-[#0A0A0B]" />
     <svg className="absolute inset-0 w-full h-full opacity-[0.08] dark:opacity-[0.1]" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <pattern id="crossGrid" x="0" y="0" width="120" height="120" patternUnits="userSpaceOnUse">
@@ -102,7 +102,7 @@ export default function BatchList() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setOpen(true)}
-              className="group relative inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#C9A227] to-[#B8911A] rounded-full text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+              className="group relative inline-flex items-center gap-2 px-6 py-3 bg-linear-to-r from-[#C9A227] to-[#B8911A] rounded-full text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
             >
               <Plus className="h-5 w-5 transition-transform group-hover:rotate-90 duration-300" />
               አዲስ ዙር ፍጠር
@@ -137,10 +137,10 @@ export default function BatchList() {
                   className="group relative overflow-hidden rounded-2xl bg-white/80 dark:bg-[#1C1C1F]/80 backdrop-blur-lg border border-[#ddd8d0] dark:border-[#2a2a2d] shadow-xl hover:shadow-2xl transition-all duration-300"
                 >
                   {/* Glowing gradient border on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#C9A227]/0 via-[#C9A227]/0 to-[#C9A227]/0 group-hover:from-[#C9A227]/20 group-hover:via-[#C9A227]/10 group-hover:to-transparent transition-all duration-500" />
+                  <div className="absolute inset-0 bg-linear-to-r from-[#C9A227]/0 via-[#C9A227]/0 to-[#C9A227]/0 group-hover:from-[#C9A227]/20 group-hover:via-[#C9A227]/10 group-hover:to-transparent transition-all duration-500" />
                   <div className="p-6">
                     <div className="flex items-start justify-between mb-4">
-                      <div className="p-3 rounded-xl bg-gradient-to-br from-[#7A1C1C]/10 to-[#C9A227]/10">
+                      <div className="p-3 rounded-xl bg-linear-to-br from-[#7A1C1C]/10 to-[#C9A227]/10">
                         <PhaseIcon className="h-8 w-8 text-[#C9A227]" />
                       </div>
                       <Badge variant="outline" className="border-[#C9A227] text-[#C9A227] text-xs">
@@ -159,7 +159,7 @@ export default function BatchList() {
                       </div>
                     </div>
                   </div>
-                  <div className="px-6 py-3 border-t border-[#ddd8d0] dark:border-[#2a2a2d] bg-gradient-to-r from-transparent to-[#C9A227]/5 flex justify-between items-center">
+                  <div className="px-6 py-3 border-t border-[#ddd8d0] dark:border-[#2a2a2d] bg-linear-to-r from-transparent to-[#C9A227]/5 flex justify-between items-center">
                     <span className="text-xs text-muted-foreground">የተፈጠረ {new Date(batch.created_at).toLocaleDateString()}</span>
                     <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                   </div>
@@ -202,7 +202,7 @@ export default function BatchList() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpen(false)}>ሰርዝ</Button>
-              <Button onClick={() => createMutation.mutate()} className="bg-gradient-to-r from-[#C9A227] to-[#B8911A] text-white hover:shadow-lg transition-all">ፍጠር</Button>
+              <Button onClick={() => createMutation.mutate()} className="bg-linear-to-r from-[#C9A227] to-[#B8911A] text-white hover:shadow-lg transition-all">ፍጠር</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

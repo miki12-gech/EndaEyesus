@@ -10,7 +10,7 @@ import { ClipboardList, CheckCircle, XCircle } from "lucide-react";
 // Sacred Background (same as other pages)
 const SacredBackground = () => (
   <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-    <div className="absolute inset-0 bg-gradient-to-br from-[#F8F5F0]/90 via-[#FFF9F0]/70 to-[#EDE5D8]/90 dark:from-[#0E0E0F] dark:via-[#1A1816] dark:to-[#0A0A0B]" />
+    <div className="absolute inset-0 bg-linear-to-br from-[#F8F5F0]/90 via-[#FFF9F0]/70 to-[#EDE5D8]/90 dark:from-[#0E0E0F] dark:via-[#1A1816] dark:to-[#0A0A0B]" />
     <svg className="absolute inset-0 w-full h-full opacity-[0.06] dark:opacity-[0.08]" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <pattern id="crossPattern" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
@@ -70,7 +70,7 @@ export default function PendingRegistrations() {
 
         <div className="overflow-x-auto rounded-2xl border border-[#ddd8d0] dark:border-[#2a2a2d] bg-white/70 dark:bg-[#1C1C1F]/70 backdrop-blur-md shadow-xl">
           <Table>
-            <TableHeader className="bg-gradient-to-r from-[#7A1C1C]/5 to-[#C9A227]/5 dark:from-[#7A1C1C]/10 dark:to-[#D4AF37]/10">
+            <TableHeader className="bg-linear-to-r from-[#7A1C1C]/5 to-[#C9A227]/5 dark:from-[#7A1C1C]/10 dark:to-[#D4AF37]/10">
               <TableRow>
                 <TableHead className="text-[#7A1C1C] dark:text-[#D4AF37]">አባል</TableHead>
                 <TableHead className="text-[#7A1C1C] dark:text-[#D4AF37]">ደረጃ</TableHead>

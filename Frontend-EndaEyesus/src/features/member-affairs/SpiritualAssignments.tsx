@@ -161,7 +161,7 @@ export default function SpiritualAssignments() {
                                 assignMutation.mutate({ memberId: member.id, role: "repentance_father_id", valueId: val })
                               }
                             >
-                              <SelectTrigger className="w-[200px]">
+                              <SelectTrigger className="w-50">
                                 <SelectValue placeholder="Select priest" />
                               </SelectTrigger>
                               <SelectContent>
@@ -180,7 +180,7 @@ export default function SpiritualAssignments() {
                                 assignMutation.mutate({ memberId: member.id, role: "repentance_deacon_id", valueId: val })
                               }
                             >
-                              <SelectTrigger className="w-[200px]">
+                              <SelectTrigger className="w-50">
                                 <SelectValue placeholder="Select deacon" />
                               </SelectTrigger>
                               <SelectContent>
@@ -199,7 +199,7 @@ export default function SpiritualAssignments() {
                                 assignMutation.mutate({ memberId: member.id, role: "spiritual_father_id", valueId: val })
                               }
                             >
-                              <SelectTrigger className="w-[200px]">
+                              <SelectTrigger className="w-50">
                                 <SelectValue placeholder="Select spiritual father" />
                               </SelectTrigger>
                               <SelectContent>
@@ -218,7 +218,7 @@ export default function SpiritualAssignments() {
                                 assignMutation.mutate({ memberId: member.id, role: "spiritual_mother_id", valueId: val })
                               }
                             >
-                              <SelectTrigger className="w-[200px]">
+                              <SelectTrigger className="w-50">
                                 <SelectValue placeholder="Select spiritual mother" />
                               </SelectTrigger>
                               <SelectContent>
@@ -260,7 +260,7 @@ export default function SpiritualAssignments() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex-1 min-w-[200px]">
+                <div className="flex-1 min-w-50">
                   <label className="text-sm font-medium mb-1 block">Mentor</label>
                   <Select value={selectedMentorId} onValueChange={setSelectedMentorId}>
                     <SelectTrigger>

@@ -4,66 +4,115 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { motion } from "framer-motion";
-import { Shield } from "lucide-react"; // Or your custom Orthodox cross icon
+import { Shield } from "lucide-react";
 
 export default function DashboardPage() {
-    const router = useRouter();
-    const { user, token } = useAuthStore();
-    const [isRouting, setIsRouting] = useState(true);
+  const router = useRouter();
+  const { user, token } = useAuthStore();
 
-    useEffect(() => {
-        // Wait a tiny fraction of a second to ensure store hydration
-        const timer = setTimeout(() => {
-            if (!token || !user) {
-                router.replace("/login");
-                return;
-            }
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!token || !user) {
+        router.replace("/login");
+        return;
+      }
 
-            // Member Affairs Manager Routing
-            if (user.role === "SERVICE_MANAGER" && user.serviceClassName === "የአባልነት ጉዳይ ክፍል") {
-                router.replace("/dashboard/member-affairs");
-                return;
-            }
+      if (user.role === "SERVICE_MANAGER" && user.serviceClassName === "የአባልነት ጉዳይ ክፍል") {
+        router.replace("/dashboard/member-affairs");
+        return;
+      }
+      
+      // Default fallback
+      router.replace("/dashboard/announcements");
+    }, 1800); // Slightly prolonged to appreciate the cinematic intro
 
-            // Add other service class redirects here (Education, Choir, etc.)
-            
-            // Default fallback
-            router.replace("/dashboard/announcements");
-        }, 300);
+    return () => clearTimeout(timer);
+  }, [user, token, router]);
 
-        return () => clearTimeout(timer);
-    }, [user, token, router]);
+  return (
+    <div className="relative min-h-screen w-full flex flex-col items-center justify-center bg-[#faf8f5] dark:bg-[#0E0E0F] overflow-hidden transition-colors duration-500">
+      
+      {/* Background Graphic Patterns */}
+      <div className="absolute inset-0 bg-[radial-gradient(#C9A227_1px,transparent_1px)] bg-size-[32px_32px] opacity-[0.15] dark:opacity-[0.05]" />
+      
+      {/* Cinematic Ambient Glow */}
+      <motion.div 
+        animate={{ 
+          scale: [1, 1.2, 1],
+          opacity: [0.2, 0.4, 0.2] 
+        }}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute w-125 h-125 bg-linear-to-tr from-[#7A1C1C]/10 to-[#C9A227]/10 dark:from-[#7A1C1C]/5 dark:to-[#C9A227]/5 rounded-full blur-3xl pointer-events-none" 
+      />
 
-    // A beautiful cinematic loading state while calculating the redirect
-    return (
-        <div className="min-h-[80vh] w-full flex flex-col items-center justify-center">
-            <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5 }}
-                className="relative flex items-center justify-center"
-            >
-                {/* Outer pulsing ring */}
-                <motion.div 
-                    className="absolute inset-0 rounded-full border-2 border-primary/20 dark:border-primary/30"
-                    animate={{ scale: [1, 1.5], opacity: [1, 0] }}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
-                />
-                
-                {/* Inner Icon Box */}
-                <div className="relative z-10 w-20 h-20 bg-white dark:bg-[#161618] rounded-2xl shadow-2xl border border-border flex items-center justify-center">
-                    <Shield className="w-8 h-8 text-primary animate-pulse" />
-                </div>
-            </motion.div>
-            
-            <motion.p 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="mt-6 text-muted-foreground text-sm font-medium tracking-widest uppercase"
-            >
-                ወደ ማዕከል በመግባት ላይ...
-            </motion.p>
+      {/* Centerpiece Animation Group */}
+      <div className="relative flex items-center justify-center w-80 h-80">
+        
+        {/* Outer Fine-Line Astrolabe Ring 1 */}
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+          className="absolute inset-0 border border-dashed border-[#7A1C1C]/20 dark:border-[#D4AF37]/20 rounded-full"
+        />
+
+        {/* Middle Intersecting Axis Rings */}
+        <motion.div
+          animate={{ rotate: -360 }}
+          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+          className="absolute inset-6 border border-[#C9A227]/30 dark:border-[#C9A227]/20 rounded-full flex items-center justify-center"
+        >
+          {/* Internal Crosshairs */}
+          <div className="absolute w-full h-px bg-linear-to-r from-transparent via-[#C9A227]/40 to-transparent" />
+          <div className="absolute h-full w-px bg-linear-to-b from-transparent via-[#C9A227]/40 to-transparent" />
+        </motion.div>
+
+        {/* Rapid Pulse Wave Effect */}
+        <motion.div 
+          animate={{ scale: [0.8, 1.4], opacity: [0.5, 0] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+          className="absolute w-32 h-32 rounded-full bg-linear-to-r from-[#7A1C1C]/20 to-[#C9A227]/20 blur-sm"
+        />
+
+        {/* Sacred Core Icon Container */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: "spring", stiffness: 100, damping: 15 }}
+          className="relative z-10 w-24 h-24 bg-white dark:bg-[#1C1C1F] rounded-3xl shadow-[0_20px_50px_rgba(122,28,28,0.15)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-[#ddd8d0] dark:border-[#2a2a2d] flex items-center justify-center group"
+        >
+          <motion.div
+            animate={{ scale: [1, 1.06, 1] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <Shield className="w-10 h-10 text-[#7A1C1C] dark:text-[#D4AF37]" />
+          </motion.div>
+
+          {/* Corner Decors */}
+          <div className="absolute top-2 left-2 w-1.5 h-1.5 border-t border-l border-[#C9A227]" />
+          <div className="absolute top-2 right-2 w-1.5 h-1.5 border-t border-r border-[#C9A227]" />
+          <div className="absolute bottom-2 left-2 w-1.5 h-1.5 border-b border-l border-[#C9A227]" />
+          <div className="absolute bottom-2 right-2 w-1.5 h-1.5 border-b border-r border-[#C9A227]" />
+        </motion.div>
+      </div>
+      
+      {/* Cinematic Staggered Text Release */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4 }}
+        className="flex flex-col items-center gap-2 mt-2 text-center"
+      >
+        <p className="text-[#1a1a1a] dark:text-gray-100 font-serif text-lg font-bold tracking-widest">
+          ወደ ማዕከል በመግባት ላይ
+        </p>
+        <div className="w-12 h-0.5 bg-linear-to-r from-[#7A1C1C] to-[#C9A227] rounded-full overflow-hidden relative">
+          <motion.div 
+            animate={{ x: [-50, 50] }}
+            transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+            className="absolute top-0 bottom-0 w-6 bg-white"
+          />
         </div>
-    );
+      </motion.div>
+    </div>
+  );
 }

@@ -16,7 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 // Background (same as BatchList)
 const SacredBackground = () => (
   <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-    <div className="absolute inset-0 bg-gradient-to-br from-[#F8F5F0]/90 via-[#FFF9F0]/70 to-[#EDE5D8]/90 dark:from-[#0E0E0F] dark:via-[#1A1816] dark:to-[#0A0A0B]" />
+    <div className="absolute inset-0 bg-linear-to-br from-[#F8F5F0]/90 via-[#FFF9F0]/70 to-[#EDE5D8]/90 dark:from-[#0E0E0F] dark:via-[#1A1816] dark:to-[#0A0A0B]" />
     <svg className="absolute inset-0 w-full h-full opacity-[0.05] dark:opacity-[0.08]" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <pattern id="crossGridSubject" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
@@ -115,7 +115,7 @@ export default function SubjectManager() {
             )}
           </div>
           {selectedBatch && (
-            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setOpenSubject(true)} className="px-5 py-2 bg-gradient-to-r from-[#C9A227] to-[#B8911A] text-white rounded-full font-semibold shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setOpenSubject(true)} className="px-5 py-2 bg-linear-to-r from-[#C9A227] to-[#B8911A] text-white rounded-full font-semibold shadow-md hover:shadow-lg transition-all flex items-center gap-2">
               <Plus className="h-4 w-4" /> አዲስ ክፍል
             </motion.button>
           )}
@@ -210,7 +210,7 @@ export default function SubjectManager() {
               <Textarea placeholder="መግለጫ" value={subjectForm.description} onChange={(e) => setSubjectForm({ ...subjectForm, description: e.target.value })} rows={3} />
               <Input type="number" placeholder="ቅደም ተከተል" value={subjectForm.order} onChange={(e) => setSubjectForm({ ...subjectForm, order: parseInt(e.target.value) })} />
             </div>
-            <DialogFooter><Button variant="outline" onClick={() => setOpenSubject(false)}>ሰርዝ</Button><Button onClick={() => createSubject.mutate()} className="bg-gradient-to-r from-[#C9A227] to-[#B8911A] text-white">አስቀምጥ</Button></DialogFooter>
+            <DialogFooter><Button variant="outline" onClick={() => setOpenSubject(false)}>ሰርዝ</Button><Button onClick={() => createSubject.mutate()} className="bg-linear-to-r from-[#C9A227] to-[#B8911A] text-white">አስቀምጥ</Button></DialogFooter>
           </DialogContent>
         </Dialog>
 
@@ -223,7 +223,7 @@ export default function SubjectManager() {
               <Textarea placeholder="ይዘት (HTML)" rows={8} value={lessonForm.content} onChange={(e) => setLessonForm({ ...lessonForm, content: e.target.value })} className="font-mono" />
               <Input type="number" placeholder="ቅደም ተከተል" value={lessonForm.order} onChange={(e) => setLessonForm({ ...lessonForm, order: parseInt(e.target.value) })} />
             </div>
-            <DialogFooter><Button variant="outline" onClick={() => setOpenLesson(false)}>ሰርዝ</Button><Button onClick={() => createLesson.mutate()} className="bg-gradient-to-r from-[#C9A227] to-[#B8911A] text-white">አስቀምጥ</Button></DialogFooter>
+            <DialogFooter><Button variant="outline" onClick={() => setOpenLesson(false)}>ሰርዝ</Button><Button onClick={() => createLesson.mutate()} className="bg-linear-to-r from-[#C9A227] to-[#B8911A] text-white">አስቀምጥ</Button></DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
