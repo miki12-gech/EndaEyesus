@@ -1,3 +1,4 @@
+//src/app.ts
 import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -25,12 +26,13 @@ const app: Application = express();
 // ─── Security ───────────────────────────────────────────────────────
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors({
-    origin: [
-        env.FRONTEND_URL || 'http://localhost:3001',
-        'http://localhost:3000',
-        'http://localhost:3001',
-        'https://endaeyesusbete.vercel.app'
-    ],
+origin: [
+    env.FRONTEND_URL || 'http://localhost:3001',
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'https://endaeyesusbete.vercel.app',
+    'https://koinonia-frontend-bsf0b9ne9-kibroms-projects-fa770174.vercel.app', // ← YOUR URL
+],
     credentials: true,
 }));
 
