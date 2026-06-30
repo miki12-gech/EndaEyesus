@@ -231,7 +231,16 @@ export default function RegisterPage() {
                 dorm_block: dormBlock || undefined,
                 dorm_room: dormRoom || undefined,
             });
-            const regToken = (regRes.data as any).token || 'authenticated';
+
+            // ✅ Robust token extraction – TypeScript-safe
+            const data = regRes.data as any;
+            const regToken = data.token || data.data?.token;
+
+            if (!regToken) {
+                console.error("❌ No token found in registration response:", regRes);
+                setError("Registration succeeded but no token received. Please try logging in.");
+                return;
+            }
 
             const userProfileRes = await apiClient.auth.getCurrentUser();
             const mappedUser = mapGeneratedUserToAuthUser(userProfileRes.data);

@@ -30,15 +30,25 @@ export default function LoginPage() {
         try {
             // Call generated login endpoint
             const loginRes = await apiClient.auth.login({ email, password });
-            const loginToken = (loginRes.data as any).token || 'authenticated';
+            
+            // ✅ Robust token extraction – TypeScript-safe
+            const data = loginRes.data as any;
+            const loginToken = data.token || data.data?.token;
+            
+            if (!loginToken) {
+                console.error("❌ No token found in response:", loginRes);
+                setError("No token received. Please try again.");
+                return;
+            }
 
-            // Immediately retrieve user profile (HttpOnly cookie will be automatically attached)
+            // Immediately retrieve user profile
             const profileRes = await apiClient.auth.getCurrentUser();
             const mappedUser = mapGeneratedUserToAuthUser(profileRes.data);
 
             setAuth(mappedUser, loginToken);
             router.replace("/dashboard");
         } catch (err: any) {
+            console.error("❌ Login error:", err);
             setError(err.response?.data?.detail || err.response?.data?.message || "Login failed. Check your credentials.");
         } finally {
             setIsLoading(false);
